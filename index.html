@@ -205,6 +205,59 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--acce
 .mail-compose label{display:block;font-size:12px;color:var(--text3);margin-bottom:4px}
 .mail-compose input{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;font-family:inherit;outline:none;margin-bottom:10px}
 
+/* Red packet */
+.redpack-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.redpack-overlay.open{opacity:1;pointer-events:all}
+.redpack-card{width:280px;background:linear-gradient(180deg,#e6392e 0%,#c0392b 100%);border-radius:20px;padding:32px 24px;text-align:center;color:#ffd700;box-shadow:0 20px 60px rgba(230,57,46,.4);position:relative;overflow:hidden;animation:bounceIn .5s cubic-bezier(.22,1,.36,1)}
+.redpack-card .rp-icon{font-size:64px;margin-bottom:12px;animation:rpBounce .6s infinite alternate}
+.redpack-card .rp-title{font-size:20px;font-weight:700;letter-spacing:2px;margin-bottom:6px}
+.redpack-card .rp-sub{font-size:13px;color:#ffcccb;margin-bottom:16px}
+.redpack-card .rp-btn{display:inline-block;padding:10px 40px;border-radius:50px;background:#ffd700;color:#c0392b;font-weight:700;font-size:16px;cursor:pointer;border:none;transition:transform .2s}
+.redpack-card .rp-btn:active{transform:scale(.95)}
+.redpack-card .rp-amount{font-size:36px;font-weight:900;color:#ffd700;margin:12px 0}
+.redpack-card .rp-opened{display:none}
+.redpack-card.opened .rp-closed{display:none}
+.redpack-card.opened .rp-opened{display:block}
+@keyframes bounceIn{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes rpBounce{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+
+/* Call screen */
+.call-overlay{position:fixed;inset:0;z-index:1000;background:linear-gradient(180deg,#1a1a2e 0%,#0a0a14 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s;gap:20px}
+.call-overlay.open{opacity:1;pointer-events:all}
+.call-avatar{width:100px;height:100px;border-radius:50%;background:rgba(var(--accent-rgb),.3);display:flex;align-items:center;justify-content:center;font-size:42px;animation:callPulse 2s infinite}
+.call-name{font-size:22px;font-weight:600;color:var(--text)}
+.call-status{font-size:14px;color:var(--accent)}
+.call-timer{font-size:16px;color:var(--text3);font-family:monospace}
+.call-bubble{background:rgba(255,255,255,.06);border:1px solid var(--border2);border-radius:16px;padding:12px 18px;max-width:260px;text-align:center;font-size:14px;color:var(--text);animation:fadeInUp .5s ease;margin-top:10px}
+.call-actions{display:flex;gap:24px;margin-top:20px}
+.call-btn{width:56px;height:56px;border-radius:50%;border:none;font-size:24px;cursor:pointer;transition:transform .2s;display:flex;align-items:center;justify-content:center}
+.call-btn:active{transform:scale(.9)}
+.call-hangup{background:#e74c3c;color:#fff}
+.call-pickup{background:#2ecc71;color:#fff}
+@keyframes callPulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--accent-rgb),.3)}50%{box-shadow:0 0 0 20px rgba(var(--accent-rgb),0)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Moments */
+.moments-overlay{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .3s}
+.moments-overlay.open{opacity:1;pointer-events:all}
+.moments-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.moments-header .mh-back{width:34px;height:34px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.moments-header .mh-title{font-size:17px;font-weight:600;color:var(--text)}
+.moments-body{flex:1;overflow-y:auto;padding:16px 20px}
+.moments-post{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:14px;animation:msgIn .3s ease}
+.moments-post .mp-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.moments-post .mp-avatar{width:36px;height:36px;border-radius:50%;background:rgba(var(--accent-rgb),.3);display:flex;align-items:center;justify-content:center;font-size:14px}
+.moments-post .mp-name{font-weight:600;font-size:14px;color:var(--text)}
+.moments-post .mp-time{font-size:11px;color:var(--text3);margin-left:auto}
+.moments-post .mp-content{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:10px}
+.moments-post .mp-img{max-width:100%;max-height:240px;border-radius:10px;margin-bottom:10px;cursor:pointer}
+.moments-comment{background:var(--bg3);border-radius:10px;padding:10px 12px;margin-top:8px;font-size:13px;color:var(--text2)}
+.moments-comment .mc-name{color:var(--accent);font-weight:600;margin-right:6px}
+.moments-compose{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:12px 20px;display:flex;gap:10px;align-items:center;z-index:10}
+.moments-compose textarea{flex:1;padding:8px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;font-family:inherit;outline:none;resize:none;max-height:60px}
+.moments-compose .mc-send{width:38px;height:38px;border-radius:50%;background:rgba(var(--accent-rgb),.8);color:#fff;border:none;font-size:14px;cursor:pointer}
+.moments-compose .mc-img-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+
 .empty-chat{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:12px;font-size:14px}
 .empty-chat .empty-icon{font-size:56px;opacity:.3}
 </style>
@@ -224,6 +277,52 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--acce
 <!-- Settings overlay -->
 <div class="overlay" id="settings-overlay">
   <div class="panel" id="settings-panel"></div>
+</div>
+
+<!-- Red packet overlay -->
+<div class="redpack-overlay" id="redpack-overlay">
+  <div class="redpack-card" id="redpack-card">
+    <div class="rp-closed">
+      <div class="rp-icon">🧧</div>
+      <div class="rp-title">发红包</div>
+      <div style="margin:10px 0"><input type="number" id="rp-amount-input" placeholder="输入金额" step="0.01" min="0.01" style="width:140px;padding:8px 14px;border-radius:20px;border:none;text-align:center;font-size:20px;font-weight:700;color:#c0392b;outline:none"></div>
+      <div style="font-size:11px;color:#ffcccb;margin-bottom:12px">发给 <span id="rp-to-name">梦角</span></div>
+      <button class="rp-btn" id="rp-send-btn">塞进红包</button>
+    </div>
+    <div class="rp-opened">
+      <div class="rp-icon">🎉</div>
+      <div class="rp-amount" id="rp-amount"></div>
+      <div class="rp-sub" id="rp-sub-msg"></div>
+      <div class="rp-sub" id="rp-reply" style="margin-top:8px;font-size:13px"></div>
+      <button class="rp-btn" id="rp-close-btn" style="margin-top:12px;background:rgba(255,255,255,.2);color:#ffd700">收下</button>
+    </div>
+  </div>
+</div>
+
+<!-- Call overlay -->
+<div class="call-overlay" id="call-overlay">
+  <div class="call-avatar" id="call-avatar">✦</div>
+  <div class="call-name" id="call-name">梦角</div>
+  <div class="call-status" id="call-status">呼叫中…</div>
+  <div class="call-timer" id="call-timer" style="display:none">00:00</div>
+  <div id="call-bubbles"></div>
+  <div class="call-actions">
+    <button class="call-btn call-hangup" id="call-hangup-btn">📞</button>
+  </div>
+</div>
+
+<!-- Moments overlay -->
+<div class="moments-overlay" id="moments-overlay">
+  <div class="moments-header">
+    <button class="mh-back" id="moments-back-btn">←</button>
+    <span class="mh-title">朋友圈</span>
+  </div>
+  <div class="moments-body" id="moments-body"></div>
+  <div class="moments-compose">
+    <label class="mc-img-btn" id="moments-img-btn">🖼️<input type="file" id="moments-img-input" accept="image/*" style="display:none"></label>
+    <textarea id="moments-input" rows="1" placeholder="说点什么…"></textarea>
+    <button class="mc-send" id="moments-send-btn">发</button>
+  </div>
 </div>
 
 <!-- Mail overlay -->
@@ -261,6 +360,9 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--acce
         <div class="char-dropdown" id="char-dropdown"></div>
       </div>
       <div class="header-actions">
+        <button id="redpack-btn" title="红包">🧧</button>
+        <button id="moments-btn" title="朋友圈">🌐</button>
+        <button id="call-btn" title="通话">📞</button>
         <button id="mail-btn" title="信箱">✉️</button>
         <button id="settings-btn" title="设置">⚙️</button>
       </div>
@@ -904,6 +1006,181 @@ function updateMailBadge(){
   btn.textContent=n>0?'✉️('+n+')':'✉️';
 }
 
+// ===== RED PACKET =====
+let rpAmount='', rpDirection='to';
+
+function openRedpack(direction){
+  rpDirection=direction||'to';
+  var c=getActiveChar(),card=$('redpack-card');
+  card.classList.remove('opened');
+  if(rpDirection==='to'){
+    $('rp-to-name').textContent=c?c.name:'梦角';
+    $('redpack-card').querySelector('.rp-title').textContent='发红包';
+  }else{
+    $('rp-to-name').textContent='我';
+    $('redpack-card').querySelector('.rp-title').textContent=c?c.name+' 的红包':'红包';
+  }
+  $('rp-amount-input').value='';
+  $('redpack-overlay').classList.add('open');
+  setTimeout(function(){$('rp-amount-input').focus();},300);
+}
+
+$('redpack-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+
+$('rp-send-btn').addEventListener('click',function(){
+  var amount=parseFloat($('rp-amount-input').value);
+  if(!amount||amount<=0){toast('请输入有效金额');return;}
+  rpAmount=amount.toFixed(2);
+  var card=$('redpack-card'),c=getActiveChar();
+  card.classList.add('opened');
+  if(rpDirection==='to'){
+    $('rp-amount').textContent='¥'+rpAmount;
+    $('rp-sub-msg').textContent='已发给 '+(c?c.name:'梦角');
+    // Character auto-reply
+    setTimeout(function(){
+      $('rp-reply').textContent=getRandomCard();
+    },800);
+    addMessage('text','🧧 发给'+(c?c.name:'梦角')+'一个红包 ¥'+rpAmount,'me');
+    // Character replies in chat after delay
+    var delay=(c?c.replyDelay:3)*1000;if(c&&c.replyUnit==='m')delay*=60;
+    setTimeout(function(){addMessage('text','🧧 谢谢宝贝的红包~ '+getRandomCard(),'partner');},delay);
+  }else{
+    $('rp-amount').textContent='¥'+rpAmount;
+    $('rp-sub-msg').textContent=(c?c.name:'梦角')+' 发来的红包';
+    $('rp-reply').textContent=getRandomCard();
+    addMessage('text','🧧 收到'+(c?c.name:'梦角')+'的红包 ¥'+rpAmount,'partner');
+  }
+});
+
+$('rp-close-btn').addEventListener('click',function(){$('redpack-overlay').classList.remove('open');});
+
+// ===== CALL =====
+let callTimer=null, callSeconds=0, callBubbleInterval=null;
+
+function openCall(){
+  var c=getActiveChar();
+  $('call-avatar').textContent=c?c.name.charAt(0):'✦';
+  $('call-name').textContent=c?c.name:'梦角';
+  $('call-status').textContent='呼叫中…';
+  $('call-status').style.display='block';
+  $('call-timer').style.display='none';
+  $('call-bubbles').innerHTML='';
+  $('call-overlay').classList.add('open');
+
+  // Simulate pickup after 2-4 seconds
+  setTimeout(function(){
+    $('call-status').textContent='通话中';
+    callSeconds=0;
+    $('call-timer').style.display='block';
+    updateCallTimer();
+    callTimer=setInterval(updateCallTimer,1000);
+
+    // Show random cards as speech every 3-5 seconds
+    function showCallBubble(){
+      var card=getRandomCard(),b=document.createElement('div');
+      b.className='call-bubble';b.textContent=card;
+      $('call-bubbles').appendChild(b);
+      if($('call-bubbles').children.length>4) $('call-bubbles').firstChild.remove();
+    }
+    showCallBubble();
+    callBubbleInterval=setInterval(showCallBubble,3000+Math.random()*3000);
+  },2000+Math.random()*2000);
+}
+
+function updateCallTimer(){
+  callSeconds++;
+  var m=Math.floor(callSeconds/60),s=callSeconds%60;
+  $('call-timer').textContent=(m<10?'0'+m:m)+':'+(s<10?'0'+s:s);
+}
+
+function hangupCall(){
+  clearInterval(callTimer);clearInterval(callBubbleInterval);
+  $('call-overlay').classList.remove('open');
+  toast('通话结束 ('+$('call-timer').textContent+')');
+}
+
+$('call-hangup-btn').addEventListener('click',hangupCall);
+
+// ===== MOMENTS =====
+let momentsImages=[];
+
+function ensureMoments(){
+  var c=getActiveChar();if(!c)return;
+  if(!c.moments) c.moments=[];
+}
+
+function openMoments(){
+  ensureMoments();
+  $('moments-overlay').classList.add('open');
+  renderMoments();
+}
+
+function renderMoments(){
+  var c=getActiveChar();var posts=c.moments||[];
+  var body=$('moments-body'),html='';
+  if(posts.length===0){
+    html='<div style="text-align:center;color:var(--text3);padding:60px 20px"><div style="font-size:48px;opacity:.3;margin-bottom:12px">🌐</div>还没有动态<br><span style="font-size:12px">发第一条朋友圈吧</span></div>';
+  }
+  for(var i=posts.length-1;i>=0;i--){
+    var p=posts[i],isMe=p.from==='我';
+    html+='<div class="moments-post"><div class="mp-header"><div class="mp-avatar" style="'+(isMe?'':'background:rgba(var(--accent-rgb),.3)')+'">'+p.from.charAt(0)+'</div><div class="mp-name">'+escapeHtml(p.from)+'</div><div class="mp-time">'+new Date(p.time).toLocaleString('zh-CN')+'</div></div><div class="mp-content">'+escapeHtml(p.text||'')+'</div>';
+    if(p.img){html+='<img class="mp-img" src="'+p.img+'" onclick="previewImage(this.src)">';}
+    if(p.comments&&p.comments.length>0){
+      for(var j=0;j<p.comments.length;j++){
+        var cmt=p.comments[j];html+='<div class="moments-comment"><span class="mc-name">'+escapeHtml(cmt.from)+'</span>：'+escapeHtml(cmt.text)+'</div>';
+      }
+    }
+    html+='</div>';
+  }
+  body.innerHTML=html;
+  body.scrollTop=body.scrollHeight;
+}
+
+function postMoment(text,img,from){
+  ensureMoments();var c=getActiveChar();if(!from)from='我';
+  c.moments.push({text:text,img:img||null,from:from,time:Date.now(),comments:[]});
+  var postIdx=c.moments.length-1;
+  // Auto-comment from the other side
+  var delay=(c.replyDelay||3)*1000;if(c.replyUnit==='m')delay*=60;
+  setTimeout(function(){
+    var card=getRandomCard();
+    var commenter=from==='我'?c.name:'我';
+    c.moments[postIdx].comments.push({from:commenter,text:card,time:Date.now()});
+    saveAll();
+    if($('moments-overlay').classList.contains('open')) renderMoments();
+  },delay);
+  saveAll();
+  renderMoments();
+}
+
+// Character auto-posts a moment periodically (triggered when user opens moments)
+function maybeAutoPost(){
+  var c=getActiveChar();if(!c||!c.moments)return;
+  // 30% chance character posts something
+  if(Math.random()<0.3&&c.moments.filter(function(p){return p.from!=='我'}).length<20){
+    postMoment(getRandomCard(),null,c.name);
+  }
+}
+
+$('moments-back-btn').addEventListener('click',function(){$('moments-overlay').classList.remove('open');});
+$('moments-send-btn').addEventListener('click',function(){
+  var text=$('moments-input').value.trim(),img=momentsImages.length>0?momentsImages[0]:null;
+  if(!text&&!img){toast('请输入内容');return;}
+  postMoment(text,img,'我');
+  $('moments-input').value='';momentsImages=[];
+  // Character might reply with a post too
+  var c=getActiveChar();var delay=(c?c.replyDelay:3)*1000;if(c&&c.replyUnit==='m')delay*=60;
+  setTimeout(function(){postMoment(getRandomCard(),null,c.name);},delay+2000);
+});
+$('moments-img-btn').addEventListener('click',function(){$('moments-img-input').click();});
+$('moments-img-input').addEventListener('change',function(e){
+  var file=e.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){momentsImages=[ev.target.result];toast('✓ 图片已选择');};
+  reader.readAsDataURL(file);
+  e.target.value='';
+});
+
 // ===== CHARACTER SWITCHER =====
 function renderCharDropdown(){
   var dd=$('char-dropdown'),html='';
@@ -1050,6 +1327,9 @@ function bindEvents(){
   });
   
   // Settings
+  $('redpack-btn').addEventListener('click',function(){openRedpack('to');});
+  $('call-btn').addEventListener('click',openCall);
+  $('moments-btn').addEventListener('click',function(){openMoments();maybeAutoPost();});
   $('mail-btn').addEventListener('click',openMailbox);
   $('mail-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   $('settings-btn').addEventListener('click',openSettings);
