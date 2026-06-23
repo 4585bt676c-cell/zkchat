@@ -750,11 +750,13 @@ function renderEmojiContent(){
     for(var i=0;i<customEmojis.length;i++){
       html+='<div class="emoji-item emoji-image" style="position:relative" data-emoji="'+customEmojis[i].data+'" data-idx="'+i+'"><img src="'+customEmojis[i].data+'"><span class="emoji-del">✕</span></div>';
     }
-    html+='<div class="emoji-item emoji-add"><input type="file" id="emoji-upload-input" accept="image/*" multiple onchange="uploadEmojis(this.files)">＋</div>';
+    html+='<div class="emoji-item emoji-add"><input type="file" class="emoji-upload-input" accept="image/*" multiple>＋</div>';
     html+='</div>';
     content.innerHTML=html;
     var addBtn=content.querySelector('.emoji-add');
-    if(addBtn) addBtn.addEventListener('click',function(){content.querySelector('#emoji-upload-input').click();});
+    var uploadInput=content.querySelector('.emoji-upload-input');
+    if(addBtn) addBtn.addEventListener('click',function(){uploadInput.click();});
+    if(uploadInput) uploadInput.addEventListener('change',function(){uploadEmojis(this.files);});
   }
 }
 
