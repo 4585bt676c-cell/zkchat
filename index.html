@@ -435,6 +435,7 @@ function init(){
   applyColor();
   updateHeader();
   updateMailBadge();
+  startProactiveEvents();
 }
 
 function loadAll(){
@@ -1006,6 +1007,57 @@ function updateMailBadge(){
   btn.textContent=n>0?'✉️('+n+')':'✉️';
 }
 
+// ===== PROACTIVE EVENTS =====
+let proactiveTimer=null;
+function startProactiveEvents(){
+  clearInterval(proactiveTimer);
+  proactiveTimer=setInterval(function(){
+    var c=getActiveChar();if(!c)return;
+    var roll=Math.random();
+    if(roll<0.15){
+      var amounts=['0.52','1.68','5.20','6.66','8.88','9.99','13.14','52.00'];
+      var amount=amounts[Math.floor(Math.random()*amounts.length)];
+      c.chatHistory.push({id:Date.now(),type:'text',content:'🧧 '+(c.name)+' 给你发了一个红包 ¥'+amount, sender:'partner',time:Date.now()});
+      saveAll();renderChat();
+      $('redpack-btn').textContent='🧧🔴';toast('🧧 '+(c.name)+' 给你发了一个红包！');
+      setTimeout(function(){$('redpack-btn').textContent='🧧';},30000);
+    }else if(roll<0.3){
+      ensureMoments();c.moments.push({text:getRandomCard(),img:null,from:c.name,time:Date.now(),comments:[]});
+      saveAll();$('moments-btn').textContent='🌐🔴';toast('🌐 '+(c.name)+' 发了一条朋友圈');
+      setTimeout(function(){$('moments-btn').textContent='🌐';},30000);
+    }else if(roll<0.4){
+      $('call-btn').textContent='📞🔴';toast('📞 '+(c.name)+' 给你打电话…');
+      setTimeout(function(){$('call-btn').textContent='📞';},30000);
+    }
+  },45000+Math.random()*45000);
+}
+
+document.addEventListener('visibilitychange',function(){if(!document.hidden)startProactiveEvents();});
+
+function incomingCall(){
+  var c=getActiveChar();
+  $('call-avatar').textContent=c?c.name.charAt(0):'✦';
+  $('call-name').textContent=c?c.name:'梦角';
+  $('call-status').textContent='来电…';
+  $('call-status').style.display='block';
+  $('call-timer').style.display='none';
+  $('call-bubbles').innerHTML='';
+  $('call-overlay').classList.add('open');
+  setTimeout(function(){
+    $('call-status').textContent='通话中';callSeconds=0;
+    $('call-timer').style.display='block';updateCallTimer();
+    callTimer=setInterval(updateCallTimer,1000);
+    function showCallBubble(){
+      var card=getRandomCard(),b=document.createElement('div');
+      b.className='call-bubble';b.textContent=card;
+      $('call-bubbles').appendChild(b);
+      if($('call-bubbles').children.length>4)$('call-bubbles').firstChild.remove();
+    }
+    showCallBubble();
+    callBubbleInterval=setInterval(showCallBubble,3000+Math.random()*3000);
+  },3000);
+}
+
 // ===== RED PACKET =====
 let rpAmount='', rpDirection='to';
 
@@ -1328,7 +1380,11 @@ function bindEvents(){
   
   // Settings
   $('redpack-btn').addEventListener('click',function(){openRedpack('to');});
-  $('call-btn').addEventListener('click',openCall);
+  $('call-btn').addEventListener('click',function(){
+    if($('call-btn').textContent.includes('🔴')){
+      incomingCall();$('call-btn').textContent='📞';
+    }else{openCall();}
+  });
   $('moments-btn').addEventListener('click',function(){openMoments();maybeAutoPost();});
   $('mail-btn').addEventListener('click',openMailbox);
   $('mail-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
