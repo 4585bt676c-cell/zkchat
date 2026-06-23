@@ -1079,6 +1079,8 @@ function startProactiveEvents(){
 
 document.addEventListener('visibilitychange',function(){if(!document.hidden)startProactiveEvents();});
 
+let incomingCallTimer=null;
+
 function incomingCall(){
   var c=getActiveChar();
   $('call-avatar').textContent=c?c.name.charAt(0):'✦';
@@ -1088,19 +1090,50 @@ function incomingCall(){
   $('call-timer').style.display='none';
   $('call-bubbles').innerHTML='';
   $('call-overlay').classList.add('open');
-  setTimeout(function(){
-    $('call-status').textContent='通话中';callSeconds=0;
-    $('call-timer').style.display='block';updateCallTimer();
-    callTimer=setInterval(updateCallTimer,1000);
-    function showCallBubble(){
-      var card=getRandomCard(),b=document.createElement('div');
-      b.className='call-bubble';b.textContent=card;
-      $('call-bubbles').appendChild(b);
-      if($('call-bubbles').children.length>4)$('call-bubbles').firstChild.remove();
-    }
-    showCallBubble();
-    callBubbleInterval=setInterval(showCallBubble,3000+Math.random()*3000);
-  },3000);
+  $('call-minimize-btn').style.display='none';
+  $('call-hangup-btn').style.display='none';
+  var ca=document.getElementById('call-answer-btn');
+  if(!ca){
+    ca=document.createElement('button');ca.className='call-btn call-pickup';ca.id='call-answer-btn';ca.textContent='接听';
+    var cd=document.createElement('button');cd.className='call-btn call-hangup';cd.id='call-decline-btn';cd.textContent='挂断';
+    document.querySelector('#call-overlay .call-actions').appendChild(ca);
+    document.querySelector('#call-overlay .call-actions').appendChild(cd);
+  }
+  ca.style.display='flex';document.getElementById('call-decline-btn').style.display='flex';
+  ca.onclick=function(){answerCall();};
+  document.getElementById('call-decline-btn').onclick=function(){declineCall();};
+  clearTimeout(incomingCallTimer);
+  incomingCallTimer=setTimeout(function(){declineCall();},30000);
+}
+
+function answerCall(){
+  clearTimeout(incomingCallTimer);
+  var ca=document.getElementById('call-answer-btn'),cd=document.getElementById('call-decline-btn');
+  if(ca)ca.style.display='none';if(cd)cd.style.display='none';
+  $('call-minimize-btn').style.display='flex';$('call-hangup-btn').style.display='flex';
+  $('call-status').textContent='通话中';callSeconds=0;
+  $('call-timer').style.display='block';updateCallTimer();
+  callTimer=setInterval(updateCallTimer,1000);
+  function showCallBubble(){
+    var card=getRandomCard(),b=document.createElement('div');
+    b.className='call-bubble';b.textContent=card;
+    $('call-bubbles').appendChild(b);
+    if($('call-bubbles').children.length>4)$('call-bubbles').firstChild.remove();
+  }
+  showCallBubble();
+  callBubbleInterval=setInterval(showCallBubble,3000+Math.random()*3000);
+}
+
+function declineCall(){
+  clearTimeout(incomingCallTimer);
+  var ca=document.getElementById('call-answer-btn'),cd=document.getElementById('call-decline-btn');
+  if(ca)ca.style.display='none';if(cd)cd.style.display='none';
+  $('call-minimize-btn').style.display='flex';$('call-hangup-btn').style.display='flex';
+  $('call-overlay').classList.remove('open');
+  var c=getActiveChar();if(c){
+    c.chatHistory.push({id:Date.now(),type:'text',content:'📞 未接通话 ('+(c.name)+')',sender:'system',time:Date.now()});
+    saveAll();renderChat();
+  }
 }
 
 // ===== RED PACKET =====
