@@ -499,10 +499,14 @@ function updateHeader(){
 }
 
 function saveAll(){
-  localStorage.setItem('zk-characters',JSON.stringify(characters));
-  localStorage.setItem('zk-active-char',JSON.stringify(activeCharId));
-  localStorage.setItem('zk-chat-settings',JSON.stringify(settings));
-  localStorage.setItem('zk-emoji-library',JSON.stringify(customEmojis));
+  try{
+    var ch=JSON.stringify(characters);
+    if(ch.length>4000000){toast('⚠️ 存储空间不足，请清理聊天记录或表情包');return;}
+    localStorage.setItem('zk-characters',ch);
+    localStorage.setItem('zk-active-char',JSON.stringify(activeCharId));
+    localStorage.setItem('zk-chat-settings',JSON.stringify(settings));
+    localStorage.setItem('zk-emoji-library',JSON.stringify(customEmojis));
+  }catch(e){toast('⚠️ 保存失败，请清理数据');}
 }
 
 function generateStars(){
@@ -706,12 +710,13 @@ function triggerReply(){
 
 // ===== SEND =====
 function sendText(){
-  var input=$('msg-input'),text=input.value.trim();
-  if(!text) return;
-  addMessage('text',text,'me');
-  input.value='';
-  input.style.height='auto';
-  triggerReply();
+  try{
+    var input=$('msg-input'),text=input.value.trim();
+    if(!text) return;
+    addMessage('text',text,'me');
+    input.value='';input.style.height='auto';
+    triggerReply();
+  }catch(e){toast('发送失败: '+e.message);}
 }
 
 function sendImage(file){
@@ -749,7 +754,7 @@ function renderEmojiContent(){
   }else{
     var html='<div class="emoji-grid">';
     for(var i=0;i<customEmojis.length;i++){
-      html+='<div class="emoji-item emoji-image" style="position:relative" data-emoji="'+customEmojis[i].data+'" data-idx="'+i+'"><img src="'+customEmojis[i].data+'"><span class="emoji-del">✕</span></div>';
+      html+='<div class="emoji-item emoji-image" style="position:relative" data-eidx="'+i+'"><img src="'+customEmojis[i].data+'"><span class="emoji-del">✕</span></div>';
     }
     html+='<div class="emoji-item emoji-add" id="emoji-add-btn">＋</div>';
     html+='</div>';
@@ -1304,12 +1309,18 @@ function renderMoments(){
   body.innerHTML=html;
   // Bind comment send buttons
   body.querySelectorAll('.mp-comment-send').forEach(function(btn){btn.addEventListener('click',function(){
+    var cc=getActiveChar();if(!cc)return;
     var idx=parseInt(this.dataset.pidx),input=this.parentElement.querySelector('.mp-comment-input');
-    var text=input.value.trim();if(!text)return;
-    c.moments[idx].comments.push({from:'我',text:text,time:Date.now()});
-    // Character auto-reply to comment
-    setTimeout(function(){c.moments[idx].comments.push({from:c.name,text:getRandomCards(1,2),time:Date.now()});saveAll();renderMoments();},2000+Math.random()*3000);
-    saveAll();renderMoments();
+    var text=input.value.trim();if(!text||!cc.moments[idx])return;
+    cc.moments[idx].comments.push({from:'我',text:text,time:Date.now()});
+    saveAll();
+    var selfIdx=idx,selfName=cc.name;
+    setTimeout(function(){
+      var c2=getActiveChar();if(!c2||!c2.moments[selfIdx])return;
+      c2.moments[selfIdx].comments.push({from:selfName,text:getRandomCards(1,2),time:Date.now()});
+      saveAll();if($('moments-overlay').classList.contains('open'))renderMoments();
+    },2000+Math.random()*3000);
+    renderMoments();
   });});
   // Enter key on comment input
   body.querySelectorAll('.mp-comment-input').forEach(function(inp){inp.addEventListener('keydown',function(e){
@@ -1450,19 +1461,30 @@ function bindEvents(){
       renderEmojiContent();
       return;
     }
-    // Handle emoji item click (including custom images)
+    // Handle emoji item click
     var item=e.target.closest('.emoji-item');
-    if(item&&item.dataset.emoji){
-      sendEmoji(item.dataset.emoji);
-      return;
+    if(item){
+      // Custom image emoji (by index)
+      if(item.dataset.eidx!==undefined){
+        var ei=parseInt(item.dataset.eidx);
+        if(customEmojis[ei]) sendEmoji(customEmojis[ei].data);
+        return;
+      }
+      // Yanwenzi text emoji
+      if(item.dataset.emoji){
+        sendEmoji(item.dataset.emoji);
+        return;
+      }
+      // Add button - handled by its own listener
+      if(item.classList.contains('emoji-add')) return;
     }
     // Handle delete emoji
     var del=e.target.closest('.emoji-del');
     if(del){
       e.stopPropagation();
       var parent=del.closest('.emoji-item');
-      if(parent&&parent.dataset.idx!==undefined){
-        deleteEmoji(parseInt(parent.dataset.idx));
+      if(parent&&parent.dataset.eidx!==undefined){
+        deleteEmoji(parseInt(parent.dataset.eidx));
       }
       return;
     }
@@ -1573,6 +1595,9 @@ function bindEvents(){
     if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();$('msg-input').focus();}
   });
 }
+
+// Error reporter
+window.onerror=function(msg,url,line){toast('⚠️ 错误: '+msg+' (行'+line+')');return false;};
 
 // ===== START =====
 init();
