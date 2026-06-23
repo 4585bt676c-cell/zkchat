@@ -744,7 +744,7 @@ function renderEmojiContent(){
     for(var i=0;i<customEmojis.length;i++){
       html+='<div class="emoji-item emoji-image" style="position:relative" data-emoji="'+customEmojis[i].data+'" data-idx="'+i+'"><img src="'+customEmojis[i].data+'"><span class="emoji-del">✕</span></div>';
     }
-    html+='<div class="emoji-item emoji-add"><input type="file" id="emoji-upload-input" accept="image/*" onchange="uploadEmoji(this.files[0])">＋</div>';
+    html+='<div class="emoji-item emoji-add"><input type="file" id="emoji-upload-input" accept="image/*" multiple onchange="uploadEmojis(this.files)">＋</div>';
     html+='</div>';
     content.innerHTML=html;
     var addBtn=content.querySelector('.emoji-add');
@@ -752,16 +752,24 @@ function renderEmojiContent(){
   }
 }
 
-function uploadEmoji(file){
-  if(!file) return;
-  var reader=new FileReader();
-  reader.onload=function(e){
-    customEmojis.push({id:Date.now(),data:e.target.result,name:file.name});
-    localStorage.setItem('zk-emoji-library',JSON.stringify(customEmojis));
-    renderEmojiContent();
-    toast('✓ 表情已添加');
-  };
-  reader.readAsDataURL(file);
+function uploadEmojis(files){
+  if(!files||files.length===0) return;
+  var total=files.length,loaded=0;
+  for(var i=0;i<files.length;i++){
+    (function(file){
+      var reader=new FileReader();
+      reader.onload=function(e){
+        customEmojis.push({id:Date.now()+loaded,data:e.target.result,name:file.name});
+        loaded++;
+        if(loaded===total){
+          localStorage.setItem('zk-emoji-library',JSON.stringify(customEmojis));
+          renderEmojiContent();
+          toast('✓ 已添加 '+total+' 个表情');
+        }
+      };
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
 }
 
 function deleteEmoji(idx){
