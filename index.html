@@ -1291,16 +1291,30 @@ function renderMoments(){
   }
   for(var i=posts.length-1;i>=0;i--){
     var p=posts[i],isMe=p.from==='我';
-    html+='<div class="moments-post"><div class="mp-header"><div class="mp-avatar" style="'+(isMe?'':'background:rgba(var(--accent-rgb),.3)')+'">'+p.from.charAt(0)+'</div><div class="mp-name">'+escapeHtml(p.from)+'</div><div class="mp-time">'+new Date(p.time).toLocaleString('zh-CN')+'</div></div><div class="mp-content">'+escapeHtml(p.text||'')+'</div>';
+    html+='<div class="moments-post" data-pidx="'+i+'"><div class="mp-header"><div class="mp-avatar" style="'+(isMe?'':'background:rgba(var(--accent-rgb),.3)')+'">'+p.from.charAt(0)+'</div><div class="mp-name">'+escapeHtml(p.from)+'</div><div class="mp-time">'+new Date(p.time).toLocaleString('zh-CN')+'</div></div><div class="mp-content">'+escapeHtml(p.text||'')+'</div>';
     if(p.img){html+='<img class="mp-img" src="'+p.img+'" onclick="previewImage(this.src)">';}
     if(p.comments&&p.comments.length>0){
       for(var j=0;j<p.comments.length;j++){
         var cmt=p.comments[j];html+='<div class="moments-comment"><span class="mc-name">'+escapeHtml(cmt.from)+'</span>：'+escapeHtml(cmt.text)+'</div>';
       }
     }
+    html+='<div class="moments-comment-box" style="display:flex;gap:6px;margin-top:8px"><input class="mp-comment-input" placeholder="写评论…" style="flex:1;padding:6px 10px;border-radius:14px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none"><button class="btn btn-sm mp-comment-send" data-pidx="'+i+'">发送</button></div>';
     html+='</div>';
   }
   body.innerHTML=html;
+  // Bind comment send buttons
+  body.querySelectorAll('.mp-comment-send').forEach(function(btn){btn.addEventListener('click',function(){
+    var idx=parseInt(this.dataset.pidx),input=this.parentElement.querySelector('.mp-comment-input');
+    var text=input.value.trim();if(!text)return;
+    c.moments[idx].comments.push({from:'我',text:text,time:Date.now()});
+    // Character auto-reply to comment
+    setTimeout(function(){c.moments[idx].comments.push({from:c.name,text:getRandomCards(1,2),time:Date.now()});saveAll();renderMoments();},2000+Math.random()*3000);
+    saveAll();renderMoments();
+  });});
+  // Enter key on comment input
+  body.querySelectorAll('.mp-comment-input').forEach(function(inp){inp.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){var btn=this.parentElement.querySelector('.mp-comment-send');if(btn)btn.click();}
+  });});
   body.scrollTop=body.scrollHeight;
 }
 
@@ -1308,45 +1322,48 @@ function postMoment(text,img,from){
   ensureMoments();var c=getActiveChar();if(!from)from='我';
   c.moments.push({text:text,img:img||null,from:from,time:Date.now(),comments:[]});
   var postIdx=c.moments.length-1;
-  // Auto-comment 1-2 hours later with combo cards
-  var delay=3600000+Math.random()*3600000; // 1-2 hours in ms
+  var delay=3600000+Math.random()*3600000;
   setTimeout(function(){
     var card=getRandomCards(2,5);
     var commenter=from==='我'?c.name:'我';
     c.moments[postIdx].comments.push({from:commenter,text:card,time:Date.now()});
-    saveAll();
-    if($('moments-overlay').classList.contains('open')) renderMoments();
+    saveAll();if($('moments-overlay').classList.contains('open')) renderMoments();
   },delay);
-  saveAll();
-  renderMoments();
+  saveAll();renderMoments();
 }
 
-// Character auto-posts ~1-2 days apart (triggered when user opens moments)
 function maybeAutoPost(){
   var c=getActiveChar();if(!c||!c.moments)return;
   var lastPost=0;
   for(var i=c.moments.length-1;i>=0;i--){if(c.moments[i].from!=='我'){lastPost=c.moments[i].time;break;}}
   var dayMs=86400000,elapsed=Date.now()-lastPost;
-  if(elapsed>dayMs+Math.random()*dayMs){ // 1-2 days
-    postMoment(getRandomCards(1,3),null,c.name);
+  if(elapsed>dayMs+Math.random()*dayMs){
+    // Character sometimes posts with a random emoji image
+    var img=null;
+    if(customEmojis.length>0&&Math.random()<0.4){img=customEmojis[Math.floor(Math.random()*customEmojis.length)].data;}
+    postMoment(getRandomCards(1,3),img,c.name);
   }
 }
 
-$('moments-back-btn').addEventListener('click',function(){$('moments-overlay').classList.remove('open');});
+$('moments-back-btn').addEventListener('click',function(){$('moments-overlay').classList.remove('open');updatePhotoPreview();});
 $('moments-send-btn').addEventListener('click',function(){
   var text=$('moments-input').value.trim(),img=momentsImages.length>0?momentsImages[0]:null;
   if(!text&&!img){toast('请输入内容');return;}
   postMoment(text,img,'我');
-  $('moments-input').value='';momentsImages=[];
-  // Character might reply with a post 1-2 hours later
+  $('moments-input').value='';momentsImages=[];updatePhotoPreview();
   var c=getActiveChar();
   setTimeout(function(){postMoment(getRandomCards(2,4),null,c.name);},3600000+Math.random()*3600000);
 });
 $('moments-img-btn').addEventListener('click',function(){$('moments-img-input').click();});
+function updatePhotoPreview(){
+  var btn=$('moments-img-btn');
+  if(momentsImages.length>0){btn.textContent='🖼️✓';btn.style.borderColor='rgba(var(--accent-rgb),.5)';btn.style.color='var(--accent)';}
+  else{btn.textContent='🖼️';btn.style.borderColor='';btn.style.color='';}
+}
 $('moments-img-input').addEventListener('change',function(e){
   var file=e.target.files[0];if(!file)return;
   var reader=new FileReader();
-  reader.onload=function(ev){momentsImages=[ev.target.result];toast('✓ 图片已选择');};
+  reader.onload=function(ev){momentsImages=[ev.target.result];updatePhotoPreview();toast('✓ 图片已选择');};
   reader.readAsDataURL(file);
   e.target.value='';
 });
