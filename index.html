@@ -693,7 +693,13 @@ function triggerReply(){
   showTyping();
   replyTimer=setTimeout(function(){
     hideTyping();
-    addMessage('text',getRandomCard(),'partner');
+    // 30% chance to send a custom emoji instead of text
+    if(customEmojis.length>0&&Math.random()<0.3){
+      var emoji=customEmojis[Math.floor(Math.random()*customEmojis.length)];
+      addMessage('emoji',emoji.data,'partner');
+    }else{
+      addMessage('text',getRandomCard(),'partner');
+    }
   },delay);
 }
 
