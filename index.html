@@ -402,6 +402,7 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--acce
         <div class="emoji-tab" data-tab="custom">我的表情</div>
       </div>
       <div class="emoji-content" id="emoji-content"></div>
+      <input type="file" id="emoji-batch-input" accept="image/*" multiple style="display:none">
     </div>
 
     <!-- Input bar -->
@@ -750,13 +751,11 @@ function renderEmojiContent(){
     for(var i=0;i<customEmojis.length;i++){
       html+='<div class="emoji-item emoji-image" style="position:relative" data-emoji="'+customEmojis[i].data+'" data-idx="'+i+'"><img src="'+customEmojis[i].data+'"><span class="emoji-del">✕</span></div>';
     }
-    html+='<div class="emoji-item emoji-add"><input type="file" class="emoji-upload-input" accept="image/*" multiple>＋</div>';
+    html+='<div class="emoji-item emoji-add" id="emoji-add-btn">＋</div>';
     html+='</div>';
     content.innerHTML=html;
-    var addBtn=content.querySelector('.emoji-add');
-    var uploadInput=content.querySelector('.emoji-upload-input');
-    if(addBtn) addBtn.addEventListener('click',function(){uploadInput.click();});
-    if(uploadInput) uploadInput.addEventListener('change',function(){uploadEmojis(this.files);});
+    var addBtn=$('emoji-add-btn');
+    if(addBtn) addBtn.addEventListener('click',function(){$('emoji-batch-input').click();});
   }
 }
 
@@ -1426,6 +1425,7 @@ function bindEvents(){
   
   // Emoji panel
   $('emoji-btn').addEventListener('click',toggleEmojiPanel);
+  $('emoji-batch-input').addEventListener('change',function(){uploadEmojis(this.files);});
   $('emoji-panel').addEventListener('click',function(e){
     var tab=e.target.closest('.emoji-tab');
     if(tab){
