@@ -1180,14 +1180,18 @@ $('rp-send-btn').addEventListener('click',function(){
   if(rpDirection==='to'){
     $('rp-amount').textContent='¥'+rpAmount;
     $('rp-sub-msg').textContent='已发给 '+(c?c.name:'梦角');
-    // Character auto-reply
-    setTimeout(function(){
-      $('rp-reply').textContent=getRandomCard();
-    },800);
     addMessage('text','🧧 发给'+(c?c.name:'梦角')+'一个红包 ¥'+rpAmount,'me');
-    // Character replies in chat after delay
+    // Character decides: 80% accept, 20% reject after a delay
     var delay=(c?c.replyDelay:3)*1000;if(c&&c.replyUnit==='m')delay*=60;
-    setTimeout(function(){addMessage('text','🧧 谢谢宝贝的红包~ '+getRandomCard(),'partner');},delay);
+    setTimeout(function(){
+      if(Math.random()<0.8){
+        $('rp-reply').textContent='收下了 ❤️ '+getRandomCard();
+        addMessage('text','🧧 已收下你的红包~ '+getRandomCard(),'partner');
+      }else{
+        $('rp-reply').textContent='退还了 💔 '+getRandomCard();
+        addMessage('text','🧧 红包退还给你了… '+getRandomCard(),'partner');
+      }
+    },delay);
   }else{
     $('rp-amount').textContent='¥'+rpAmount;
     $('rp-sub-msg').textContent=(c?c.name:'梦角')+' 发来的红包';
