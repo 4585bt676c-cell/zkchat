@@ -1130,7 +1130,7 @@ function startProactiveEvents(){
     var c=getActiveChar();if(!c)return;
     var roll=Math.random();
     if(roll<0.15){
-      var amounts=['0.52','1.68','5.20','6.66','8.88','9.99','13.14','52.00'];
+      var amounts=['520','888','999','1314','8888','9999'];
       var amount=amounts[Math.floor(Math.random()*amounts.length)];
       c.chatHistory.push({id:Date.now(),type:'redpack',content:amount,sender:'partner',time:Date.now(),status:'pending'});
       saveAll();renderChat();
