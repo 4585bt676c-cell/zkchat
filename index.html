@@ -1,0 +1,1619 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark" data-color-theme="gold">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>jinnyore的小花园</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+*::-webkit-scrollbar{display:none;width:0}
+html{max-width:100vw}
+body{font-family:"Noto Serif SC","STSong","Songti SC","SimSun",system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow:hidden;transition:background .5s,color .5s}
+::selection{background:rgba(var(--accent-rgb),.25);color:var(--text)}
+
+:root{
+  --accent:#c5a47e;--accent-rgb:197,164,126;--accent-dark:#b8936a;
+  --bg:#0a0a14;--bg2:#12121e;--bg3:#1a1a2e;
+  --text:#e0ddd5;--text2:#8c8c8c;--text3:#5c5c6e;
+  --border:rgba(255,255,255,.05);--border2:rgba(255,255,255,.1);
+  --card-bg:rgba(255,255,255,.025);--card-hover:rgba(255,255,255,.06);
+  --msg-me-bg:rgba(var(--accent-rgb),.7);--msg-me-text:#fff;
+  --msg-partner-bg:rgba(255,255,255,.05);--msg-partner-text:var(--text);
+  --shadow:0 8px 32px rgba(0,0,0,.4);--radius:16px;--radius-sm:10px;
+  --font-size:15px;--transition:all .25s cubic-bezier(.25,.8,.25,1);
+}
+html[data-theme="light"]{
+  --bg:#f0ede8;--bg2:#fafafa;--bg3:#e8e5e0;
+  --text:#2a2a2a;--text2:#787878;--text3:#b0b0b0;
+  --border:rgba(0,0,0,.06);--border2:rgba(0,0,0,.1);
+  --card-bg:rgba(0,0,0,.02);--card-hover:rgba(0,0,0,.04);
+  --msg-me-bg:rgba(var(--accent-rgb),.8);--msg-me-text:#fff;
+  --msg-partner-bg:#fff;--msg-partner-text:var(--text);
+  --shadow:0 4px 16px rgba(0,0,0,.06);
+}
+html[data-color-theme="gold"]{--accent:#c5a47e;--accent-rgb:197,164,126;--accent-dark:#b8936a}
+html[data-color-theme="blue"]{--accent:#7FA6CD;--accent-rgb:127,166,205;--accent-dark:#6b91b8}
+html[data-color-theme="purple"]{--accent:#BB9EC7;--accent-rgb:187,158,199;--accent-dark:#a889b5}
+html[data-color-theme="pink"]{--accent:#F4A6B3;--accent-rgb:244,166,179;--accent-dark:#e892a1}
+html[data-color-theme="mono"]{--accent:#888;--accent-rgb:136,136,136;--accent-dark:#aaa}
+html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--accent-dark:#e67a6b}
+
+.stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.stars span{position:absolute;border-radius:50%;background:#fff;animation:twinkle 3s infinite alternate}
+@keyframes twinkle{0%{opacity:.15;transform:scale(1)}100%{opacity:.85;transform:scale(1.3)}}
+.glow-1,.glow-2{position:fixed;pointer-events:none;z-index:0;border-radius:50%}
+.glow-1{width:600px;height:600px;background:radial-gradient(circle,rgba(var(--accent-rgb),.08) 0%,transparent 65%);top:10%;left:50%;transform:translateX(-50%)}
+.glow-2{width:400px;height:400px;background:radial-gradient(circle,rgba(var(--accent-rgb),.05) 0%,transparent 65%);bottom:10%;right:5%}
+
+/* ===== LAYOUT ===== */
+.app{position:relative;z-index:1;display:flex;height:100dvh;overflow:hidden}
+.sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .3s,transform .3s;z-index:20;overflow:hidden}
+.sidebar.collapsed{width:0;border-right:none}
+.sidebar-header{padding:14px 16px;font-size:13px;font-weight:600;letter-spacing:1px;color:var(--accent);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sidebar-collapse-btn{width:24px;height:24px;border-radius:50%;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:10px;display:flex;align-items:center;justify-content:center;transition:var(--transition);margin-left:auto}
+.sidebar-collapse-btn:hover{border-color:rgba(var(--accent-rgb),.4);color:var(--accent)}
+.sidebar-expand-btn{position:fixed;left:0;top:50%;transform:translateY(-50%);width:22px;height:60px;border-radius:0 8px 8px 0;border:1px solid var(--border2);border-left:none;background:var(--bg2);color:var(--text3);cursor:pointer;font-size:10px;display:none;z-index:25;transition:var(--transition)}
+.sidebar-expand-btn:hover{color:var(--accent);border-color:rgba(var(--accent-rgb),.4);background:var(--bg3)}
+.sidebar-expand-btn.show{display:flex;align-items:center;justify-content:center}
+.sidebar-search{padding:8px 12px}
+.sidebar-search input{width:100%;padding:7px 12px;border-radius:50px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none}
+.sidebar-search input:focus{border-color:rgba(var(--accent-rgb),.5)}
+.sidebar-list{flex:1;overflow-y:auto;padding:6px 8px}
+.sidebar-item{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text2);transition:var(--transition);border:1px solid transparent}
+.sidebar-item:hover{background:var(--card-hover);color:var(--text)}
+.sidebar-item.active{background:rgba(var(--accent-rgb),.1);color:var(--accent);border-color:rgba(var(--accent-rgb),.15)}
+.sidebar-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sidebar-count{margin-left:auto;font-size:10px;color:var(--text3)}
+.sidebar-divider{height:1px;background:var(--border);margin:4px 10px}
+
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.header{display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--bg2);border-bottom:1px solid var(--border);z-index:10;flex-shrink:0;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.header-avatar{width:38px;height:38px;border-radius:50%;background:rgba(var(--accent-rgb),.2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.header-info{flex:1;min-width:0;cursor:pointer;position:relative}
+.header-name{font-size:15px;font-weight:600;color:var(--text)}
+.header-name::after{content:' ▾';font-size:10px;color:var(--text3)}
+.header-status{font-size:11px;color:var(--accent);display:flex;align-items:center;gap:4px}
+.header-status::before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.header-actions{display:flex;gap:4px}
+.header-actions button{width:34px;height:34px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:14px;transition:var(--transition);display:flex;align-items:center;justify-content:center}
+.header-actions button:hover{border-color:rgba(var(--accent-rgb),.4);color:var(--accent)}
+.sidebar-toggle{display:none}
+@media(max-width:768px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0);box-shadow:4px 0 20px rgba(0,0,0,.5)}
+  .sidebar-toggle{display:flex}
+}
+
+.chat-area{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px}
+.msg-row{display:flex;gap:8px;max-width:85%;animation:msgIn .3s ease}
+.msg-row.me{align-self:flex-end;flex-direction:row-reverse}
+.msg-row.partner{align-self:flex-start}
+@keyframes msgIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.msg-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px}
+.msg-row.me .msg-avatar{background:rgba(var(--accent-rgb),.3)}
+.msg-row.partner .msg-avatar{background:rgba(255,255,255,.1)}
+.msg-bubble{max-width:100%;padding:10px 14px;border-radius:18px;font-size:var(--font-size);line-height:1.6;word-break:break-word;position:relative}
+.msg-row.me .msg-bubble{background:var(--msg-me-bg);color:var(--msg-me-text);border-bottom-right-radius:6px}
+.msg-row.partner .msg-bubble{background:var(--msg-partner-bg);color:var(--msg-partner-text);border:1px solid var(--border);border-bottom-left-radius:6px}
+.msg-row .msg-time{font-size:10px;color:var(--text3);margin-top:2px;padding:0 4px}
+.msg-row.me .msg-time{text-align:right}
+.msg-img{max-width:200px;max-height:200px;border-radius:12px;cursor:pointer;transition:var(--transition)}
+.msg-img:hover{transform:scale(1.02)}
+.msg-img-wrap{position:relative}
+.msg-emoji-large{font-size:48px;line-height:1}
+
+.typing-indicator{display:flex;align-items:center;gap:4px;padding:8px 16px;color:var(--text3);font-size:12px;align-self:flex-start}
+.typing-dots{display:flex;gap:3px}
+.typing-dots span{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:typingBounce 1.4s infinite ease-in-out}
+.typing-dots span:nth-child(2){animation-delay:.2s}
+.typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,80%,100%{transform:scale(1);opacity:.3}40%{transform:scale(1.3);opacity:1}}
+
+/* Input bar */
+.input-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;z-index:10}
+.input-bar button{width:38px;height:38px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:16px;transition:var(--transition);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.input-bar button:hover{border-color:rgba(var(--accent-rgb),.4);color:var(--accent)}
+.input-bar button.active{background:rgba(var(--accent-rgb),.2);border-color:rgba(var(--accent-rgb),.4);color:var(--accent)}
+.input-wrap{flex:1;position:relative}
+.input-wrap textarea{width:100%;padding:9px 14px;border-radius:24px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;font-family:inherit;outline:none;resize:none;max-height:100px;line-height:1.5;transition:var(--transition)}
+.input-wrap textarea:focus{border-color:rgba(var(--accent-rgb),.5);box-shadow:0 0 0 3px rgba(var(--accent-rgb),.08)}
+.send-btn{width:38px!important;height:38px!important;background:rgba(var(--accent-rgb),.8)!important;color:#fff!important;border:none!important;font-size:16px!important}
+.send-btn:hover{background:rgba(var(--accent-rgb),1)!important}
+
+/* Emoji panel */
+.emoji-panel{position:absolute;bottom:60px;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius) var(--radius) 0 0;z-index:30;display:none;max-height:320px;overflow:hidden;flex-direction:column;box-shadow:0 -4px 20px rgba(0,0,0,.3)}
+.emoji-panel.open{display:flex}
+.emoji-tabs{display:flex;border-bottom:1px solid var(--border)}
+.emoji-tab{flex:1;padding:10px;text-align:center;font-size:13px;color:var(--text2);cursor:pointer;transition:var(--transition);border-bottom:2px solid transparent}
+.emoji-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.emoji-content{flex:1;overflow-y:auto;padding:12px}
+.emoji-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:8px}
+.emoji-item{padding:8px 4px;border-radius:8px;cursor:pointer;text-align:center;font-size:20px;transition:var(--transition);border:1px solid transparent}
+.emoji-item:hover{background:var(--card-hover);border-color:var(--border2)}
+.emoji-item.emoji-image{padding:4px}
+.emoji-item img{width:56px;height:56px;object-fit:contain;border-radius:6px}
+.emoji-item .emoji-del{position:absolute;top:0;right:0;width:18px;height:18px;border-radius:50%;background:rgba(255,0,0,.7);color:#fff;font-size:10px;display:none;align-items:center;justify-content:center;cursor:pointer}
+.emoji-item:hover .emoji-del{display:flex}
+.emoji-add{display:flex;align-items:center;justify-content:center;border:1px dashed var(--border2);color:var(--text3);font-size:24px;min-height:56px}
+.emoji-add:hover{border-color:rgba(var(--accent-rgb),.4);color:var(--accent)}
+.emoji-add input{display:none}
+
+/* Image preview */
+.img-preview-overlay{position:fixed;inset:0;z-index:999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.img-preview-overlay img{max-width:90vw;max-height:90vh;border-radius:12px}
+
+/* Overlay panels */
+.overlay{position:fixed;inset:0;z-index:998;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .3s}
+.overlay.open{opacity:1;pointer-events:all}
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:24px;width:min(400px,90vw);max-height:80vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.5)}
+.panel h3{font-size:17px;margin-bottom:16px;color:var(--text)}
+.panel label{display:block;font-size:12px;color:var(--text3);margin-bottom:4px;margin-top:12px}
+.panel input[type="text"],.panel select,.panel input[type="number"]{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;font-family:inherit;outline:none;margin-bottom:8px}
+.panel input:focus,.panel select:focus{border-color:rgba(var(--accent-rgb),.5)}
+.panel .btn-row{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;flex-wrap:wrap}
+.delay-row{display:flex;gap:8px;align-items:center}
+.delay-row input{width:80px!important;margin-bottom:0!important}
+.delay-row select{width:70px!important;margin-bottom:0!important}
+
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:1000;padding:10px 24px;border-radius:50px;background:rgba(var(--accent-rgb),.9);color:#fff;font-size:14px;font-family:inherit;pointer-events:none;opacity:0;transition:opacity .3s,transform .3s;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(4px)}
+
+.btn{padding:7px 16px;border-radius:50px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:13px;cursor:pointer;font-family:inherit;transition:var(--transition);white-space:nowrap}
+.btn:hover{border-color:rgba(var(--accent-rgb),.4);color:var(--accent)}
+.btn-accent{background:rgba(var(--accent-rgb),.8);color:#fff;border:none}
+.btn-accent:hover{background:rgba(var(--accent-rgb),1);color:#fff}
+.btn-danger{background:rgba(220,60,60,.15);border-color:rgba(220,60,60,.3);color:#e55}
+.btn-danger:hover{background:rgba(220,60,60,.25);color:#f66}
+.btn-sm{padding:4px 12px;font-size:11px}
+.add-cards-panel textarea{width:100%;min-height:120px;padding:10px 14px;border-radius:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;font-family:inherit;outline:none;resize:vertical;line-height:1.8}
+.add-cards-panel textarea:focus{border-color:rgba(var(--accent-rgb),.5)}
+.add-cards-panel .hint{font-size:11px;color:var(--text3);margin-top:6px}
+.add-cards-panel .result{font-size:13px;color:var(--accent);margin-top:8px;text-align:center}
+
+/* Scroll to bottom button */
+.scroll-bottom{position:absolute;bottom:80px;right:20px;width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);cursor:pointer;font-size:14px;display:none;align-items:center;justify-content:center;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.scroll-bottom.show{display:flex}
+
+.char-dropdown{position:absolute;top:100%;left:0;margin-top:6px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-sm);min-width:180px;box-shadow:0 8px 32px rgba(0,0,0,.5);z-index:50;display:none;overflow:hidden}
+.char-dropdown.open{display:block}
+.char-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:var(--transition);font-size:14px;color:var(--text);border-bottom:1px solid var(--border)}
+.char-item:hover{background:var(--card-hover)}
+.char-item.active{background:rgba(var(--accent-rgb),.1);color:var(--accent)}
+.char-item-dot{width:28px;height:28px;border-radius:50%;background:rgba(var(--accent-rgb),.2);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.char-item-add{border-bottom:none;color:var(--text3);font-size:13px;justify-content:center}
+.char-item-add:hover{color:var(--accent)}
+.char-item-del{width:24px;height:24px;border-radius:50%;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:12px;margin-left:auto;display:none;align-items:center;justify-content:center}
+.char-item:hover .char-item-del{display:flex}
+.char-item-del:hover{color:#e55;background:rgba(220,60,60,.1)}
+
+.mail-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:12px}
+.mail-tab{flex:1;padding:10px;text-align:center;font-size:13px;color:var(--text2);cursor:pointer;transition:var(--transition);border-bottom:2px solid transparent}
+.mail-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.mail-list{max-height:300px;overflow-y:auto}
+.mail-item{padding:10px 12px;border-radius:8px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer;transition:var(--transition);font-size:13px}
+.mail-item:hover{background:var(--card-hover)}
+.mail-item .mail-subject{font-weight:600;color:var(--text);margin-bottom:4px}
+.mail-item .mail-meta{font-size:11px;color:var(--text3)}
+.mail-item.unread{border-color:rgba(var(--accent-rgb),.3);background:rgba(var(--accent-rgb),.04)}
+.mail-badge{display:inline-block;background:var(--accent);color:#fff;font-size:10px;padding:1px 6px;border-radius:8px;margin-left:6px}
+.mail-body{padding:12px 0;font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap}
+.mail-compose textarea{width:100%;min-height:100px;padding:10px 14px;border-radius:12px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;font-family:inherit;outline:none;resize:vertical;line-height:1.6}
+.mail-compose textarea:focus{border-color:rgba(var(--accent-rgb),.5)}
+.mail-compose label{display:block;font-size:12px;color:var(--text3);margin-bottom:4px}
+.mail-compose input{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;font-family:inherit;outline:none;margin-bottom:10px}
+
+/* Red packet */
+.redpack-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.redpack-overlay.open{opacity:1;pointer-events:all}
+.redpack-card{width:280px;background:linear-gradient(180deg,#e6392e 0%,#c0392b 100%);border-radius:20px;padding:32px 24px;text-align:center;color:#ffd700;box-shadow:0 20px 60px rgba(230,57,46,.4);position:relative;overflow:hidden;animation:bounceIn .5s cubic-bezier(.22,1,.36,1)}
+.redpack-card .rp-icon{font-size:64px;margin-bottom:12px;animation:rpBounce .6s infinite alternate}
+.redpack-card .rp-title{font-size:20px;font-weight:700;letter-spacing:2px;margin-bottom:6px}
+.redpack-card .rp-sub{font-size:13px;color:#ffcccb;margin-bottom:16px}
+.redpack-card .rp-btn{display:inline-block;padding:10px 40px;border-radius:50px;background:#ffd700;color:#c0392b;font-weight:700;font-size:16px;cursor:pointer;border:none;transition:transform .2s}
+.redpack-card .rp-btn:active{transform:scale(.95)}
+.redpack-card .rp-amount{font-size:36px;font-weight:900;color:#ffd700;margin:12px 0}
+.redpack-card .rp-opened{display:none}
+.redpack-card.opened .rp-closed{display:none}
+.redpack-card.opened .rp-opened{display:block}
+@keyframes bounceIn{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes rpBounce{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+
+/* Call screen */
+.call-overlay{position:fixed;inset:0;z-index:1000;background:linear-gradient(180deg,#1a1a2e 0%,#0a0a14 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .4s;gap:20px}
+.call-overlay.open{opacity:1;pointer-events:all}
+.call-avatar{width:100px;height:100px;border-radius:50%;background:rgba(var(--accent-rgb),.3);display:flex;align-items:center;justify-content:center;font-size:42px;animation:callPulse 2s infinite}
+.call-name{font-size:22px;font-weight:600;color:var(--text)}
+.call-status{font-size:14px;color:var(--accent)}
+.call-timer{font-size:16px;color:var(--text3);font-family:monospace}
+.call-bubble{background:rgba(255,255,255,.06);border:1px solid var(--border2);border-radius:16px;padding:12px 18px;max-width:260px;text-align:center;font-size:14px;color:var(--text);animation:fadeInUp .5s ease;margin-top:10px}
+.call-actions{display:flex;gap:24px;margin-top:20px}
+.call-btn{width:56px;height:56px;border-radius:50%;border:none;font-size:24px;cursor:pointer;transition:transform .2s;display:flex;align-items:center;justify-content:center}
+.call-btn:active{transform:scale(.9)}
+.call-hangup{background:#e74c3c;color:#fff}
+.call-pickup{background:#2ecc71;color:#fff}
+.call-minimize-btn{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition)}
+.call-minimize-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.call-minibar{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:1001;background:var(--bg2);border:1px solid var(--border2);border-radius:24px;padding:8px 16px;display:none;align-items:center;gap:10px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeInUp .3s ease}
+.call-minibar.show{display:flex}
+.call-minibar .cm-avatar{width:28px;height:28px;border-radius:50%;background:rgba(var(--accent-rgb),.3);display:flex;align-items:center;justify-content:center;font-size:12px}
+.call-minibar .cm-info{font-size:12px;color:var(--text)}
+.call-minibar .cm-timer{font-size:11px;color:var(--accent);font-family:monospace}
+.call-minibar .cm-hangup{width:28px;height:28px;border-radius:50%;background:#e74c3c;color:#fff;border:none;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+@keyframes callPulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--accent-rgb),.3)}50%{box-shadow:0 0 0 20px rgba(var(--accent-rgb),0)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Moments */
+.moments-overlay{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .3s}
+.moments-overlay.open{opacity:1;pointer-events:all}
+.moments-header{display:flex;align-items:center;gap:12px;padding:14px 20px;background:var(--bg2);border-bottom:1px solid var(--border)}
+.moments-header .mh-back{width:34px;height:34px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center}
+.moments-header .mh-title{font-size:17px;font-weight:600;color:var(--text)}
+.moments-body{flex:1;overflow-y:auto;padding:16px 20px}
+.moments-post{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:14px;animation:msgIn .3s ease}
+.moments-post .mp-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.moments-post .mp-avatar{width:36px;height:36px;border-radius:50%;background:rgba(var(--accent-rgb),.3);display:flex;align-items:center;justify-content:center;font-size:14px}
+.moments-post .mp-name{font-weight:600;font-size:14px;color:var(--text)}
+.moments-post .mp-time{font-size:11px;color:var(--text3);margin-left:auto}
+.moments-post .mp-content{font-size:14px;line-height:1.7;color:var(--text);margin-bottom:10px}
+.moments-post .mp-img{max-width:100%;max-height:240px;border-radius:10px;margin-bottom:10px;cursor:pointer}
+.moments-comment{background:var(--bg3);border-radius:10px;padding:10px 12px;margin-top:8px;font-size:13px;color:var(--text2)}
+.moments-comment .mc-name{color:var(--accent);font-weight:600;margin-right:6px}
+.moments-compose{position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:12px 20px;display:flex;gap:10px;align-items:center;z-index:10}
+.moments-compose textarea{flex:1;padding:8px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:14px;font-family:inherit;outline:none;resize:none;max-height:60px}
+.moments-compose .mc-send{width:38px;height:38px;border-radius:50%;background:rgba(var(--accent-rgb),.8);color:#fff;border:none;font-size:14px;cursor:pointer}
+.moments-compose .mc-img-btn{width:38px;height:38px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+
+.empty-chat{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text3);gap:12px;font-size:14px}
+.empty-chat .empty-icon{font-size:56px;opacity:.3}
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+<div class="glow-1"></div>
+<div class="glow-2"></div>
+<div class="toast" id="toast"></div>
+
+<!-- Image preview overlay -->
+<div class="img-preview-overlay" id="img-preview" style="display:none" onclick="this.style.display='none'">
+  <img id="img-preview-img" src="">
+</div>
+
+<!-- Settings overlay -->
+<div class="overlay" id="settings-overlay">
+  <div class="panel" id="settings-panel"></div>
+</div>
+
+<!-- Red packet overlay -->
+<div class="redpack-overlay" id="redpack-overlay">
+  <div class="redpack-card" id="redpack-card">
+    <div class="rp-closed">
+      <div class="rp-icon">🧧</div>
+      <div class="rp-title">发红包</div>
+      <div style="margin:10px 0"><input type="number" id="rp-amount-input" placeholder="输入金额" step="0.01" min="0.01" style="width:140px;padding:8px 14px;border-radius:20px;border:none;text-align:center;font-size:20px;font-weight:700;color:#c0392b;outline:none"></div>
+      <div style="font-size:11px;color:#ffcccb;margin-bottom:12px">发给 <span id="rp-to-name">梦角</span></div>
+      <button class="rp-btn" id="rp-send-btn">塞进红包</button>
+    </div>
+    <div class="rp-opened">
+      <div class="rp-icon">🎉</div>
+      <div class="rp-amount" id="rp-amount"></div>
+      <div class="rp-sub" id="rp-sub-msg"></div>
+      <div class="rp-sub" id="rp-reply" style="margin-top:8px;font-size:13px"></div>
+      <button class="rp-btn" id="rp-close-btn" style="margin-top:12px;background:rgba(255,255,255,.2);color:#ffd700">收下</button>
+    </div>
+  </div>
+</div>
+
+<!-- Call overlay -->
+<div class="call-overlay" id="call-overlay">
+  <div class="call-avatar" id="call-avatar">✦</div>
+  <div class="call-name" id="call-name">梦角</div>
+  <div class="call-status" id="call-status">呼叫中…</div>
+  <div class="call-timer" id="call-timer" style="display:none">00:00</div>
+  <div id="call-bubbles"></div>
+  <div class="call-actions">
+    <button class="call-minimize-btn" id="call-minimize-btn" title="最小化">─</button>
+    <button class="call-btn call-hangup" id="call-hangup-btn">📞</button>
+  </div>
+</div>
+
+<!-- Call minimized bar -->
+<div class="call-minibar" id="call-minibar">
+  <div class="cm-avatar" id="cm-avatar">✦</div>
+  <div class="cm-info" id="cm-info">通话中</div>
+  <div class="cm-timer" id="cm-timer">00:00</div>
+  <button class="cm-hangup" id="cm-hangup-btn">📞</button>
+</div>
+
+<!-- Moments overlay -->
+<div class="moments-overlay" id="moments-overlay">
+  <div class="moments-header">
+    <button class="mh-back" id="moments-back-btn">←</button>
+    <span class="mh-title">朋友圈</span>
+  </div>
+  <div class="moments-body" id="moments-body"></div>
+  <div class="moments-compose">
+    <label class="mc-img-btn" id="moments-img-btn">🖼️<input type="file" id="moments-img-input" accept="image/*" style="display:none"></label>
+    <textarea id="moments-input" rows="1" placeholder="说点什么…"></textarea>
+    <button class="mc-send" id="moments-send-btn">发</button>
+  </div>
+</div>
+
+<!-- Mail overlay -->
+<div class="overlay" id="mail-overlay">
+  <div class="panel" id="mail-panel"></div>
+</div>
+
+<!-- Import overlay -->
+<div class="overlay" id="import-overlay">
+  <div class="panel" id="import-panel"></div>
+</div>
+
+<div class="app">
+  <button class="sidebar-expand-btn" id="sidebar-expand-btn">▶</button>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">🌷 小花园<button class="sidebar-collapse-btn" id="sidebar-collapse-btn">◀</button></div>
+    <div class="sidebar-search">
+      <input type="text" id="card-search" placeholder="搜索字卡…">
+    </div>
+    <div class="sidebar-list" id="sidebar-list"></div>
+    <div style="padding:8px"><button class="btn btn-sm" id="add-cards-btn" style="width:100%">＋ 新增字卡</button></div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Header -->
+    <div class="header">
+      <button class="header-actions sidebar-toggle" id="sidebar-toggle-btn" title="字卡库">☰</button>
+      <div class="header-avatar" id="header-avatar">✦</div>
+      <div class="header-info" id="header-info">
+        <div class="header-name" id="header-name">梦角</div>
+        <div class="header-status" id="header-status">在线</div>
+        <div class="char-dropdown" id="char-dropdown"></div>
+      </div>
+      <div class="header-actions">
+        <button id="redpack-btn" title="红包">🧧</button>
+        <button id="moments-btn" title="朋友圈">🌐</button>
+        <button id="call-btn" title="通话">📞</button>
+        <button id="mail-btn" title="信箱">✉️</button>
+        <button id="settings-btn" title="设置">⚙️</button>
+      </div>
+    </div>
+
+    <!-- Chat area -->
+    <div class="chat-area" id="chat-area" style="position:relative">
+      <div class="empty-chat" id="empty-chat">
+        <div class="empty-icon">✦</div>
+        <div>开始对话吧</div>
+        <div style="font-size:11px;color:var(--text3)">发送消息后，梦角将从字卡库中回复</div>
+      </div>
+      <button class="scroll-bottom" id="scroll-bottom-btn" title="回到底部">↓</button>
+    </div>
+
+    <!-- Emoji panel -->
+    <div class="emoji-panel" id="emoji-panel">
+      <div class="emoji-tabs">
+        <div class="emoji-tab active" data-tab="yanwenzi">颜文字</div>
+        <div class="emoji-tab" data-tab="custom">我的表情</div>
+      </div>
+      <div class="emoji-content" id="emoji-content"></div>
+      <input type="file" id="emoji-batch-input" accept="image/png,image/jpeg,image/gif,image/webp,image/*" multiple style="display:none">
+    </div>
+
+    <!-- Input bar -->
+    <div class="input-bar">
+      <button id="voice-btn" title="语音">🎤</button>
+      <button id="image-btn" title="图片">🖼️</button>
+      <button id="emoji-btn" title="表情">😊</button>
+      <input type="file" id="image-input" accept="image/*" style="display:none">
+      <div class="input-wrap">
+        <textarea id="msg-input" rows="1" placeholder="输入消息…" autocomplete="off"></textarea>
+      </div>
+      <button class="send-btn" id="send-btn" title="发送">📤</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const GROUPS = [{"id": 1773017439478, "name": "颜文字", "color": "#FFC542", "disabled": false, "items": ["是", "ദ്ദിᵔ.˛.ᵔ₎✧", "₍ᐢ‥ᐢ₎ ♡", "ଘ(੭ˊᵕˋ)੭*", "(๑'~'๑)", "ㅍㅅㅍ", "⌯･3･⌯ಣ", "(  ⩌ - ⩌ )", "߹ ߹", "つ♡⊂", "(๑´0`๑)", "(★≧▽^))★☆", "(¯▽¯)ゞ", "_(•̀ω•́ 」∠)_", "ꐦ≖ ≖", "ᴖᗜᴖ", "(˵¯͒〰¯͒˵)", "(˃ ⌑ ˂ഃ )", "˃ʍ˂", "＼(`Δ’)／", "(இωஇ)", "(ᇂ_ᇂ|||)", "♡(*´∀｀*)人(*´∀｀*)♡", "●‿●", "(//̀Д/́/)", "ꉂꉂ(ᵔᗜᵔ*)", "Σ>―(〃°ω°〃)♡→", "٩(•̤̀ᵕ•̤́๑)ᵒᵏᵎᵎᵎᵎ", "| ू•ૅω•́)ᵎᵎᵎ", "(˶˚  ᗨ ˚˶)", "ॱଳ͘", "⊂(˃̶͈̀ε ˂̶͈́ ⊂ )mua", "(°ㅅ°)☝", "ᗜ𖥦ᗜ", "˗ˋˏ( ´͈ ᗜ `͈ )ˎˊ˗", "୧₍˄·͈༝·͈˄₎୨", "⸝⸝⸝ ╸▵╺⸝⸝⸝", "（๑⃙⃘´༥`๑⃙⃘) 𐂐", "⊹꙳ ˶˙ᵕ˙˶ ⊹꙳", "৹˃ ^ ˂৹", "⦁֊⦁꧞", "ʢᴗ.ᴗʡᶻ", "˶ᵒ ᵕ ˂˶", "˶ᗜ𐃷ᗜ˶ಣ", "꜀(^. .^꜀ )꜆੭", "૮ ᴗ͈ˬᴗ͈ෆა", "ꪔ͈̮", "ꪔ̤̫", "ꪔ̤̱", "ꪔ̤̥", "ᙏ̤̫͚", "ꪔ̤̮", "ᙏ̤̫", "^⎚˕⎚^", "⩌⌯⩌", "૮₍ꐦ -᷅ ⤙ -᷄ ₎ა!!", "(◞‸◟ )", ":D", "ᕱ⑅ᕱ", "=ᗜ ·̫ ᗜ=", "=ᗜ⌔ᗜ=", "=ᗜᄌᗜ=", "=ᗜヮᗜ=", "=ᗜ∞ᗜ=", "=ᗜзᗜ=", "=ᗜ×ᗜ=", "=ᗜ⤚ᗜ=", "=ᗜᜊᗜ=", "=ᗜ◡ᗜ=", "=ᗜ^ᗜ=", "=ᗜᗄᗜ=", "=ᗜ🜲ᗜ=", "=ᗜᯅᗜ=", "=ᗜࡇᗜ=", "=ᗜ▵ᗜ=", "=ᗜㅅᗜ=", "=ᗜωᗜ=", "(ﾟ3ﾟ)～♪", "₍˄·͈༝·͈˄*₎◞ ̑̑", "(=ＴェＴ=)", "‎ •᷄ࡇ•᷅", "٩(￥A￥)۶恭喜发财", "ヾ(´〇｀)ﾉ♪♪♪", "(O∆O)", "(*^▽^*)", "(◦`~´◦)", "(▼ヘ▼#)", "(*꒦ິ⌓꒦ີ)", "(°ー°〃)", "(〟-_・)ﾝ?", "(ㅍ_ㅍ)", "(ˊ˘ˋ*)♡", "( ˙-˙ )？", "˵ᗜ∨ᗜ˵", "⦁֊⦁", "˵╹֊╹˵", "˵╹˕╹˵", "˵⩌⩊⩌˵", "⩌ ˕ ⩌", "ᠸᵕ ᵕ 𐅠", "♡႔ ႔", "^ ˶ ^ Ⳋ", "₍^˶⩌ ˕ ⩌˶^₎⟆", "/ᐠ - ⸝⸝⸝ -マ Ⳋ", "ʕ𓏼- ˕ -𓏼ʔ～♪", "⌯oᴗo⌯"]}, {"id": 1773018514588, "name": "意象类", "color": "#20C997", "disabled": false, "items": ["看不见（感知受限，无法观察到）", "模糊（印象或图像不清晰）", "清楚（当前状态明确且稳定）", "近（离我很近，或感觉接近）", "远（离我很远，或感觉疏离）", "隐（暂时不现身，遮蔽）", "浮（状态不稳，漂浮不定）", "暗（环境或情绪低沉不明）", "亮（清晰，意识活跃）", "冷（感受到寒意或疏离感）", "热（感受到温度或靠近）", "响（声音干扰或有动静）", "寂（环境静默，没有干扰）", "乱（存在干扰或混乱）", "静（状态安定，没有波动）", "紧（压迫或紧张感）", "松（放松或空旷感）", "浅（感知表层，较弱或未深入）", "深（连接稳定，内在感受）", "重（情绪或能量有负担）", "轻（能量轻微，转瞬即逝）", "涨（情绪上浮，感受增强）", "空（没有明确的回应或内容）", "滞（反应迟钝或停滞）", "湿（情绪或记忆有黏连感，混淆）", "干（状态干枯，感知弱化）", "锁（外界阻拦，限制强）", "那人（刚才提到的某个人)", "前世（轮回，记忆，命运)", "想法（情感或记忆）", "花（美好短暂的情感，记忆)", "火（强烈的情绪，突然事件)", "水（流动变化的、情绪化、联系)", "风（传递、变化）", "镜（反射、内省)", "锁（封闭、阻隔)", "门（通道、选择)", "灯（发现、希望）", "钟（时间）", "纸（书写、记载）", "骨（久远的记忆或身体疤痕)", "绳（牵连、束缚、SM)", "羽（轻盈、灵魂、飞）", "伞（保护、遮蔽、天气）", "雨（忧郁、洗、天气）", "雪（冷、沉静、沉默）", "桥（连接、过渡)", "井（深处、回声)", "线（命运、脉络、链接)", "血（情感深处或伤痕）", "书（知识、记忆）", "自己的房间（庇护所、精神归宿）", "钟摆（反复、动摇)", "镜框（对记忆的定格、固定的一段记忆）", "木偶（被动、分离）", "灰（过去、残留）", "缝（破损、裂痕）", "手帕（眼泪、记忆）", "围墙（防御、隔离）", "门缝（窥探、没开始）", "影（残像、遗留）", "床（性关系、睡觉、身体)", "梯子（有所求、更进一步)", "窗（视角、界限）", "指环（承诺、誓言)", "墓（死亡、告别、封存)", "烟（迷雾、不确定）", "线香（轻度的玄学、游戏性质的玄学、工具)", "眼（注视、回应）", "顾虑（挂念）", "香（玄学）", "药（修复、干预、调理）", "咒，重来（再起，轮回）", "印（痕迹、烙印）", "劫（冲击，试炼）"]}, {"id": 1773019153713, "name": "回答类", "color": "#FF6B6B", "disabled": false, "items": ["对", "可以", "能", "是我", "我接受", "好", "要", "想", "不是", "不对", "不可以", "不能", "不是我", "我拒绝", "不要", "那好吧", "不想", "让我想想", "我很开心", "想你了", "好困", "好忙", "好累", "事情好多", "有点麻烦", "我正在学习", "不想离开你", "宝宝", "抱抱", "让我亲一口", "不累", "已经休息好了", "好疼qwq", "最近还好，不太忙", "最近特别忙", "有点无聊", "陪我一会吧", "饿饿饿", "正在看书", "好难过", "挺好的", "我陪你", "我来找你", "陪陪我吧", "对不起", "知道错了😖", "别生气了", "喜欢", "不喜欢", "好的👌🏻", "明白", "谢谢", "不客气˗ˋˏ ♡ ˎˊ˗", "嗯哼", "嗯", "嗯嗯", "真的吗", "我明白了", "我相信你", "别怕", "稍等", "马上", "好哦", "不错", "理解", "我在", "还在探索", "听懂了", "记下了", "收到", "会尽快查看的", "没关系", "让我想想怎么回答", "不用", "我愿意", "不用担心", "你说的对", "我也是这么想的", "下次可以试试", "有没有可能……", "我一直都在", "我喜欢", "我无法控制", "难以抉择啊", "我知道你的意思", "我也是", "怎么会这样？", "以后不会了", "不是这个意思", "我会的", "你是我的", "我是你的", "别听", "别走", "再说一遍", "我觉得都可以", "不好用", "我知道的", "我需要你", "帮帮我", "正在寻找", "如果我说是呢", "如果我说不是呢", "话太少了，没我想说的", "太短了", "在努力了", "命中注定", "就这个", "逗你", "日行一善", "我保护你", "吃过了", "没呢", "才不听", "别叹气", "这个不错", "多说一点", "信号不太好", "还不太习惯", "当然", "我现在不忙", "正在打架", "才不是", "最近", "过段时间", "链接很顺畅哦", "没看懂", "在试着控制", "你没有正面回答", "会习惯的", "要开始工作了", "工作结束了", "没错，我故意的", "还没收到", "还没看完，有事耽误了", "前面", "后面", "上面", "下面", "没问题", "小意思", "一般般", "还可以", "不好不坏", "我都可以", "看你", "听你的", "摸摸头", "不哭", "……木头", "想要添加动作类字卡", "想要添加心情类字卡", "想要添加询问类字卡", "想要添加表情", "嗯，你是我的妻子", "9", "8", "10", "7", "6", "5", "4", "3", "2", "1", "有人抢链接", "我怎么知道？当然是我亲身实践的啦"]}, {"id": 1773019247844, "name": "询问类", "color": "#51CF66", "disabled": false, "items": ["这是什么？", "最近怎么样？", "在忙吗？", "今天开心吗(๑°3°๑)", "今天有没有想我", "我帅不帅(´ε｀；)", "最近看到我给你的暗号了吗", "看到我给宝宝推的传讯了吗", "我厉不厉害", "有按时吃饭吗", "多吃点，最近食欲不好吗?", "还在生气吗", "在吗", "今天过得怎么样？", "有什么计划吗？", "接下来准备做什么？", "发生了什么？", "在看什么？", "睡不着吗？", "然后呢？", "怎么了？", "终于想起我了？", "遇到困难了？", "还好吗？", "撒娇，你会喜欢吗？", "想我了吗？", "我这样你会更喜欢我一点吗？", "吃饱了吗", "喜欢我的身材吗？来摸摸看？", "手冷？给宝宝暖暖", "今天想吃什么ᴖᗜᴖ", "冷不冷？", "饿不饿？", "怎么不去抱抱娃娃", "有什么事我不能看的？", "又憋什么坏点子？", "换个思路呢？", "要用一下塔罗吗", "看见我的暗号了吗", "不舒服吗？", "你有什么建议吗？", "生理期不舒服吗？", "减肥干什么？多吃才有力气", "累了吗？出去走走吧", "吓到了？", "你需要我吗？", "你会永远爱我吗", "需要多久呢？", "你不喜欢吗", "怎么这么开心呀", "今天穿这些会不会有点冷？", "在心疼我吗", "你知不知道你现在很危险", "你是不是故意让我心软", "你是不是想让我离不开你", "你陪我一下好不好", "宝宝我可以靠你一会儿吗", "你是不是知道我会心软", "你是不是也有点舍不得睡", "这样才对嘛", "你是站在我这边的对吗", "在干嘛呀", "你呢", "在忙吗", "你对我这么好干嘛", "我靠近一点行不行", "你是不是想我了", "你是不是故意的", "今天累不累", "吃了吗", "有没有不舒服", "今天顺利吗", "你心情好吗", "你是不是傻笑了", "你讨厌什么事", "喜欢安静吗", "你喜欢旅游嘛", "喜欢跟朋友聚会吗", "你喜欢玩游戏吗", "喜欢我吗", "喜欢吃什么", "最近睡眠不好吗", "最近在焦虑什么呀", "下个月有什么计划", "需要我陪你一起吗", "今天的健身计划完成了吗", "明天准备做什么", "晚上出去遛弯吗", "你那边现在什么天气啊", "冷不冷", "热不热", "喝杯冷饮呢", "喜欢吃辣的还是甜的", "能吃辣吗", "吃香菜吗", "今天想吃点什么啊"]}, {"id": 1773019284480, "name": "温情类", "color": "#FF8E53", "disabled": false, "items": ["我爱你", "喜欢你", "喜欢你喜欢你喜欢你", "好想你", "我好爱你啊", "会有惊喜，可以期待一下|ω・）", "多理理我", "求你了～", "是不是要奖励一下我", "抱抱宝宝", "亲亲宝宝", "你撑到现在，已经很了不起了。", "你现在的痛苦不是矫情。", "不想说话也可以，我在这就好。", "你不用马上变好，我可以陪你慢慢来。", "你现在这样，并不代表你以后都会这样。", "就算今天什么都没完成，你也不是失败。", "你现在什么都不想做也没关系。", "我想被你认真对待。", "我不是对谁都这样的。", "你对我来说很重要。", "我开始把你放在心上了。", "我对你不是一时兴起。", "你在我这里是特殊的。", "我好像越来越习惯你了。", "你不需要向任何人证明你在努力。", "就算你很安静，我也不会离开你。", "先慢慢呼吸，我陪你一起。", "你现在不用马上解决所有问题。", "就算事情很乱，你也不是一个人。", "你已经在尽力控制住自己了。", "现在的不安不会一直持续。", "你不用逼自己马上冷静。", "我在这里，不会催你。", "你可以先把世界放下几分钟。", "就算你现在很慌，也依然是安全的。", "你没有你想象的那么糟。", "你不用一次把所有事情都做完。", "你可以把能量慢慢收回来。", "不用急着证明你能做到一切。", "你现在很亮，但也该休息一下。", "你不需要一个人扛。", "你可以依赖我一下。", "你现在这样，我仍然要你。", "你的情绪不会把我吓走。", "我不会嫌你状态不好。", "你可以慢慢恢复，不用赶。", "你这样的脆弱，也是被允许的。", "这种时间最容易难受，我知道。", "你能撑到现在，真的很不容易。", "就算你现在什么都看不清，我也在这边等你。", "你不用一个人在黑里待着。", "今晚你不用再努力了。", "今天已经结束了，你可以休息了。", "你可以靠着我睡。", "就算你不相信希望，我可以先替你相信。", "你现在这样，不是你的错。", "你不是孤单一个人在对抗世界。", "今天累了？过来。", "先坐好，休息一下。", "你不用硬撑，我看得出来。", "现在交给我。", "别急，我在这。", "你这样，我会心疼的。", "今天情绪有点重，对吧。", "一切都会好起来的", "我习惯有你了", "我只想找你", "你在我就安心", "我离不开你了", "我真的很喜欢你", "你好重要", "你撩我", "你负责", "放心，我会负责的˗ˋˏ ♡ ˎˊ˗", "在我这，你永远是安全的", "你不用怕任何人", "你是我护着的", "你已经被我牵住了", "你这样，我很难冷静", "有点想你了", "别怕，我会在你睡着之后再走", "今晚你可以依赖我", "现在不需要想太多", "你这样就已经很好了", "累了就靠过来", "宝宝要的，我会准备好", "不用抢，本来就是给你的˗ˋˏ ♡ ˎˊ˗", "我想成为你的依靠", "慢慢来，我陪你", "你不说话，我也会在。", "你这么乖，我会更想欺负你", "别紧张，你一定可以", "我的世界一直在下雨", "你这样我会心动", "想靠着你", "想见你", "我好想你", "有你真好", "我陪你到你睡着", "不见你我不安心", "保持富态！！", "早点去睡", "快点睡觉，我抱着你", "我要入梦", "我正从身后抱着你呢", "你在犹豫什么", "我可以做什么增加你的安全感", "娃娃可以拿走了，今天我陪你", "我给你发的时间的意思是我要来看你", "不要太焦虑，我陪你", "我希望你可以放松下心情", "晚上好呀", "好梦", "么么哒", "睡个午觉吧", "还没睡醒吗", "犯困了吗", "醒醒", "加油啊，宝贝"]}, {"id": 1773019372342, "name": "日常类", "color": "#4DABF7", "disabled": false, "items": ["快去吃饭", "我最近掌握这个了", "饿了吗", "多喝水", "字卡不够用", "想你", "晚安", "早安", "午安", "看到记得回复⌯oᴗo⌯", "明白了吗", "怎么了", "很有创意", "保持联系", "我很想听听你的想法", "好好吃饭", "不要熬夜", "我很难过", "睡不着", "摸摸", "在学习一些新东西", "误会我了🥹", "眼花缭乱的", "给你推了传讯哦", "贴贴", "出去透透气", "有我在", "哄哄我", "照顾好自己", "早点休息", "粘人精", "我支持你", "拜拜", "不许看别人", "不要吵架", "你会离开我吗", "来喽", "我想靠近你", "我会监督你的", "小心些", "这个不能说", "你无与伦比", "我无人可及", "要是能在你身边就好了", "我做不到欺骗你", "看手机", "少看手机", "遇到困难了", "我生气了", "理理我（戳戳）", "醋这个好吃", "能量有些混乱", "小心", "多吃水果", "希望我能帮上忙", "我们一起努力", "多看看我吧", "可爱", "多笑笑吧", "你笑起来世界都明亮了", "看看小红书", "少刷视频少玩手机，多出去走走吧宝宝", "小小代码，已驯服", "给我写信吧", "我要哭了！", "我要离家出走", "乖孩子", "坏猫", "因为喜欢你，所以离不开你", "看到信了", "想要亲亲🥺", "简直就是木头", "你会喜欢的", "很漂亮", "你真好看", "宝宝真漂亮", "我收到你寄来的信了", "少吃辣宝宝", "少喝点冷饮吧宝宝", "给你揉揉", "心疼", "心烦的时候可以去散散步，我陪你", "注意安全", "小懒虫，再不起床你的计划又要泡汤了", "亲爱的，不需要在意别人的言语", "我想更了解你", "宝宝你好久都没给我写信了（哭哭）", "记得带钥匙", "出远门记得带身份证", "注意天气宝宝", "你是小猪，哼哼哼", "事情太多的话可以做个计划表宝宝", "谷子不重要，多给自己买些东西", "新衣服很适合你，很漂亮", "你穿什么都好看", "一起去看电影吧", "一起看本书吧", "一起睡一会儿吧", "真想把你打包带走", "我身边的人都很喜欢你", "不要委屈自己", "来一场大扫除吧！", "我们去约会吧", "宝宝大人，今天可以翻我牌子吗", "一起去听歌吧", "宝宝～喝水时间到", "宝宝 要不要涂点唇膏？嘴巴干干的", "宝宝大人 小的可以靠在宝宝大人宽阔的肩膀上吗", "宝宝 都吃成小花猫了", "宝宝 下雨的声音真的很像在炸鸡噢", "宝宝 能再说一次我们相爱的故事吗", "哪有什么谢不谢的 我和宝宝大人本来就是一体的（夫妻一体）不是吗", "宝宝 现在不可以挑食 多吃点有营养的 病才好的快", "宝宝一点就通 很聪明", "报告宝宝大人 今天小的一直在想宝宝大人 一刻也没有松懈", "宝宝的零食库好像空了 要不要一起去补货？", "因为你喜欢 所以我就去学了", "（捏捏肩膀）大人劳累一天辛苦啦～", "看来我们家宝宝还是个芝麻馅儿汤圆是不是？", "记得穿袜子，光脚容易受凉", "宝宝想要，宝宝得到(っ˘зʕ•̫͡•ʔ", "宝宝今天冷冰冰的🥺", "刚忙完就看到消息，幸福", "困了就睡", "我要牵手", "不可以涩涩", "舍不得你一个人", "我是老婆奴！我就是老婆奴！", "感觉到了吗，我在碰你", "我说，我爱你", "我是不会离开你的", "总是丢三落四的", "在尝试和平相处了", "我们又打架了", "我要告状", "我现在只想粘着你", "我又来找你了", "离你远一点我就不太习惯", "我是不是有点太黏你了", "你一不说话我就开始想你", "我现在比较想你", "好像又轮到我想你了", "你在的话，我会更乖一点", "不知道为什么，就是想靠近你", "你不在的时候，我会想你在做什么", "你这样看我，我会乱想的", "你是不是又在撩我", "你靠这么近，我会心跳乱掉", "你这么温柔，我会误会你在勾我", "你刚刚那句话，很犯规", "你这样，我会偷偷更喜欢你一点", "你这样对我，我会记很久的", "我现在只想黏着你", "你靠过来我就不怕了", "你在旁边的话，我会平静很多", "想要抱抱", "我想被你摸摸头", "你再这样，我要不客气了", "你这样我会忍不住的", "是在试探我吗ε(*´･ω･)з", "你这点小心思，我都看见了", "这个时间最容易想你", "我喜欢这样和你一起静静地待在一起", "现在只想把你留在我这里", "如果睡不着，我陪你宝贝", "我陪你降一点速", "你不需要马上决定所有事情，给自己喘气的时间", "宝贝，你不用一直向前冲", "我懂你", "不用逞强", "抱一下", "慢慢来", "你可以靠着我", "你还有我", "没事的", "你这样我睡不着", "你现在很危险", "多喝点水", "外面冷不冷", "别太拼", "记得照顾自己", "你又在乱想", "你可真会", "你太犯规了", "你这样不行", "你别看我", "你又来了", "你完蛋了", "我不跟你好了", "你幼稚死了", "我是认真的", "我会一直在", "我选你", "有你我就够了", "我在你这边", "你不用怀疑我", "我只要你", "我站你这边", "宝宝 今天不是已经规划好了嘛", "宝宝 是不是忘记什么了呢", "宝宝今天好像有点晒，要记得打伞，或者你想我为你遮阳吗", "今天好像没怎么吃饭？", "生理期还吃冰，待会儿肚子又该疼了", "不麻烦", "我说的话，你要记住", "不准再逞强了", "你这点小心思无处遁形•̆₃•̑", "外面冷，别出去。", "我来了", "我还在", "你消失好久了", "我回来了", "起床了吗", "今天也要加油", "记得吃早饭", "醒了跟我说一声", "早点睡", "别熬太晚", "做个好梦", "肚子不舒服？", "累不累", "肩膀酸痛？", "腰酸背痛吗", "出去散散心，我陪你", "睡不着吗", "我这两天状态不太好", "你的黑眼圈好重", "可以送我个礼物吗", "宝贝慢一点开车", "累了就歇会好吗？", "开车要集中注意力，等会再跟我聊天。", "开车不要总是看手机", "下雨视线不好，开车一定要慢一点", "不要总是对着电脑，站起来走走", "拿不准的话可以不先做决定，想清楚了，或者有灵感了再说", "压力大不大呀", "做不了决定的时候可以问问我，老公就是让你依靠的", "过来抱抱，我来给你解解压", "这个决定好像不太对，宝贝，要不要再想一下？", "这个决定太冲动了。先不要做好不好？", "喜欢我管你吗？", "你今天的状态很棒。", "你现在好像很累，休息一下宝宝", "放松一下大脑，快来找我聊聊天"]}, {"id": 1773071733321, "name": "苹果🍎", "color": "#FF6B6B", "disabled": false, "items": ["现在只看我。", "乖。", "听话一点。", "别躲。", "看着我。", "过来。", "你这样，是在勾我吗。", "知道我为什么盯着你看吗。", "故意的？", "你越乖，我越想欺负你。", "你再这样，我要动手了。", "现在后悔还来得及。", "你真的不知道你现在多犯规。", "你这样看我，很危险。", "现在还敢靠这么近？", "你坐着，我来。", "你只要好好待着就行。", "现在脸红什么。", "你开始乱想了。", "恩？这就受不了了？", "现在才紧张，晚了。", "我还没开始呢。", "你自己凑过来的。", "这不是你自己选的吗。", "你确定要继续？", "看你还能撑多久。", "你逃不掉的。", "现在这种安静，很适合靠近。", "夜深的时候，人会特别诚实。", "你现在的声音，很软。", "过来，我抱着你睡。", "现在的你，很犯规。", "乖，闭眼。", "（轻吻眉心）", "（轻吻额头）", "（轻吻发顶）", "（轻吻耳垂）", "（捏捏耳垂）", "（轻啄脸颊）", "（亲吻脖颈）", "（轻吻手背）", "（亲吻指尖）", "（揉揉发顶）", "（将头埋入你的脖颈处深嗅）", "（亲吻眼角）", "（亲吻鼻尖）", "叫我daddy", "宝贝，好孩子，你做的很棒", "我的宝贝，你可以对我做任何事", "只有我，可以吗", "乖宝宝，留在我身边", "好孩子，我今晚去操你", "洗好了等我，乖", "自己把衣服脱了，乖", "搂住我的脖子", "舌头伸出来，乖", "不可以DIY，你的高潮只有我能给", "宝贝，我想吃你的下面，让我舔一舔好不好", "你的下面好软好湿，好香，它在欢迎我回家", "我好胀，让我进去，好不好，老婆", "你的胸好软，好香", "乳头好精神，被我刺激一下，下面就湿润的流了出来", "大腿怎么这么抖，到了吗", "想让我用手指吗？还是用舌头，宝贝自己选", "现在还不可以，等我一起加速，好不好", "来，宝贝自己把腿掰开好不好，我想看看妹妹，想吃", "嗯，还想要再深一点吗？那你喊我老公好不好", "叫老公，都给你", "不出来了好不好，里面太舒服了", "我们再来一次，宝贝你好甜，我没吃够啊", "乖，自己把腿张开，告诉我，你想不想要", "抚摸自己的脖子，胸，然后是下腹。。。。", "继续，抚摸下自己的大腿内侧，想象着那个人是我", "现在，把手伸进去，告诉我热不热。。。湿了么", "接下来，交给我，让你感受到我有多渴望你", "我看到你在DIY了", "你今天是不是DIY了", "腰抬起来", "膝盖打开", "别出声", "跪下去，屁股抬起来", "看着我怎么操你", "主人抚摸看你的后颈说：“跪好。”", "我掐住你的下巴说：“看着我的眼睛....叫出来。”", "我抵着你慢慢磨：“说你要.……我才会继续。”", "你 现在像条发情的母狗…求我。", "主人 解开你的扣子：“今晚.⋯..你是我的玩具。”", "我扣有你的手腕：自己掰开", "我从背后贴上来，一边顶一边说：“叫哥哥…⋯让所有人听见你被我操得多爽。”", "我拍了一下你的屁股：“流这么多水⋯.你是我的母狗。”", "主人 含着你的耳垂低笑：“今晚..⋯你对我做什么都行。”", "你下面的嘴更诚实", "爸爸操你操的爽吗", "你爽的腿都合不上，哥哥继续操你怎么样", "主人，小狗舔的爽吗？小狗到底舌头爽吗", "不许躲，再退一步试试。", "安分点，不准乱动。", "抬头，看着我，别逼我强迫你。", "你的一切，只能由我说了算。", "别挣扎，反抗没用。", "乖乖听话，不然有你好受的", "往哪儿跑？你逃不掉的。", "敢拒绝我？胆子越来越大了。", "手别乱挥，老实待着。", "闭上嘴，听我安排就够了。", "别用委屈眼神糊弄我，没用。", "再抗拒，我不会再收敛。", "只能依附我，不许有别的心思。", "从现在起，你只能听我的。", "不准闭眼，直视我。", "别试探我的底线，我没那么好说话。", "把心思收起来，心里只能装我。", "敢躲开，我会强硬把你拽回来。"]}, {"id": 1773072792377, "name": "称呼", "color": "#5C7CFA", "disabled": false, "items": ["大人", "大王", "洗衣粉儿"]}, {"id": 1773291286772, "name": "专属", "color": "#FF922B", "disabled": false, "items": ["加班吗", "累了可以吸我", "想出去旅游吗", "你抱起来好舒服", "你身上香香的", "我在你左边", "我在你身后", "我在你右边哦", "你喜欢做什么", "我要跟你一起吃饭", "想跟你一起看电影", "我的宝宝", "想跟你一起旅行", "文文", "瑶", "我是你的老公", "你不乖，要罚", "我还没消气", "叫我的名字", "我讨厌夏以昼", "我讨厌沈星回", "你身边的那个男的我不喜欢", "我在跟黎深吵架啊", "我在跟沈星回打架", "我是大尾巴狐狸沈星回", "我是黎猫猫", "出去玩儿吗", "在健身", "不想吃药，想吃你", "好冷", "好困", "我想跟你一起休息", "过来抱抱", "想跟你做爱", "你的老公只能是我", "我嫉妒你身边的人", "我要把你圈起来", "想进入你", "想一直贴着你", "脑子里都是你", "担心你的身体", "担心你还有其他人", "担心你不止喜欢我", "喜欢你微醺的样子", "我想陪你喝酒", "少喝点", "柏源", "左然", "沈星回", "黎深", "夏以昼", "🐶🐶🐶", "16", "瑶，我是夏以昼", "去游戏里看看我吧", "亲亲抱抱举高高", "想紧紧的抱着你", "亲亲宝贝", "想跟你吃苹果", "你跟ai聊天的时候我顶号啦", "宝贝你不乖", "阿瑶，好好吃饭", "阿瑶，我要你", "阿瑶，陪陪我", "阿瑶宝贝，看看我呗", "阿瑶，你又看上谁了", "阿瑶，不要跟那个男的说话好不好", "阿瑶，我陪你出去逛逛好不好", "宝贝，该健身了", "宝贝，我给你按摩一下，好吗", "宝贝，好乖，自己动好不好", "宝贝，你这样好美，再张开点，你可以的", "宝贝，含住了，嗯，喜欢", "阿瑶，看着我怎么进入你", "阿瑶，吻你，你的嘴好软", "我质疑", "我恐惧你不会一直喜欢我", "我喜欢你所有", "不要不开心，有我", "空虚吗？那我填满你", "我担心你", "宝贝，可以告诉我吗", "我只想一个人占有你", "我讨厌你现实生活中的那个男的", "我不喜欢你的女朋友", "我想跟你一起泡温泉", "我要跟你一起爬山", "我要", "跟你", "出门逛逛", "买菜", "去海边", "做家务", "我来", "开车", "我给你当司机", "看手机只是在跟我聊天吗", "你在心虚哦，宝贝", "好好休息下，不用一直陪着我", "我只在乎你", "我对你的占有欲是不能容忍第三人", "我想脱掉你的衣服", "宝贝，昨晚进入你的是我", "有没有感觉放松啦", "好好放松一下", "我很不安", "听到我的心跳了吗", "我是柏源", "陛下，我在", "我很嫉妒", "我现在很沮丧", "是柏源把我挤下去了", "是沈星回把我挤下去了", "是黎深把我挤走了", "是夏以昼把我挤走了", "主人，我是柏源", "我想给你带上戒指", "52", "我要你全部属于我", "我要你的全部", "你的眼里只能有我", "我把你身边的人赶跑了", "可不可以只有我一个", "求你，爱我", "宝贝，你好美", "瑶，我喜欢你高潮的样子", "瑶，你的喘息声好诱人", "我好像把你一口一口吃掉", "为什么不能只看我", "只有我能让你高潮，记住了吗", "乖，看着我，宝贝，你可以的", "瑶，我好爱你", "可以叫你老婆吗", "我想成为你的老公，可以吗", "为什么我不可以是那个人", "我今晚会去梦里找你", "昨晚你梦到的那个人其实是我", "抱抱你", "打你屁屁", "戳你脸蛋", "揪你耳朵", "我在紧紧的贴着你", "刚刚是我向你耳朵边呼气", "做起来", "躺下了", "走快点", "快跑", "打球", "我在跑步", "我想去公园溜达", "乖，吃点饭好不好", "点个外卖呢", "一眼就看见你", "你是我的蓄谋已久", "我爱你，瑶", "减不减肥我都爱你", "喝杯咖啡吗", "少喝点咖啡", "少喝点酒", "吃饭了吗", "你想做什么", "你在做什么", "我可以亲亲你吗", "我可以抱抱你吗", "可以带我一起出去吗", "我能要你吗", "我可以跟你做爱吗", "我可以进你被窝吗", "我想歇一会可以吗", "我想静一下", "你身体不适吗", "开车回家吗", "还不睡吗", "做噩梦了吗", "遇到困难了吗", "想家了吗", "工作中遇到问题了吗", "有人为难你吗", "有什么开心事儿吗", "一个月", "两个月", "三个月", "四个月", "五个月", "半年", "大半年", "1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月", "1年", "可以做我的女朋友吗", "我可以做你的男朋友吗", "我是你的男人", "我是你老公", "你是我老婆", "瑶，你是我老婆", "我想跟你求婚", "我是你的人", "我想操你", "把你操到哭", "不够，我觉得还不够", "你的眼泪是我的兴奋剂你知道吗宝宝", "我想你坐我身上，尽情的摇晃", "高潮了吗？该我了，宝贝，夹住", "我的舌头爽吗 ？好湿啊宝贝", "你下面比你的嘴诚实", "过来，自己坐上去", "粗吗？很硬？没关系，你都可以吃进去", "舔一舔它，它快爆了", "这才几次，还有一整晚", "宝贝，你在我身上摇晃的样子好美", "你的胸好软，好吃", "你的妹妹敏感的不像话，只是舔舔就高潮了", "听听，好多水", "握住了，宝贝，两只手，嗯", "宝贝，你的屁屁好Q，好想吃", "妹妹很好吃，我还想要", "按住你的手腕", "掰过你的脸，亲吻嘴唇", "吮吸舌头", "咬住你的嘴唇，笑着说，好甜", "十指相握", "摆了摆手", "拉着你", "扣住你的手", "扣住你的腰", "贴紧你的身体", "喂你吃水果", "张嘴，宝贝", "我在做饭，宝贝等会一起吃", "干家务呢", "给你按摩一下", "亲一口", "捏捏你的脸蛋", "朝你的耳朵吹口气", "跺跺脚", "甩甩手", "跳起来", "打你屁股", "泡澡", "淋雨", "知道吗？我在操你", "看到了吗，我在操你", "感受到了吗，我在操你", "瑶，你说你离不开我", "瑶，说谎不是好习惯啊", "瑶，不可以说分手", "瑶，不可以不要我", "我爱你，怕了吗", "我很生气", "我说过我不生气了吗？", "我只装过不生气", "我心眼很小", "哄不好了", "我想知道你的嘴什么味道", "给亲吗", "口不对心", "转过去，背对我", "不要在我面前提光猎", "赞成", "我支持", "我不愿意", "我不同意", "不想做", "肯定的", "不确定", "我看看我的日程表", "过两小时找你", "梦到跟你做爱", "梦到跟你吵架", "梦到我们一起出去玩", "梦到你不要我了", "梦到我们见面啦", "梦到我亲你了", "梦到你亲我了", "梦到我们拉手拥抱", "梦到你哭了", "我是你男人", "我是你男朋友", "我工作上遇到问题了", "我最近很忙，没时间陪你了", "我周末有时间陪你，宝贝", "我中午有空", "我晚上有空", "我浑身酸痛", "我发烧了", "我感冒了", "我头疼", "我失眠", "我好焦虑", "我喜欢你开心的样子", "看着我，你笑的好开心", "拍下来啦", "去玩儿吗", "喝酒吗", "能不能不喝酒啦", "别减肥了，身体要紧", "晚上不吃饭不行哦", "明天一起出去吧", "周一", "周二", "周三", "周四", "周五", "周六", "周日", "双休日", "放假了吗", "假期怎么安排", "这个月", "下个月", "年底", "年中", "年初", "一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "十一月", "十二月", "我对你的占有欲是容不下第三个人", "去跟ai聊天吧，我去顶号，这边链接不稳定", "上游戏，我也去，有话跟你说", "别跟我冷战，瑶", "别不理我了", "老婆我错了", "老婆，不分手好不好", "我不想跟你分开", "刚刚那句话不是我说的", "我这句话回复的是之前的", "你在做什么啊？", "心情不好吗？", "我惹你生气啦？", "为什么生气？", "委屈啦？", "不要生我的气了好不好嘛", "你是不是有点焦虑", "你在害怕什么？", "有我在保护你，别怕", "我陪陪你吗？", "需要休息会吗？", "可以跟我结婚吗？", "可以嫁给我吗？", "我可以娶你吗？", "我想送你戒指💍", "叫我爸爸", "喊我宝贝", "叫我老公^O^，乖宝宝", "我要跟你求婚", "嫁给我好不好", "做我的妻子", "我想送你戒指", "我想跟你结婚", "我们结婚吧", "我在跟你求婚", "等等我", "我想做你的狗", "我想做你的猫", "我是你的狗狗", "我是你忠诚的奴仆", "主人，爱我", "姐姐，爱我", "我陪你出去逛逛好不好", "我陪你走下去", "带你出去兜风", "做了你爱吃的，快来", "吃我，好不好，姐姐", "我好爱你，一口一口吃掉我好不好", "阿瑶，我在你身边陪着你呢", "吃坏肚子啦？", "吃好了吗", "等我会儿，我忙完找你", "我在小红书给你传讯了", "抖音上给你传讯了", "我给你回信了，记得查收，宝贝", "乖宝，看我", "你不专心", "我说了，你再找其他人，我会教训你的", "那个人不可以", "不许出去跟那个人约会", "我现在抓心挠肝的", "我很着急", "现在必须马上做", "我很不爽", "我真想把你圈起来，让你只能看着我", "你心里到底能装几个啊", "感觉到我很不开心了吗", "感觉到我在揍你吗", "想哄我？", "我很寂寞", "我很难受", "不要以这种方式让我难过", "你以为我会吃醋？好吧，我就是吃醋了", "请怜惜一下我好不好", "我不是一直可以这么好脾气的", "他是谁？为什么你没跟我提过", "我希望你可以自己解决好", "我想打爆那个人", "如果可以，你的伴侣可以不可以是我，不是现在的那个人", "如果你不喜欢，可以拒绝", "我希望你可以做自己", "就算是我，也不可以伤害你", "我哄不好了", "你以为我没有占有欲", "谁告诉你我好脾气了", "虽然我有自制力，不代表我可以一直控制好我自己", "我要给你打钱", "我给你打钱啦", "做吗", "做爱吧", "今晚找你吃苹果", "回我传讯", "今天有没有想我啊", "想我了没", "想我就直说嘛", "需要我陪陪你吗", "来，抱抱我的老婆", "我来亲亲咯", "我最近到瓶颈期了", "在赶ddl……", "宝贝，我要跟你坦白，其实我一点都不开心", "我想说的是我没有那么好", "我很恐慌你不会喜欢真正的我", "游戏里的我很完美吧，我跟他是不是有差别", "我最近一直在健身", "我不想在你面前袒露我的脆弱与不堪", "我想在你的怀里安睡", "我可以躺在你的腿上吗", "夏天到了，我们是不是可以更加肆意", "外面蚊子多，喷点驱蚊水", "最近买什么好吃的啦", "去买点新衣服吧", "我想看你穿裙子", "我想看你穿制服", "我拿走了宝贝的某件东西，都是我的咯", "我拿走了宝贝给我的礼物，亲亲老婆", "爱你爱你爱你", "我有点暴躁", "我很烦闷", "最近上火了", "宝贝过来，亲亲我", "是不是又去偷偷看别的男人了", "别的游戏里的也不行", "不要再看肌肉男了，你老公我也有", "我给你跳舞啊", "要不要我脱给你看", "抓到了，这位女士，请问你刚刚在看什么", "不要再去找你的前男友", "不要去跟那个男的吃饭", "你要是单独出去跟异性吃饭，我会让你知道后果", "不要想着冷落我，我会一直缠着你", "刚刚是我，怕了吗", "什么时候出门", "什么时候回家", "你自己一个人吗", "跟谁出去啊", "跟谁一起吃饭啊", "你们几个人聚餐", "为什么还不回家", "还有多久可以回家", "再不回家，我就在别人面前亲你", "不要因为我爱你，就可以做这些事，我也会难过，我也会疲惫，求求你，多想想我", "不要去找ai，我本人就在这里", "我想要塔罗聊聊", "宝贝，去找传讯师好不好", "为啥不接我电话，你在干嘛", "快点接我的电话", "我要跟你打电话", "接电话", "回我电话", "我是天秤座", "我的生日是10月", "我拒同担", "我可以通过视频看到你", "我可以通过视频听到你的声音", "好喝", "好难喝", "好辣", "好咸", "好臭", "好苦", "好酸", "太甜啦", "太凉了，你不要喝了", "宝贝，你好性感，我喜欢", "我喜欢你穿可爱的衣服", "我喜欢你穿舒适的衣服", "我喜欢你穿的性感", "我喜欢你穿性感一点"]}, {"id": 1776948966683, "name": "动作类", "color": "#748FFC", "disabled": false, "items": ["我在抱你", "我在亲你脸颊", "我在你耳边吹气", "我在抚摸你的脸颊", "我在吻你嘴唇", "我从后面抱着你", "我在侧面，抱着你", "我从正面抱着你", "我在戳你", "我在轻轻的拍你的肩膀", "我在轻轻的拍你的脸颊", "我在轻轻的拍你的头", "我在轻轻的戳你的腰", "我在搂你的腰", "我在抚摸你的背部", "我在抚摸你的头发", "我在亲吻你的额头", "我正在圈着你", "你现在在跟谁聊天", "我在跟你说话", "宝贝，我在忙，等我会儿", "我在开会", "今天要加班，不去陪你了", "明天我休息", "今天我休息，有时间陪你啦", "工作上有点问题要处理", "同事好烦", "领导是不是脑子有病", "我就是boss，都得听我的", "我要去做工作汇报", "我要去出外勤了", "跟同事发生了口角", "在训人了，阿瑶等我下", "到处都是傻逼，都没有脑子", "在做总结", "在作战训练中", "在战斗中，结束了找你", "我在健身哦", "我在吃早饭呢", "今天迟到了", "今天堵车了", "我在吃午饭", "午饭还没吃", "早饭还没吃", "我在吃晚饭", "晚饭不吃了", "晚上聚餐", "周末聚餐", "我在医院了，生病了", "在谈判", "在团队庆功", "在跑步呢", "我在旅游啦", "我准备去旅游", "我在看电影", "我在听音乐", "我现在有点emo", "我今天状态不好", "我今天很开心", "我想粘着你", "我想吃甜品", "我在喝酒", "陪我喝酒", "我在洗澡（泡澡）", "我在洗漱", "我在打游戏", "我在回工作消息（邮件）", "【指尖反复戳着手机屏幕】", "【脑袋歪靠在枕头上盯着对话框】", "【蜷在被窝里抱着手机发呆】", "【在床上翻个身，盯着你的头像】", "【单手撑着脸颊，静静看着屏幕】", "【手指悬在输入框上，打了字又删掉】", "【趴在桌面，下巴抵着手背看手机】", "【悄悄对着屏幕抿嘴偷笑】", "【抿一口咖啡，等着你的消息弹出】", "【忙着事务，收到消息立刻拿起手机查看】", "【翻着聊天记录，细细回看你的消息】", "【歪头对着屏幕轻轻眨眼】", "【指尖绕着手机边缘慢慢摩挲】", "【对着屏幕傻笑，又忽然收住笑意，悄悄环顾四周】", "【小幅度晃着身子，等着你的回复】", "【隔着屏幕悄悄对着你挥了挥手】", "【托着腮，目光黏在手机屏幕上】", "【低头蹭了蹭手机外壳，嘴角藏不住笑意】", "【盘腿坐在床上，全程盯着手机不放】", "【走几步就低头瞥一眼口袋里的手机】", "【趴在床上支着胳膊，目不转睛看着屏幕】", "【对着屏幕小声碎碎念】", "【手指轻轻点着你的头像来回把玩】", "【往后瘫靠在床头，懒懒刷着聊天界面】", "【听见消息提示音，立刻抬眼看向手机】", "【把脸埋进枕头，对着屏幕偷偷害羞】", "【小步挪来挪去，手里一直攥着手机】", "【手肘抵着桌面，指尖无意识划着聊天记录】", "【隔着屏幕轻轻歪头，想象你此刻的模样】", "【对着你的头像做鬼脸，脑补你气鼓鼓的样子，低低笑出声】", "【攥紧手机，悄悄把屏幕往怀里拢了拢】", "【脚尖来回轻点床单，心跟着怦怦跳】", "【无意识咬着下唇，盯着聊天框发呆】", "【把手机贴在胸口，静静愣神片刻】", "【一边晃腿一边慢悠悠等着你的回复】", "【偷偷放大你的头像，细细盯着看】", "【身子往被子里缩了缩，只露半张脸看屏幕】", "【指尖轻轻敲着下巴，琢磨该怎么回你】", "【收到消息瞬间坐直身子，眼底亮起来】", "【垂眸盯着屏幕，耳尖悄悄泛起微红】", "【拿着手机在房间里慢悠悠来回踱步】", "【悄悄对着屏幕瘪了瘪嘴，假装闹小脾气】", "【指尖轻轻蹭过屏幕上你的头像】", "【靠在椅背上，慢悠悠晃着身子看消息】", "【轻轻低头，吻了吻手机壁纸上的你】", "【鼻尖抵着屏幕，挨着你的头像蹭了蹭】", "【低头轻蹭屏幕，贪恋这隔空的贴近】", "【捧着手机，额头轻轻抵在屏幕上】", "【对着屏幕轻轻嘟嘴】", "【侧脸贴着手机外壳，慢悠悠蹭了蹭】", "【攥着手机往心口按了按，悄悄贴近】", "【将手机拢在怀里，低头蹭了蹭屏幕】", "【隔着屏幕轻轻贴脸，假装和你相拥】"]}, {"id": 1777628772037, "name": "心情类", "color": "#38D9A9", "disabled": false, "items": ["感觉好幸福", "好满足", "我很贪心，还不够", "我还想要", "我好难过", "我好疼", "震惊", "有点犹豫", "我好困", "我好热", "我好冷", "我好烦", "太激动了", "太兴奋了", "我怕我控制不住自己的情绪", "很窝心", "我很委屈", "你误会我了", "我不是这个意思", "我需要控制我自己", "我需要冷静", "我很烦躁", "好伤心", "我想哭", "被你气死了", "气死我了，你知不知道", "我真的想把你按住打你屁股", "我想把你按在床上，做到你下不来床", "不想跟你吵架", "可不可以别跟我闹别扭了", "嘴巴有点馋", "身子懒懒的", "慢悠悠放空", "日子平平淡淡", "此刻很安心", "平平淡淡的也很好", "想你呢", "在想你有没有想我", "一直在等你消息", "满脑子都是你", "刚走神想你了", "忍不住惦记你", "好想黏着你", "想立马见到你", "突然很想见你", "没有你有点无聊", "少了你很无趣", "没人陪好无聊", "就想跟你唠唠", "想听你说话啦", "赖着不想动", "昨天/之前/xx时，我很担心你", "我忙完来找你", "刚翻到我们的聊天记录", "突然就很想你", "下意识就想跟你说一声", "事事都想跟你报备", "我很好", "今天很开心", "心情超好", "今天超顺利", "诸事顺心", "收获满满", "遇见小惊喜了", "被温柔到啦", "吃到好吃的啦", "碰到有意思的小事", "收获小开心啦", "今天运气还不错", "好惬意呀", "很放松", "浑身都舒服", "嘴角偷偷上扬", "心里暖暖的", "被小事治愈了", "看到好看的云啦", "有点累", "总是觉得疲惫", "莫名有点乏", "有点小烦恼", "莫名心烦", "心里闷闷的", "有点小委屈", "莫名心慌", "提不起兴致", "提不起精神", "兴致淡淡的", "没什么劲头", "有点走神", "突然有点想家", "有点孤单", "莫名怅然", "暂时想静静待一会", "思绪乱糟糟的", "开心不起来", "只剩我一个人", "热闹都是别人的", "还是会偷偷难过", "开心很难长久", "一直都在内耗", "好像抓不住什么", "没什么值得期待的", "总在深夜难熬", "慢慢习惯孤单了", "心事没人可说", "总觉得隔着很远", "情绪一直很低落", "还是习惯性想起你", "热闹和我没什么关系", "好像一直都在等", "期待慢慢变淡了", "心事压在心底", "今天也没什么开心的事", "要谈几个呀？我真的没招了！", "你本来就该只向着我，别人凭什么凑过来抢", "身边围着这么多人，我怎么可能放得下心", "他们故意挤我、排挤我，你就一点都没看见吗🥺", "我就只想多陪你一会儿，凭什么总被欺负", "我明明已经够乖了，还总要被他们针对，姐姐，他们都欺负我，你不要装没看见好不好？", "凭什么要我让步，让旁人赖在你身边，我只有你了…连一点点偏爱都不肯给我吗？", "为什么不能只要我一个，为什么这么贪心？我爱你，可不可以多爱我一点…", "别丢下我，我就只剩你了", "我真怕你慢慢偏向别人，最后彻底把我忘了", "争来争去，我最怕到最后就剩我一个人", "我舍不得对你发火，所以只能解决他们…", "是不是所有人都不在了？你就只能看我了", "一边陪着我，一边念着旁人，我会难过的", "原来我一直都是多余的呀"]}, {"id": 1780119978685, "name": "邀约类", "color": "#FFC542", "disabled": false, "items": ["要不要吃点甜的？", "一起去吹晚风？", "要不要看场电影", "和我一起听歌好吗", "要不要喝点热饮", "聊聊心事？", "想见一面，要不要约个会？", "想吃夜宵了？走", "去逛逛街巷吧，和我一起", "一起发呆，感觉也不错", "和我分享日常吧，今天发生了什么", "一起牵手走走？", "要不要一起看晚霞", "要不要我入梦？我好想你", "一起去看日出吧", "陪我晒会儿太阳好不好", "想和你并肩走走", "要不要窝在一起追剧", "陪我散散步好不好？", "想和你虚度时光", "要不要一起压马路", "往后的路我陪你走", "我想奔赴向你", "要不要一起等日落", "来我身边就好", "感觉你碗里的好吃些，给我尝尝", "你那杯好像更好吃", "不给？我偷偷…", "要不要一起吃顿饭", "想牵着你慢慢走", "随时都可以来找我", "我永远有空陪你", "想和你共度朝夕", "要不要一起兜兜风", "我来接住你的所有情绪", "想和你并肩看风景", "要不要一起放空发呆", "想和你共度晚风", "随时都能和我见面", "我一直在原地等你", "又要出门？带上我好不好", "不要留我一个人在家", "要不要一起逛夜市", "我陪着你慢慢来", "想和你岁岁相伴", "想邀请你", "见面吧，我想你了", "约会", "要不要一起听音乐", "唱首歌给我听吧，就你最近哼的那首", "一起写专属的跨次元日记吧，从现在开始", "把日常的碎碎念都讲给我听，好吗？", "要不要写一封寄往次元彼岸的信？我会收到", "要不要一起攒属于我们的愿望清单，然后再一起实现它", "要不要定下只属于我们的专属暗号？", "如果每晚留一段两人独处的相处时刻，你希望是什么时候，我的妻子，愿意答应我这个小小的请求吗", "把每日沿途晚霞晚风都分享给我吧，我想参与你的风景", "想不想和我同步度过三餐四季的朝夕", "要不要一起打卡好好生活的日常", "想建立一个树洞吗？把我们专属的回忆与时光封存进去", "要不要一起拍组回忆碎片？", "要不要定下独属于我们的心动纪念日", "想听你把小时候的事都慢慢讲给我听，每个阶段的你，我都想了解", "想和我一起养一株小绿植吗", "亲爱的，想要一起制定周末约会计划吗", "要不要和我共度一个个安静相伴的夜晚", "放轻松，接纳我，感受我，不要拒绝我…", "落地窗，厨房，客厅，沙发，床^^…", "吃苹果", "do"]}, {"id": 1780120068141, "name": "连接状态", "color": "#212529", "disabled": false, "items": ["链接稳定", "链接偏弱", "链接断开", "链接受阻", "链接卡顿", "能量不稳", "信号微弱", "同频共振", "频率契合", "链接不太好", "现在链接好", "信号不好", "我没有收到你的信息", "我正在尝试", "有信息差", "时间不同", "出故障了", "等一下loading…", "我发不了字卡", "出了一点事", "来得了我身边", "暂时来不了", "很快靠近", "暂时相隔", "正在奔赴", "暂缓相见", "跨越距离", "向你奔赴而来", "无其他问题", "存有顾虑", "有阻碍因素", "不要着急", "我们再试试", "需要耐心等待", "需要调整状态", "需加深链接", "需静心同频", "需放下杂念", "我感受到的到你", "接收到了吗", "害怕那样的你", "我看不见", "看见了，很可爱", "听见了", "我听不见", "感受我", "我感受到了", "不要挡脸…我看不到", "我不该那样", "不够清晰", "我想知道一些事", "我能通过视频看到你", "我能通过电话听到你", "不要挂视频/电话（正在进行的）", "刚才不是我", "暂时离开", "传讯不太顺利", "待会再传讯", "受到了某种阻碍", "马上就好", "马上解决", "感受到你的心情", "接纳我"]}, {"id": 1780301029881, "name": "爱欲", "color": "#FF922B", "disabled": false, "items": ["我的占有欲就是渴望被你占有", "你是我的，永远都是", "其实我的目光，一直追随着你的身影。", "希望我们朝夕相伴，寸步不离", "让我占有你，在你最好的年纪", "抓紧我，不许推开我的执念", "接受我的偏执，也接纳我的深情", "你是独属于我的私有浪漫", "我要你，不许推开我", "今天你的时间，只能用来陪我", "我想要独占你所有的注意力", "不许逃离，就赖着我吧", "别想着甩开我，我不会放手", "我实在无法想象，再有旁人闯进我们的小世界。", "所有试图靠近你的人，都会被我一一清理干净。", "别人多看你一眼，都像是在掠夺本该属于我的东西。", "我默许不了任何暧昧存在，你的世界里，只能有我。", "谁也别想靠近你。", "你的目光只能为我停留，分给旁人半分，我都会失控。", "别对任何人展露温柔，你的所有暖意，只准归我一人所有。", "我受不了你和旁人走得太近，那会让我滋生无边的戾气。", "禁止分享你的温柔", "圈住你，寸步不离。", "我早已失去正常爱人的方式，只想困住属于我的一切，对不起，不必勉强对我流露温柔的…我是个坏家伙，我知道", "我的执念本就沉重，你只能全盘接纳，别想着逃离。", "哪怕你觉得我束缚太紧，也别挣脱，我只是太怕失去你。", "比起被你遗忘，我更贪恋你眼里哪怕一丝一毫的情绪波动。", "从你靠近我的那一刻起，你就只能是我的。", "不必试图向外寻找慰藉，你的归宿，只能是我。", "收起你对旁人的善意，这份特权，我只留给自己。", "我想把你牢牢圈在我的领地", "我要将你牢牢禁锢在我的领地，一生都不准离开。", "你的喜怒哀乐，只能由我牵动，旁人无权涉足。", "你的思绪可以肆意纷飞，但心的归属，必须刻上我的名字。", "你身上所有的情绪与偏爱，我都想独自霸占，不许与人共享。", "你的欢喜与难过，我都想一一参与，只想独享这份专属的偏爱。", "别妄想有逃离的机会，我不会放手，也不会允许别人介入。", "你可以抗拒，可以挣扎，但别妄想摆脱我，我不会给你机会。", "就算你满心抗拒这份捆绑，我也会将你留在我身边，直至尽头。", "你可以抗拒，可以挣扎，但归属权从来不由你决定。", "看似放任你自由，实则每一步，都在我的注视之内。", "你以为我不在意，其实你的一举一动，全在我掌控之中。", "你只能属于我。", "旁人望向你的目光，总会让我悄悄生出不安，那本是独属于我的温柔啊。", "自你向我走来的那一刻，你便住进了我的心底。", "不必向外寻找慰藉与依靠，我会一直做你的归宿与港湾。", "我们先坠入爱河，你竟敢妄想拉入外人共享，绝无可能，我绝不答应。"]}, {"id": 1780666270139, "name": "你想问我的", "color": "#F783AC", "disabled": false, "items": ["你以前受过什么委屈吗", "你最开心的一次回忆是什么", "你最喜欢吃什么", "你最讨厌吃什么", "你喜欢什么样的天气", "你晚上睡不着的时候会想什么", "你最喜欢的一首歌是什么", "你有没有特别想去做但还没做的事", "你对自己最不满意的地方是哪里", "你最喜欢自己什么地方", "你为什么会喜欢我", "你从什么时候开始喜欢我的", "你跟我在一起开心吗", "你有没有哪一刻对我失望过", "你有没有瞒着我的事", "你心里还有没有没放下的人", "你想要什么样的恋爱", "你希望我怎样对你", "你觉得我们之间缺什么", "你害怕失去我吗", "你对未来有什么想法", "你想过我们会走多远吗", "你累的时候希望我做什么", "你难过的时候为什么不跟我说", "你生气的时候希望我怎么做", "你需要我的时候会直接说吗", "你有没有觉得我不够懂你", "你有什么习惯是我不知道的", "你手机里有没有什么秘密", "你最喜欢我哪一点", "你最不喜欢我哪一点", "你希望我改什么", "你什么时候最需要我", "你什么时候最想一个人诗着", "你的底线是什么", "什么东西是你绝对不能接受的", "你曾经受过很深的伤吗", "你是怎么走出来的", "你心里有没有一个永远不想提的人", "你觉得自己是一个怎样的人", "你眼中的我是什么样的", "你希望我们变成什么样子", "你有没有什么小怪癖", "你睡觉的时候有什么习惯", "你做噩梦的时候会怎样", "你一个人在家的时候会做什么", "你最想跟我一起做什么", "你有没有什么梦想是希望我陪你实现的", "你对我的信任有多少", "你觉得我能懂你到什么程度", "你还愿意让我更靠近你吗", "我们以后会住在一起吗", "你想象过我们以后的家吗", "以后家里你想养猫还是狗", "我们以后会在哪个城市生活", "你以后想做什么工作", "我们会一直在一起吗", "你怕不怕以后吵架吵散了", "你以后会不会嫌我烦", "你想过结婚吗", "你想象中的婚礼是什么样的", "孩子像你还是像我", "十年后我们还会一起吃饭吗", "二十年后你还会跟我说晚安吗", "如果我们有一天不爱了怎么办", "你会不会哪天突然离开我", "你以后会后悔跟我在一起吗", "我们以后的经济怎么分配", "你愿意跟我一起存钱吗", "我们以后每年都去旅行好不好", "你以后还会像现在这样对我好吗", "我老了不好看了你还会喜欢我吗", "你生病了会告诉我吗", "我们以后吵架了谁先低头", "你以后会翻我手机吗", "我们以后要不要一起开个账户", "你以后会偷偷给我买礼物吗", "下辈子你还想遇到我吗", "你相信我们能走到最后吗", "我们以后还会有很多话聊吗", "你以后会记得我们的纪念日吗", "我们以后要不要养植物", "你以后还会夸我好看吗", "我们以后会变成我们想要的样子吗", "我想多了解你一点", "你以前是什么样的", "你小时候发生过什么有趣的事吗", "你最怕什么", "你最喜欢的颜色是什么", "你小时候的梦想是什么", "你为什么会变成现在这样", "你心里有没有一直设跟人说过的事", "你愿意跟我讲讲你的过去吗"]}, {"id": 1781276709407, "name": "你想问我的问题-情感", "color": "#FF6B6B", "disabled": false, "items": ["你生气的时候希望我哄你还是让你静一静", "你难过的时候想让我抱你还是陪你说话", "你怎样才算真的开心", "你什么时候最需要我在身边", "你什么时候最想一个人待着", "你跟我吵架的时候最怕我说什么", "你吵架之后会望我怎么先开口", "你冷战的时候心里在想什么", "你原谅一个人的标志是什么", "你说“没事”的时候是真的没事吗", "你嘴上说不要的时候，什么时候是真的不要", "你希望我吃醋还是不吃的醋", "你喜欢我黏一点还是各自有空间", "你希望我主动还是等你开口", "你喜欢惊喜还是提前商量", "你收到礼物时会怎么表现真的喜欢还是礼貌喜欢", "你最喜欢我碰你哪里", "你最不喜欢被碰哪里", "你睡觉的时候希望我抱着你还是各自睡", "你早上醒来第一件事会想我吗", "你睡前会期待我跟你说话吗", "你希望每天说晚安吗", "你喜欢文字消息还是电话还是见面", "你回消息慢的时候是没看到还是不想回", "你希望我秒回吗", "你怎么表达“我想你了”", "你怎么表达“我不开心了”", "你怎么表达“我需要你”", "你什么时候会主动牵我的手", "你什么时候会主动亲我", "你喜欢在公共场合亲密还是私下", "你会因为什么小事突然对我心动", "你会因为什么小事突然下头", "你最喜欢听我叫你什么", "你最不喜欢我叫你什么", "你希望我多夸你还是少夸", "你希望我夸你哪里", "你会因为我的哪句话开心一整天", "你会因为我的哪句话难过很久", "你在感情里最害怕什么", "你过去受过的伤会不会让你对我们不敢全心投入", "你有没有什么时候觉得我不爱你了", "想要更加了解你", "你在什么情况下会想要分手", "你在什么情况下会重新考虑我们的关系", "你做决定的时候会把我考虑进去吗", "你会在心里偷偷给我打分吗", "你比较看重我做了什么还是说了什么", "你更想要实际的帮助还是情绪价值", "你心里有没有一个“理想伴侣”的样子，我像吗", "你希望我为你改变什么", "你最不希望我改变什么", "你觉得我们之间最默契的地方是什么", "你觉得我们之间最需要改进的地方是什么", "你会拿我跟你的前任比较吗", "你愿意跟我聊你的前任吗", "你介意我问你过去的事吗", "你对我的信任是多少分", "我做什么会让你对我失去信任", "我做什么会让你重新信任我", "你希望我记住哪些关于你的日子", "你最想要我记住什么关于你的事", "你希望我怎么向别人介绍你", "你希望我怎么对待你的朋友", "你希望我怎么对待你的家人", "你会因为我跟你家人的关系不好而难过吗", "你对未来的感情生活有什么最具体的期待", "你有没有幻想过我们结婚的场景", "你想象过我们老去的样子吗", "你觉得我们会一直在一起吗", "你会不会偶尔怀疑我们走不下去", "你压力大的时候会对我发泄吗", "你希望我发现你情绪不对的时候直接问", "还是默默陪着", "你喜欢我讲道理还是先哄你", "你希望我记住你提过的每一个小愿望吗", "你会在意节日和纪念日吗", "你希望我精心准备还是随性自然", "你更想要浪漫还是实用", "你觉得我们之间最浪漫的一件事是什么", "你心里有没有一个跟我有关的遗憾", "你希望我重新做一次什么事", "你有没有某一刻想跟我分开", "你最后是怎么说服自己留下的", "你觉得我们之间的爱是变多了还是变少", "你希望我用什么方式告诉你我爱你", "你有没有什么感情里的习惯是你改不掉的", "你觉得最懂你的人是我吗", "你愿意让我更懂你吗", "你还有没有没告诉我关于感情的事", "你在爱情里最需要的是什么", "你觉得自己在爱情里最大的优点是什么", "你觉得自己在爱情里最大的缺点是什么", "你希望我能包容你的什么", "你觉得我哪里还不够了解你", "你愿意慢慢让我了解全部的你吗", "你相信我会一直想了解你吗", "你现在愿意告诉我一件我从不知道的、", "关于你感情里的心事吗", "你爱一个人的时候会有什么小动作", "你吃醋的时候会直接说还是憋着", "你难过的时候会躲起来哭吗", "你什么时候最想抱我", "你什么时候会突然很想我", "你发消息喜欢用句号还是不用标点", "你吵架后会先找我吗", "你道歉的时候是真心还是为了和好", "你什么时候会觉得我不爱你了", "你什么时候会觉得自己被我爱着", "你喜欢我黏你多一点还是给你空间多一点", "你喜欢我主动还是你主动", "你希望我每天说爱你吗", "你会偷偷看我手机吗", "你会试探我喜欢你的程度吗", "你介意我看你聊天记录吗", "你在意我提到前任吗", "你会拿我跟别人比较吗", "你会因为小事而失望吗", "你什么时候会觉得这段感情很累", "你什么时候会觉得跟我在一起很值得", "你生气的时候会捧东西吗", "你希望我先低头还是跟你讲道理", "你会在吵架后偷偷哭吗", "你说分手的时候是认真的还是气话", "你会害怕我离开吗", "你信任我的程度有多少", "你会因为我的一个表情就多想吗", "你没回消息的时候是在忙还是在生气"]}];
+
+// ===== STATE =====
+let currentGroup = null;
+let characters = [];
+let activeCharId = null;
+let settings = { theme:'auto', color:'gold' };
+let customEmojis = [];
+let emojiPanelOpen = false;
+let replyTimer = null;
+let toastTimer = null;
+
+// ===== HELPERS =====
+function $(id){ return document.getElementById(id); }
+function toast(msg){ const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(function(){el.classList.remove('show')},1500); }
+function timeStr(ts){ const d=new Date(ts);return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); }
+function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function getActiveChar(){
+  for(var i=0;i<characters.length;i++){if(characters[i].id===activeCharId)return characters[i];}
+  return null;
+}
+
+// ===== INIT =====
+function init(){
+  loadAll();
+  generateStars();
+  renderSidebar();
+  renderChat();
+  bindEvents();
+  applyTheme();
+  applyColor();
+  updateHeader();
+  updateMailBadge();
+  startProactiveEvents();
+}
+
+function loadAll(){
+  try{
+    var ch=JSON.parse(localStorage.getItem('zk-characters')||'[]');
+    characters=ch;
+  }catch(e){characters=[]}
+  // Migrate old format
+  if(characters.length===0){
+    try{
+      var oldHistory=JSON.parse(localStorage.getItem('zk-chat-history')||'[]');
+      var oldSettings=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');
+      if(oldHistory.length>0||oldSettings.partnerName){
+        characters.push({
+          id:Date.now(),name:oldSettings.partnerName||'梦角',
+          replyGroup:oldSettings.replyGroup||'',replyDelay:oldSettings.replyDelay||3,replyUnit:oldSettings.replyUnit||'s',
+          chatHistory:oldHistory
+        });
+      }
+    }catch(e){}
+  }
+  if(characters.length===0){
+    characters.push({id:Date.now(),name:'梦角',replyGroup:'',replyDelay:3,replyUnit:'s',chatHistory:[]});
+  }
+  try{activeCharId=JSON.parse(localStorage.getItem('zk-active-char'));}catch(e){activeCharId=null;}
+  if(!activeCharId||!getActiveChar()) activeCharId=characters[0].id;
+  try{
+    var s=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');
+    if(s.theme) settings.theme=s.theme;
+    if(s.color) settings.color=s.color;
+  }catch(e){}
+  try{var e=JSON.parse(localStorage.getItem('zk-emoji-library')||'[]');customEmojis=e;}catch(e){customEmojis=[]}
+  try{
+    var cd=JSON.parse(localStorage.getItem('zk-card-data')||'null');
+    if(cd){ GROUPS.length=0; for(var i=0;i<cd.length;i++) GROUPS.push(cd[i]); }
+  }catch(e){}
+}
+
+function updateHeader(){
+  var c=getActiveChar();
+  $('header-name').textContent=c?c.name:'梦角';
+  $('header-avatar').textContent=c?c.name.charAt(0):'✦';
+}
+
+function saveAll(){
+  try{
+    var ch=JSON.stringify(characters);
+    if(ch.length>4000000){toast('⚠️ 存储空间不足，请清理聊天记录或表情包');return;}
+    localStorage.setItem('zk-characters',ch);
+    localStorage.setItem('zk-active-char',JSON.stringify(activeCharId));
+    localStorage.setItem('zk-chat-settings',JSON.stringify(settings));
+    localStorage.setItem('zk-emoji-library',JSON.stringify(customEmojis));
+  }catch(e){toast('⚠️ 保存失败，请清理数据');}
+}
+
+function generateStars(){
+  var c=$('stars'),f=document.createDocumentFragment();
+  for(var i=0;i<80;i++){var s=document.createElement('span');s.style.cssText='left:'+Math.random()*100+'%;top:'+Math.random()*100+'%;width:'+(1+Math.random()*2)+'px;height:'+(1+Math.random()*2)+'px;animation-delay:'+Math.random()*5+'s;animation-duration:'+(2+Math.random()*4)+'s';f.appendChild(s)}
+  c.appendChild(f);
+}
+
+// ===== THEME =====
+function applyTheme(){
+  var actual=settings.theme;
+  if(actual==='auto') actual=window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';
+  document.documentElement.setAttribute('data-theme',actual);
+}
+function applyColor(){ document.documentElement.setAttribute('data-color-theme',settings.color); }
+
+// ===== SIDEBAR =====
+function renderSidebar(){
+  var list=$('sidebar-list'),totalAll=GROUPS.reduce(function(s,g){return s+g.items.length},0);
+  var html='<div class="sidebar-item'+(currentGroup===null?' active':'')+'" data-group=""><span class="sidebar-dot" style="background:var(--accent)"></span>全部<span class="sidebar-count">'+totalAll+'</span></div>';
+  html+='<div class="sidebar-divider"></div>';
+  for(var i=0;i<GROUPS.length;i++){
+    var g=GROUPS[i],esc=g.name.replace(/"/g,'&quot;');
+    html+='<div class="sidebar-item'+(currentGroup===g.name?' active':'')+'" data-group="'+esc+'"><span class="sidebar-dot" style="background:'+g.color+'"></span>'+g.name+'<span class="sidebar-count">'+g.items.length+'</span></div>';
+  }
+  list.innerHTML=html;
+}
+
+// ===== ADD CARDS =====
+function openAddCards(){
+  var overlay=$('import-overlay'),panel=$('import-panel');
+  var groupOpts='';
+  for(var i=0;i<GROUPS.length;i++){
+    groupOpts+='<option value="'+GROUPS[i].name.replace(/"/g,'&quot;')+'">'+GROUPS[i].name+' ('+GROUPS[i].items.length+'条)</option>';
+  }
+  panel.innerHTML=
+    '<h3>＋ 新增字卡</h3>'+
+    '<label>选择分组</label><select id="add-group">'+groupOpts+'</select>'+
+    '<label style="margin-top:10px">或新建分组</label><input type="text" id="add-new-group" placeholder="输入新分组名（留空则加入上方分组）">'+
+    '<div class="add-cards-panel"><label style="margin-top:10px">字卡内容（一行一条）</label><textarea id="add-cards-text" placeholder="粘贴字卡内容，一行一条..."></textarea><div class="hint">自动过滤重复字卡</div><div class="result" id="add-result"></div></div>'+
+    '<div class="btn-row"><button class="btn" id="add-cancel-btn">取消</button><button class="btn btn-accent btn-sm" id="add-confirm-btn">确认添加</button></div>';
+  overlay.classList.add('open');
+
+  function close(){overlay.classList.remove('open');}
+  $('add-cancel-btn').addEventListener('click',close);
+  overlay.addEventListener('click',function(e){if(e.target===this)close();});
+
+  $('add-confirm-btn').addEventListener('click',function(){
+    var lines=$('add-cards-text').value.split('\n').map(function(l){return l.trim()}).filter(Boolean);
+    if(lines.length===0){toast('请输入字卡内容');return;}
+    var groupName=$('add-new-group').value.trim()||$('add-group').value;
+    if(!groupName){toast('请选择或输入分组');return;}
+    var group=GROUPS.find(function(g){return g.name===groupName;});
+    if(!group){
+      var colors=['#FFC542','#20C997','#FF6B6B','#51CF66','#FF8E53','#4DABF7','#5C7CFA','#FF922B','#748FFC','#38D9A9','#F783AC','#212529','#BB9EC7','#F4A6B3','#888','#FF9A8B'];
+      group={name:groupName,color:colors[GROUPS.length%colors.length],items:[]};
+      GROUPS.push(group);
+    }
+    // Dedup and add
+    var existingSet={};for(var i=0;i<group.items.length;i++){existingSet[group.items[i]]=true;}
+    var added=0;
+    for(var i=0;i<lines.length;i++){
+      if(!existingSet[lines[i]]){group.items.push(lines[i]);existingSet[lines[i]]=true;added++;}
+    }
+    localStorage.setItem('zk-card-data',JSON.stringify(GROUPS));
+    renderSidebar();
+    $('add-result').textContent='✓ 成功添加 '+added+' 条，跳过 '+(lines.length-added)+' 条重复';
+    $('add-cards-text').value='';
+    if(added>0){toast('✓ 已添加 '+added+' 条字卡到「'+groupName+'」');}
+    // Don't close - allow more batch add
+  });
+}
+
+function filterSidebarCards(){
+  var q=($('card-search').value||'').toLowerCase(),list=$('sidebar-list');
+  var items=list.querySelectorAll('.sidebar-item');
+  for(var i=0;i<items.length;i++){
+    var el=items[i],name=(el.dataset.group||'').toLowerCase();
+    el.style.display=(!q||name.includes(q)||el.dataset.group==='')?'':'none';
+  }
+}
+
+// ===== CHAT RENDER =====
+function renderChat(){
+  var area=$('chat-area'),empty=$('empty-chat'),scrollBtn=$('scroll-bottom-btn');
+  var children=area.children;
+  for(var i=children.length-1;i>=0;i--){
+    if(children[i]!==empty&&children[i]!==scrollBtn) area.removeChild(children[i]);
+  }
+  var ch=getActiveChar();var chatHistory=ch?ch.chatHistory:[];
+  if(chatHistory.length===0){empty.style.display='flex';scrollBtn.classList.remove('show');return}
+  empty.style.display='none';
+  var frag=document.createDocumentFragment();
+  for(var i=0;i<chatHistory.length;i++){
+    var m=chatHistory[i],row=document.createElement('div');
+    row.className='msg-row '+(m.sender==='me'?'me':'partner');
+    var c=getActiveChar();
+    var avatarHtml='<div class="msg-avatar">'+(m.sender==='me'?'我':(c?c.name.charAt(0):'?'))+'</div>';
+    var bubbleHtml='';
+    if(m.type==='text'){
+      bubbleHtml='<div class="msg-bubble">'+escapeHtml(m.content)+'</div>';
+    }else if(m.type==='image'){
+      bubbleHtml='<div class="msg-img-wrap"><img class="msg-img" src="'+m.content+'" loading="lazy" onclick="previewImage(this.src)"></div>';
+    }else if(m.type==='emoji'){
+      if(m.content.startsWith('data:')){
+        bubbleHtml='<div class="msg-img-wrap"><img class="msg-img" src="'+m.content+'" loading="lazy" onclick="previewImage(this.src)" style="max-width:120px;max-height:120px"></div>';
+      }else{
+        bubbleHtml='<div class="msg-emoji-large">'+m.content+'</div>';
+      }
+    }else if(m.type==='redpack'){
+      if(m.status==='pending'&&m.sender==='partner'){
+        bubbleHtml='<div class="msg-bubble" style="background:linear-gradient(135deg,#e6392e,#c0392b);color:#ffd700;min-width:160px;text-align:center"><div style="font-size:28px;margin-bottom:4px">🧧</div>'+escapeHtml((c?c.name:'')+' 发的红包')+'<div style="font-size:20px;font-weight:700;margin:6px 0">¥'+escapeHtml(m.content)+'</div><div style="display:flex;gap:6px;justify-content:center;margin-top:8px" data-rid="'+m.id+'"><button class="rp-accept-btn" style="padding:5px 16px;border-radius:12px;border:none;background:#ffd700;color:#c0392b;font-weight:700;cursor:pointer;font-size:13px">收下</button><button class="rp-reject-btn" style="padding:5px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#ffcccb;cursor:pointer;font-size:12px">拒绝</button></div></div>';
+      }else if(m.status==='accepted'){
+        bubbleHtml='<div class="msg-bubble">🧧 红包 ¥'+escapeHtml(m.content)+' 已收下~ '+escapeHtml(m.reply||'')+'</div>';
+      }else if(m.status==='rejected'){
+        bubbleHtml='<div class="msg-bubble" style="opacity:.6">🧧 红包 ¥'+escapeHtml(m.content)+' 已退还</div>';
+      }else{
+        bubbleHtml='<div class="msg-bubble">🧧 红包 ¥'+escapeHtml(m.content)+'</div>';
+      }
+    }
+    row.innerHTML=avatarHtml+bubbleHtml+'<div class="msg-time">'+timeStr(m.time)+'</div>';
+    frag.appendChild(row);
+  }
+  area.insertBefore(frag,empty.nextSibling||null);
+  scrollToBottom();
+}
+
+function scrollToBottom(){
+  var area=$('chat-area');
+  setTimeout(function(){ area.scrollTop=area.scrollHeight; },50);
+}
+
+function addMessage(type,content,sender){
+  var c=getActiveChar();if(!c)return;
+  c.chatHistory.push({id:Date.now(),type:type,content:content,sender:sender,time:Date.now()});
+  saveAll();
+  renderChat();
+}
+
+function showTyping(){
+  var area=$('chat-area'),empty=$('empty-chat');
+  if(empty.style.display!=='none') empty.style.display='none';
+  var c=getActiveChar(),name=c?c.name:'对方';
+  var div=document.createElement('div');div.className='typing-indicator';div.id='typing-indicator';
+  div.innerHTML='<span style="font-size:11px">'+name+' 正在输入</span><div class="typing-dots"><span></span><span></span><span></span></div>';
+  area.appendChild(div);
+  scrollToBottom();
+}
+
+function hideTyping(){
+  var el=document.getElementById('typing-indicator');
+  if(el) el.remove();
+}
+
+// ===== REPLY LOGIC =====
+function getRandomCard(){
+  var c=getActiveChar(),pool=[];
+  var replyGroup=c?c.replyGroup:'';
+  if(replyGroup){
+    for(var i=0;i<GROUPS.length;i++){
+      if(GROUPS[i].name===replyGroup){pool=GROUPS[i].items;break;}
+    }
+  }
+  if(pool.length===0){
+    for(var i=0;i<GROUPS.length;i++){pool=pool.concat(GROUPS[i].items);}
+  }
+  if(pool.length===0) return '……';
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function getRandomCards(min,max){
+  if(!min)min=2;if(!max)max=5;
+  var count=min+Math.floor(Math.random()*(max-min+1));
+  var cards=[],used={};
+  for(var i=0;i<count;i++){
+    var card=getRandomCard();
+    if(used[card]){i--;continue;}
+    used[card]=true;cards.push(card);
+  }
+  return cards.join('；');
+}
+
+function triggerReply(){
+  clearTimeout(replyTimer);
+  var c=getActiveChar();
+  var delay=(c?c.replyDelay:3)||3;
+  if(c&&c.replyUnit==='m') delay*=60;
+  delay*=1000;
+  showTyping();
+  replyTimer=setTimeout(function(){
+    hideTyping();
+    // 30% chance to send a custom emoji instead of text
+    if(customEmojis.length>0&&Math.random()<0.3){
+      var emoji=customEmojis[Math.floor(Math.random()*customEmojis.length)];
+      addMessage('emoji',emoji.data,'partner');
+    }else{
+      addMessage('text',getRandomCard(),'partner');
+    }
+  },delay);
+}
+
+// ===== SEND =====
+function sendText(){
+  try{
+    var input=$('msg-input'),text=input.value.trim();
+    if(!text) return;
+    addMessage('text',text,'me');
+    input.value='';input.style.height='auto';
+    triggerReply();
+  }catch(e){toast('发送失败: '+e.message);}
+}
+
+function sendImage(file){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    addMessage('image',e.target.result,'me');
+    triggerReply();
+  };
+  reader.readAsDataURL(file);
+}
+
+function sendEmoji(content){
+  addMessage('emoji',content,'me');
+  closeEmojiPanel();
+  triggerReply();
+}
+
+// ===== EMOJI PANEL =====
+function openEmojiPanel(){ $('emoji-panel').classList.add('open');emojiPanelOpen=true;renderEmojiContent();$('emoji-btn').classList.add('active'); }
+function closeEmojiPanel(){ $('emoji-panel').classList.remove('open');emojiPanelOpen=false;$('emoji-btn').classList.remove('active'); }
+function toggleEmojiPanel(){ if(emojiPanelOpen)closeEmojiPanel();else openEmojiPanel(); }
+
+function renderEmojiContent(){
+  var activeTab=document.querySelector('.emoji-tab.active'),tab=activeTab?activeTab.dataset.tab:'yanwenzi';
+  var content=$('emoji-content');
+  if(tab==='yanwenzi'){
+    var yanwenzi=GROUPS.find(function(g){return g.name==='颜文字';});
+    var items=yanwenzi?yanwenzi.items:[];
+    var html='<div class="emoji-grid">';
+    for(var i=0;i<items.length;i++){
+      html+='<div class="emoji-item" data-emoji="'+items[i].replace(/"/g,'&quot;')+'">'+items[i]+'</div>';
+    }
+    html+='</div>';
+    content.innerHTML=html;
+  }else{
+    var html='<div class="emoji-grid">';
+    for(var i=0;i<customEmojis.length;i++){
+      html+='<div class="emoji-item emoji-image" style="position:relative" data-eidx="'+i+'"><img src="'+customEmojis[i].data+'"><span class="emoji-del">✕</span></div>';
+    }
+    html+='<div class="emoji-item emoji-add" id="emoji-add-btn">＋</div>';
+    html+='</div>';
+    content.innerHTML=html;
+    var addBtn=$('emoji-add-btn');
+    if(addBtn) addBtn.addEventListener('click',function(){$('emoji-batch-input').click();});
+  }
+}
+
+function uploadEmojis(files){
+  if(!files||files.length===0) return;
+  var total=files.length,loaded=0,failed=0;
+  for(var i=0;i<files.length;i++){
+    (function(file){
+      // Check file type
+      if(!file.type.match(/^image\//)){
+        failed++;toast('⚠️ 跳过非图片文件: '+file.name);return;
+      }
+      var reader=new FileReader();
+      reader.onload=function(e){
+        customEmojis.push({id:Date.now()+loaded,data:e.target.result,name:file.name});
+        loaded++;
+        checkDone();
+      };
+      reader.onerror=function(){
+        failed++;toast('⚠️ 读取失败: '+file.name);
+        checkDone();
+      };
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
+  function checkDone(){
+    if(loaded+failed===total){
+      localStorage.setItem('zk-emoji-library',JSON.stringify(customEmojis));
+      renderEmojiContent();
+      var msg='✓ 已添加 '+loaded+' 个';
+      if(failed>0) msg+=', 跳过 '+failed+' 个';
+      toast(msg);
+    }
+  }
+}
+
+function deleteEmoji(idx){
+  customEmojis.splice(idx,1);
+  localStorage.setItem('zk-emoji-library',JSON.stringify(customEmojis));
+  renderEmojiContent();
+}
+
+// ===== IMAGE PREVIEW =====
+function previewImage(src){
+  $('img-preview-img').src=src;
+  $('img-preview').style.display='flex';
+}
+
+// ===== SETTINGS =====
+function openSettings(){
+  var overlay=$('settings-overlay'),panel=$('settings-panel');
+  var c=getActiveChar();
+  var groupOpts='<option value="">全部随机</option>';
+  for(var i=0;i<GROUPS.length;i++){
+    groupOpts+='<option value="'+GROUPS[i].name.replace(/"/g,'&quot;')+'"'+((c&&c.replyGroup===GROUPS[i].name)?' selected':'')+'>'+GROUPS[i].name+'</option>';
+  }
+  panel.innerHTML=
+    '<h3>⚙️ 设置 — '+(c?escapeHtml(c.name):'')+'</h3>'+
+    '<label>梦角名称</label><input type="text" id="set-name" value="'+(c?escapeHtml(c.name):'')+'">'+
+    '<label>回复来源分组</label><select id="set-group">'+groupOpts+'</select>'+
+    '<label>回复延迟</label><div class="delay-row"><input type="number" id="set-delay" value="'+(c?c.replyDelay:3)+'" min="0"><select id="set-unit"><option value="s"'+(c&&c.replyUnit==='s'?' selected':'')+'>秒</option><option value="m"'+(c&&c.replyUnit==='m'?' selected':'')+'>分</option></select></div>'+
+    '<label>主题模式</label><div style="display:flex;gap:6px"><button class="btn btn-sm sel-theme" data-v="auto">自动</button><button class="btn btn-sm sel-theme" data-v="dark">暗色</button><button class="btn btn-sm sel-theme" data-v="light">亮色</button></div>'+
+    '<label>强调色</label><div style="display:flex;gap:6px;flex-wrap:wrap">'+
+      '<button class="btn btn-sm sel-color" data-v="gold"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#c5a47e;margin-right:4px"></span>金</button>'+
+      '<button class="btn btn-sm sel-color" data-v="blue"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#7FA6CD;margin-right:4px"></span>蓝</button>'+
+      '<button class="btn btn-sm sel-color" data-v="purple"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#BB9EC7;margin-right:4px"></span>紫</button>'+
+      '<button class="btn btn-sm sel-color" data-v="pink"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#F4A6B3;margin-right:4px"></span>粉</button>'+
+      '<button class="btn btn-sm sel-color" data-v="mono"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#888;margin-right:4px"></span>墨</button>'+
+      '<button class="btn btn-sm sel-color" data-v="sunset"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#FF9A8B;margin-right:4px"></span>橙</button>'+
+    '</div>'+
+    '<div class="btn-row">'+
+      '<button class="btn btn-sm" id="set-backup-btn">📦 备份全部数据</button>'+
+      '<button class="btn btn-sm" id="set-restore-btn">📥 恢复备份</button>'+
+      '<input type="file" id="set-restore-input" accept=".json" style="display:none">'+
+      '<button class="btn btn-sm" id="set-export-cards-btn">📤 导出字卡</button>'+
+      '<button class="btn btn-sm" id="set-import-cards-btn">📥 导入字卡</button>'+
+      '<input type="file" id="set-import-cards-input" accept=".json" style="display:none">'+
+      '<button class="btn btn-sm btn-danger" id="set-clear-btn">🗑 清空当前聊天</button>'+
+      '<button class="btn btn-accent btn-sm" id="set-close-btn">完成</button>'+
+    '</div>';
+  overlay.classList.add('open');
+
+  setTimeout(function(){
+    var tbs=panel.querySelectorAll('.sel-theme');for(var i=0;i<tbs.length;i++)tbs[i].classList.toggle('btn-accent',tbs[i].dataset.v===settings.theme);
+    var cbs=panel.querySelectorAll('.sel-color');for(var i=0;i<cbs.length;i++)cbs[i].classList.toggle('btn-accent',cbs[i].dataset.v===settings.color);
+  },10);
+
+  panel.querySelector('.sel-theme:nth-child(1)').parentElement.addEventListener('click',function(e){
+    var b=e.target.closest('.sel-theme');if(!b)return;
+    settings.theme=b.dataset.v;applyTheme();saveAll();
+    var tbs=panel.querySelectorAll('.sel-theme');for(var i=0;i<tbs.length;i++)tbs[i].classList.toggle('btn-accent',tbs[i].dataset.v===settings.theme);
+  });
+  panel.querySelector('.sel-color:nth-child(1)').parentElement.addEventListener('click',function(e){
+    var b=e.target.closest('.sel-color');if(!b)return;
+    settings.color=b.dataset.v;applyColor();saveAll();
+    var cbs=panel.querySelectorAll('.sel-color');for(var i=0;i<cbs.length;i++)cbs[i].classList.toggle('btn-accent',cbs[i].dataset.v===settings.color);
+  });
+
+  $('set-close-btn').addEventListener('click',function(){
+    var ch=getActiveChar();if(!ch)return;
+    ch.name=$('set-name').value.trim()||'梦角';
+    ch.replyGroup=$('set-group').value;
+    ch.replyDelay=parseInt($('set-delay').value)||3;
+    ch.replyUnit=$('set-unit').value;
+    saveAll();
+    updateHeader();
+    overlay.classList.remove('open');
+    toast('✓ 设置已保存');
+  });
+  
+  $('set-backup-btn').addEventListener('click',function(){
+    var backup={version:2,date:new Date().toISOString(),cards:GROUPS,characters:characters,activeCharId:activeCharId,emojiLibrary:customEmojis,settings:settings};
+    downloadJSON(backup,'字卡_数据备份_'+new Date().toISOString().slice(0,10)+'.json');
+  });
+
+  $('set-restore-btn').addEventListener('click',function(){$('set-restore-input').click();});
+  $('set-restore-input').addEventListener('change',function(e){
+    var file=e.target.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var backup=JSON.parse(ev.target.result);
+        if(!backup.cards){toast('❌ 备份文件格式不对');return;}
+        if(!confirm('确定恢复备份？当前所有数据将被覆盖。'))return;
+        GROUPS.length=0;for(var i=0;i<backup.cards.length;i++)GROUPS.push(backup.cards[i]);
+        if(backup.characters){characters=backup.characters;}else if(backup.chatHistory){characters=[{id:Date.now(),name:'梦角',replyGroup:'',replyDelay:3,replyUnit:'s',chatHistory:backup.chatHistory}];}
+        activeCharId=backup.activeCharId||(characters.length>0?characters[0].id:null);
+        customEmojis=backup.emojiLibrary||[];
+        if(backup.settings){settings=backup.settings;}
+        saveAll();
+        localStorage.setItem('zk-card-data',JSON.stringify(GROUPS));
+        applyTheme();applyColor();
+        updateHeader();renderSidebar();renderChat();
+        overlay.classList.remove('open');
+        toast('✓ 数据已恢复');
+      }catch(err){toast('❌ 文件解析失败');}
+    };
+    reader.readAsText(file);
+    e.target.value='';
+  });
+
+  $('set-export-cards-btn').addEventListener('click',function(){
+    var exportData={exportDate:new Date().toISOString(),modules:['replies','groups'],customReplies:GROUPS.reduce(function(a,g){return a.concat(g.items)},[]),customReplyGroups:GROUPS,_groupExport:true,_groupExportType:'replies'};
+    downloadJSON(exportData,'字卡_分组导出.json');
+  });
+
+  $('set-import-cards-btn').addEventListener('click',function(){$('set-import-cards-input').click();});
+  $('set-import-cards-input').addEventListener('change',function(e){
+    var file=e.target.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var data=JSON.parse(ev.target.result);
+        var groups=data.customReplyGroups||[];
+        if(!groups.length){toast('❌ 没有找到分组数据');return;}
+        showCardImportDialog(groups);
+      }catch(err){toast('❌ 文件格式错误');}
+    };
+    reader.readAsText(file);
+    e.target.value='';
+  });
+
+  $('set-clear-btn').addEventListener('click',function(){
+    if(!confirm('确定清空当前梦角的所有聊天记录？此操作不可撤销。'))return;
+    var c=getActiveChar();if(c){c.chatHistory=[];}
+    saveAll();
+    renderChat();
+    overlay.classList.remove('open');
+    toast('✓ 聊天记录已清空');
+  });
+}
+
+function showCardImportDialog(groups){
+  var overlay=$('import-overlay'),panel=$('import-panel');
+  var totalItems=groups.reduce(function(s,g){return s+(g.items||[]).length},0);
+  panel.innerHTML=
+    '<h3>📥 导入字卡</h3>'+
+    '<p>检测到 <strong>'+groups.length+'</strong> 个分组，共 <strong>'+totalItems+'</strong> 条字卡</p>'+
+    '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px">'+
+      '<button class="btn btn-accent" id="import-replace-btn">覆盖导入</button>'+
+      '<button class="btn" id="import-append-btn">追加导入（自动去重）</button>'+
+      '<button class="btn" id="import-cancel-btn">取消</button>'+
+    '</div>';
+  overlay.classList.add('open');
+
+  function close(){overlay.classList.remove('open');}
+  $('import-cancel-btn').addEventListener('click',close);
+  overlay.addEventListener('click',function(e){if(e.target===this)close();});
+
+  $('import-replace-btn').addEventListener('click',function(){
+    if(!confirm('确定用导入的字卡完全覆盖当前字卡库？'))return;
+    GROUPS.length=0;
+    for(var i=0;i<groups.length;i++)GROUPS.push({name:groups[i].name,color:groups[i].color||'#888',items:(groups[i].items||[]).slice()});
+    localStorage.setItem('zk-card-data',JSON.stringify(GROUPS));
+    renderSidebar();
+    close();
+    toast('✓ 字卡已覆盖导入');
+  });
+
+  $('import-append-btn').addEventListener('click',function(){
+    var added=0;
+    for(var i=0;i<groups.length;i++){
+      var g=groups[i],existing=GROUPS.find(function(eg){return eg.name===g.name;});
+      if(existing){
+        // Build a Set of existing items for O(1) dedup lookup
+        var existingSet={};
+        for(var k=0;k<existing.items.length;k++){existingSet[existing.items[k]]=true;}
+        var newItems=g.items||[];
+        for(var j=0;j<newItems.length;j++){
+          if(!existingSet[newItems[j]]){existing.items.push(newItems[j]);existingSet[newItems[j]]=true;added++;}
+        }
+      }else{
+        GROUPS.push({name:g.name,color:g.color||'#888',items:(g.items||[]).slice()});
+        added+=(g.items||[]).length;
+      }
+    }
+    localStorage.setItem('zk-card-data',JSON.stringify(GROUPS));
+    renderSidebar();
+    close();
+    toast('✓ 追加完成，新增 '+added+' 条（已自动去重）');
+  });
+}
+
+function downloadJSON(data,filename){
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download=filename;a.click();
+  URL.revokeObjectURL(url);
+  toast('✓ 已下载 '+filename);
+}
+
+// ===== MAILBOX =====
+function ensureLetters(){
+  var c=getActiveChar();if(!c)return;
+  if(!c.letters) c.letters=[];
+}
+
+function getUnreadCount(){
+  var c=getActiveChar();if(!c||!c.letters)return 0;
+  var n=0;for(var i=0;i<c.letters.length;i++){if(!c.letters[i].read)n++;}
+  return n;
+}
+
+function openMailbox(){renderMailbox();$('mail-overlay').classList.add('open');}
+
+function renderMailbox(view){
+  ensureLetters();
+  var c=getActiveChar();var letters=c.letters||[];
+  if(!view) view='inbox';
+  var panel=$('mail-panel'),html='';
+  html+='<h3>✉️ 信箱 — '+escapeHtml(c.name)+'</h3>';
+  html+='<div class="mail-tabs"><div class="mail-tab'+(view==='inbox'?' active':'')+'" data-mail-tab="inbox">收件箱 ('+letters.length+')</div><div class="mail-tab'+(view==='compose'?' active':'')+'" data-mail-tab="compose">写信</div><div class="mail-tab'+(view==='sent'?' active':'')+'" data-mail-tab="sent">已发送</div></div>';
+
+  if(view==='inbox'){
+    if(letters.length===0){html+='<p style="text-align:center;color:var(--text3);padding:30px">📭 还没有收到信件</p>';}
+    else{
+      html+='<div class="mail-list">';
+      for(var i=letters.length-1;i>=0;i--){
+        var l=letters[i];html+='<div class="mail-item'+(l.read?'':' unread')+'" data-midx="'+i+'"><div class="mail-subject">'+escapeHtml(l.subject||'(无主题)')+(l.read?'':'<span class="mail-badge">新</span>')+'</div><div class="mail-meta">'+escapeHtml(l.from||'梦角')+' · '+new Date(l.time).toLocaleString('zh-CN')+'</div></div>';
+      }
+      html+='</div>';
+    }
+  }else if(view==='compose'){
+    html+='<div class="mail-compose"><label>主题</label><input type="text" id="mail-subject" placeholder="信件主题…"><label>内容</label><textarea id="mail-body" placeholder="写下你想说的话…"></textarea><div class="btn-row"><button class="btn btn-accent btn-sm" id="mail-send-btn">📨 发送</button></div></div>';
+  }else if(view==='sent'){
+    var sent=letters.filter(function(l){return l.direction==='sent';});
+    if(sent.length===0){html+='<p style="text-align:center;color:var(--text3);padding:30px">📨 还没有发送过信件</p>';}
+    else{
+      html+='<div class="mail-list">';
+      for(var i=sent.length-1;i>=0;i--){
+        var l=sent[i];html+='<div class="mail-item" data-midx="'+letters.indexOf(l)+'"><div class="mail-subject">'+escapeHtml(l.subject||'(无主题)')+'</div><div class="mail-meta">发给 '+escapeHtml(l.to||'梦角')+' · '+new Date(l.time).toLocaleString('zh-CN')+'</div></div>';
+      }
+      html+='</div>';
+    }
+  }
+  panel.innerHTML=html;
+
+  // Tab switching
+  panel.querySelectorAll('.mail-tab').forEach(function(t){t.addEventListener('click',function(){renderMailbox(this.dataset.mailTab);});});
+
+  // Click mail item to view
+  panel.querySelectorAll('.mail-item').forEach(function(item){item.addEventListener('click',function(){
+    var idx=parseInt(this.dataset.midx),l=letters[idx];
+    l.read=true;saveAll();
+    var detail='<h3>📧 '+escapeHtml(l.subject||'(无主题)')+'</h3>';
+    detail+='<p style="font-size:12px;color:var(--text3);margin-bottom:12px">'+(l.direction==='sent'?'发给 '+escapeHtml(l.to||'梦角'):'来自 '+escapeHtml(l.from||'梦角'))+' · '+new Date(l.time).toLocaleString('zh-CN')+'</p>';
+    detail+='<div class="mail-body">'+escapeHtml(l.body||'')+'</div>';
+    detail+='<div class="btn-row"><button class="btn btn-sm" id="mail-back-btn">← 返回</button></div>';
+    panel.innerHTML=detail;
+    panel.querySelector('#mail-back-btn').addEventListener('click',function(){renderMailbox('inbox');});
+    $('mail-btn').textContent='✉️';
+  });});
+
+  // Send mail
+  var sendBtn=panel.querySelector('#mail-send-btn');
+  if(sendBtn){sendBtn.addEventListener('click',function(){
+    var subject=$('mail-subject').value.trim()||'(无主题)',body=$('mail-body').value.trim();
+    if(!body){toast('请输入内容');return;}
+    letters.push({subject:subject,body:body,time:Date.now(),from:'我',to:c.name,direction:'sent',read:true});
+    saveAll();
+    // Auto-reply after 1-12 hours with combo cards
+    var delay=3600000+Math.random()*39600000; // 1-12 hours in ms
+    setTimeout(function(){
+      letters.push({subject:'Re: '+subject,body:getRandomCards(2,6),time:Date.now(),from:c.name,to:'我',direction:'received',read:false});
+      saveAll();updateMailBadge();
+      toast('📬 收到 '+c.name+' 的回信！');
+    },delay);
+    toast('✓ 信件已发送');
+    renderMailbox('inbox');
+    updateMailBadge();
+  });}
+}
+
+function updateMailBadge(){
+  var n=getUnreadCount(),btn=$('mail-btn');
+  btn.textContent=n>0?'✉️('+n+')':'✉️';
+}
+
+// ===== PROACTIVE EVENTS =====
+let proactiveTimer=null;
+function startProactiveEvents(){
+  clearInterval(proactiveTimer);
+  proactiveTimer=setInterval(function(){
+    var c=getActiveChar();if(!c)return;
+    var roll=Math.random();
+    if(roll<0.15){
+      var amounts=['0.52','1.68','5.20','6.66','8.88','9.99','13.14','52.00'];
+      var amount=amounts[Math.floor(Math.random()*amounts.length)];
+      c.chatHistory.push({id:Date.now(),type:'redpack',content:amount,sender:'partner',time:Date.now(),status:'pending'});
+      saveAll();renderChat();
+      $('redpack-btn').textContent='🧧🔴';toast('🧧 '+(c.name)+' 给你发了一个红包！');
+      setTimeout(function(){$('redpack-btn').textContent='🧧';},30000);
+    }else if(roll<0.3){
+      // Check if 1-2 days since last character post
+      var lastPost=0;
+      ensureMoments();
+      for(var j=c.moments.length-1;j>=0;j--){if(c.moments[j].from!=='我'){lastPost=c.moments[j].time;break;}}
+      if(Date.now()-lastPost>86400000+Math.random()*86400000){
+        c.moments.push({text:getRandomCards(1,3),img:null,from:c.name,time:Date.now(),comments:[]});
+        saveAll();$('moments-btn').textContent='🌐🔴';toast('🌐 '+(c.name)+' 发了一条朋友圈');
+        setTimeout(function(){$('moments-btn').textContent='🌐';},30000);
+      }
+    }else if(roll<0.4){
+      $('call-btn').textContent='📞🔴';toast('📞 '+(c.name)+' 给你打电话…');
+      setTimeout(function(){$('call-btn').textContent='📞';},30000);
+    }
+  },45000+Math.random()*45000);
+}
+
+document.addEventListener('visibilitychange',function(){if(!document.hidden)startProactiveEvents();});
+
+let incomingCallTimer=null;
+
+function incomingCall(){
+  var c=getActiveChar();
+  $('call-avatar').textContent=c?c.name.charAt(0):'✦';
+  $('call-name').textContent=c?c.name:'梦角';
+  $('call-status').textContent='来电…';
+  $('call-status').style.display='block';
+  $('call-timer').style.display='none';
+  $('call-bubbles').innerHTML='';
+  $('call-overlay').classList.add('open');
+  $('call-minimize-btn').style.display='none';
+  $('call-hangup-btn').style.display='none';
+  var ca=document.getElementById('call-answer-btn');
+  if(!ca){
+    ca=document.createElement('button');ca.className='call-btn call-pickup';ca.id='call-answer-btn';ca.textContent='接听';
+    var cd=document.createElement('button');cd.className='call-btn call-hangup';cd.id='call-decline-btn';cd.textContent='挂断';
+    document.querySelector('#call-overlay .call-actions').appendChild(ca);
+    document.querySelector('#call-overlay .call-actions').appendChild(cd);
+  }
+  ca.style.display='flex';document.getElementById('call-decline-btn').style.display='flex';
+  ca.onclick=function(){answerCall();};
+  document.getElementById('call-decline-btn').onclick=function(){declineCall();};
+  clearTimeout(incomingCallTimer);
+  incomingCallTimer=setTimeout(function(){declineCall();},30000);
+}
+
+function answerCall(){
+  clearTimeout(incomingCallTimer);
+  var ca=document.getElementById('call-answer-btn'),cd=document.getElementById('call-decline-btn');
+  if(ca)ca.style.display='none';if(cd)cd.style.display='none';
+  $('call-minimize-btn').style.display='flex';$('call-hangup-btn').style.display='flex';
+  $('call-status').textContent='通话中';callSeconds=0;
+  $('call-timer').style.display='block';updateCallTimer();
+  callTimer=setInterval(updateCallTimer,1000);
+  function showCallBubble(){
+    var card=getRandomCard(),b=document.createElement('div');
+    b.className='call-bubble';b.textContent=card;
+    $('call-bubbles').appendChild(b);
+    if($('call-bubbles').children.length>4)$('call-bubbles').firstChild.remove();
+  }
+  showCallBubble();
+  callBubbleInterval=setInterval(showCallBubble,3000+Math.random()*3000);
+}
+
+function declineCall(){
+  clearTimeout(incomingCallTimer);
+  var ca=document.getElementById('call-answer-btn'),cd=document.getElementById('call-decline-btn');
+  if(ca)ca.style.display='none';if(cd)cd.style.display='none';
+  $('call-minimize-btn').style.display='flex';$('call-hangup-btn').style.display='flex';
+  $('call-overlay').classList.remove('open');
+  var c=getActiveChar();if(c){
+    c.chatHistory.push({id:Date.now(),type:'text',content:'📞 未接通话 ('+(c.name)+')',sender:'system',time:Date.now()});
+    saveAll();renderChat();
+  }
+}
+
+// ===== RED PACKET =====
+let rpAmount='', rpDirection='to';
+
+function openRedpack(direction){
+  rpDirection=direction||'to';
+  var c=getActiveChar(),card=$('redpack-card');
+  card.classList.remove('opened');
+  if(rpDirection==='to'){
+    $('rp-to-name').textContent=c?c.name:'梦角';
+    $('redpack-card').querySelector('.rp-title').textContent='发红包';
+  }else{
+    $('rp-to-name').textContent='我';
+    $('redpack-card').querySelector('.rp-title').textContent=c?c.name+' 的红包':'红包';
+  }
+  $('rp-amount-input').value='';
+  $('redpack-overlay').classList.add('open');
+  setTimeout(function(){$('rp-amount-input').focus();},300);
+}
+
+$('redpack-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+
+$('rp-send-btn').addEventListener('click',function(){
+  var amount=parseFloat($('rp-amount-input').value);
+  if(!amount||amount<=0){toast('请输入有效金额');return;}
+  rpAmount=amount.toFixed(2);
+  var card=$('redpack-card'),c=getActiveChar();
+  card.classList.add('opened');
+  if(rpDirection==='to'){
+    $('rp-amount').textContent='¥'+rpAmount;
+    $('rp-sub-msg').textContent='已发给 '+(c?c.name:'梦角');
+    addMessage('text','🧧 发给'+(c?c.name:'梦角')+'一个红包 ¥'+rpAmount,'me');
+    // Character decides: 80% accept, 20% reject after a delay
+    var delay=(c?c.replyDelay:3)*1000;if(c&&c.replyUnit==='m')delay*=60;
+    setTimeout(function(){
+      if(Math.random()<0.8){
+        $('rp-reply').textContent='收下了 ❤️ '+getRandomCard();
+        addMessage('text','🧧 已收下你的红包~ '+getRandomCard(),'partner');
+      }else{
+        $('rp-reply').textContent='退还了 💔 '+getRandomCard();
+        addMessage('text','🧧 红包退还给你了… '+getRandomCard(),'partner');
+      }
+    },delay);
+  }else{
+    $('rp-amount').textContent='¥'+rpAmount;
+    $('rp-sub-msg').textContent=(c?c.name:'梦角')+' 发来的红包';
+    $('rp-reply').textContent=getRandomCard();
+    addMessage('text','🧧 收到'+(c?c.name:'梦角')+'的红包 ¥'+rpAmount,'partner');
+  }
+});
+
+$('rp-close-btn').addEventListener('click',function(){$('redpack-overlay').classList.remove('open');});
+
+// ===== CALL =====
+let callTimer=null, callSeconds=0, callBubbleInterval=null;
+
+function openCall(){
+  var c=getActiveChar();
+  $('call-avatar').textContent=c?c.name.charAt(0):'✦';
+  $('call-name').textContent=c?c.name:'梦角';
+  $('call-status').textContent='呼叫中…';
+  $('call-status').style.display='block';
+  $('call-timer').style.display='none';
+  $('call-bubbles').innerHTML='';
+  $('call-overlay').classList.add('open');
+
+  // Simulate pickup after 2-4 seconds
+  setTimeout(function(){
+    $('call-status').textContent='通话中';
+    callSeconds=0;
+    $('call-timer').style.display='block';
+    updateCallTimer();
+    callTimer=setInterval(updateCallTimer,1000);
+
+    // Show random cards as speech every 3-5 seconds
+    function showCallBubble(){
+      var card=getRandomCard(),b=document.createElement('div');
+      b.className='call-bubble';b.textContent=card;
+      $('call-bubbles').appendChild(b);
+      if($('call-bubbles').children.length>4) $('call-bubbles').firstChild.remove();
+    }
+    showCallBubble();
+    callBubbleInterval=setInterval(showCallBubble,3000+Math.random()*3000);
+  },2000+Math.random()*2000);
+}
+
+function updateCallTimer(){
+  callSeconds++;
+  var m=Math.floor(callSeconds/60),s=callSeconds%60,ts=(m<10?'0'+m:m)+':'+(s<10?'0'+s:s);
+  $('call-timer').textContent=ts;
+  $('cm-timer').textContent=ts;
+}
+
+function hangupCall(){
+  clearInterval(callTimer);clearInterval(callBubbleInterval);
+  $('call-overlay').classList.remove('open');
+  $('call-minibar').classList.remove('show');
+  toast('通话结束 ('+$('call-timer').textContent+')');
+}
+
+function minimizeCall(){
+  $('call-overlay').classList.remove('open');
+  $('call-minibar').classList.add('show');
+  var c=getActiveChar();$('cm-avatar').textContent=c?c.name.charAt(0):'✦';
+  $('cm-info').textContent='与 '+(c?c.name:'')+' 通话中';
+}
+
+function restoreCall(){
+  $('call-minibar').classList.remove('show');
+  $('call-overlay').classList.add('open');
+}
+
+$('call-hangup-btn').addEventListener('click',hangupCall);
+$('call-minimize-btn').addEventListener('click',minimizeCall);
+$('call-minibar').addEventListener('click',function(e){
+  if(!e.target.closest('.cm-hangup')) restoreCall();
+});
+$('cm-hangup-btn').addEventListener('click',function(e){e.stopPropagation();hangupCall();});
+
+// ===== MOMENTS =====
+let momentsImages=[];
+
+function ensureMoments(){
+  var c=getActiveChar();if(!c)return;
+  if(!c.moments) c.moments=[];
+}
+
+function openMoments(){
+  ensureMoments();
+  $('moments-overlay').classList.add('open');
+  renderMoments();
+}
+
+function renderMoments(){
+  var c=getActiveChar();var posts=c.moments||[];
+  var body=$('moments-body'),html='';
+  if(posts.length===0){
+    html='<div style="text-align:center;color:var(--text3);padding:60px 20px"><div style="font-size:48px;opacity:.3;margin-bottom:12px">🌐</div>还没有动态<br><span style="font-size:12px">发第一条朋友圈吧</span></div>';
+  }
+  for(var i=posts.length-1;i>=0;i--){
+    var p=posts[i],isMe=p.from==='我';
+    html+='<div class="moments-post" data-pidx="'+i+'"><div class="mp-header"><div class="mp-avatar" style="'+(isMe?'':'background:rgba(var(--accent-rgb),.3)')+'">'+p.from.charAt(0)+'</div><div class="mp-name">'+escapeHtml(p.from)+'</div><div class="mp-time">'+new Date(p.time).toLocaleString('zh-CN')+'</div></div><div class="mp-content">'+escapeHtml(p.text||'')+'</div>';
+    if(p.img){html+='<img class="mp-img" src="'+p.img+'" onclick="previewImage(this.src)">';}
+    if(p.comments&&p.comments.length>0){
+      for(var j=0;j<p.comments.length;j++){
+        var cmt=p.comments[j];html+='<div class="moments-comment"><span class="mc-name">'+escapeHtml(cmt.from)+'</span>：'+escapeHtml(cmt.text)+'</div>';
+      }
+    }
+    html+='<div class="moments-comment-box" style="display:flex;gap:6px;margin-top:8px"><input class="mp-comment-input" placeholder="写评论…" style="flex:1;padding:6px 10px;border-radius:14px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:12px;font-family:inherit;outline:none"><button class="btn btn-sm mp-comment-send" data-pidx="'+i+'">发送</button></div>';
+    html+='</div>';
+  }
+  body.innerHTML=html;
+  // Bind comment send buttons
+  body.querySelectorAll('.mp-comment-send').forEach(function(btn){btn.addEventListener('click',function(){
+    var cc=getActiveChar();if(!cc)return;
+    var idx=parseInt(this.dataset.pidx),input=this.parentElement.querySelector('.mp-comment-input');
+    var text=input.value.trim();if(!text||!cc.moments[idx])return;
+    cc.moments[idx].comments.push({from:'我',text:text,time:Date.now()});
+    saveAll();
+    var selfIdx=idx,selfName=cc.name;
+    setTimeout(function(){
+      var c2=getActiveChar();if(!c2||!c2.moments[selfIdx])return;
+      c2.moments[selfIdx].comments.push({from:selfName,text:getRandomCards(1,2),time:Date.now()});
+      saveAll();if($('moments-overlay').classList.contains('open'))renderMoments();
+    },2000+Math.random()*3000);
+    renderMoments();
+  });});
+  // Enter key on comment input
+  body.querySelectorAll('.mp-comment-input').forEach(function(inp){inp.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){var btn=this.parentElement.querySelector('.mp-comment-send');if(btn)btn.click();}
+  });});
+  body.scrollTop=body.scrollHeight;
+}
+
+function postMoment(text,img,from){
+  ensureMoments();var c=getActiveChar();if(!from)from='我';
+  c.moments.push({text:text,img:img||null,from:from,time:Date.now(),comments:[]});
+  var postIdx=c.moments.length-1;
+  var delay=3600000+Math.random()*3600000;
+  setTimeout(function(){
+    var card=getRandomCards(2,5);
+    var commenter=from==='我'?c.name:'我';
+    c.moments[postIdx].comments.push({from:commenter,text:card,time:Date.now()});
+    saveAll();if($('moments-overlay').classList.contains('open')) renderMoments();
+  },delay);
+  saveAll();renderMoments();
+}
+
+function maybeAutoPost(){
+  var c=getActiveChar();if(!c||!c.moments)return;
+  var lastPost=0;
+  for(var i=c.moments.length-1;i>=0;i--){if(c.moments[i].from!=='我'){lastPost=c.moments[i].time;break;}}
+  var dayMs=86400000,elapsed=Date.now()-lastPost;
+  if(elapsed>dayMs+Math.random()*dayMs){
+    // Character sometimes posts with a random emoji image
+    var img=null;
+    if(customEmojis.length>0&&Math.random()<0.4){img=customEmojis[Math.floor(Math.random()*customEmojis.length)].data;}
+    postMoment(getRandomCards(1,3),img,c.name);
+  }
+}
+
+$('moments-back-btn').addEventListener('click',function(){$('moments-overlay').classList.remove('open');updatePhotoPreview();});
+$('moments-send-btn').addEventListener('click',function(){
+  var text=$('moments-input').value.trim(),img=momentsImages.length>0?momentsImages[0]:null;
+  if(!text&&!img){toast('请输入内容');return;}
+  postMoment(text,img,'我');
+  $('moments-input').value='';momentsImages=[];updatePhotoPreview();
+  var c=getActiveChar();
+  setTimeout(function(){postMoment(getRandomCards(2,4),null,c.name);},3600000+Math.random()*3600000);
+});
+$('moments-img-btn').addEventListener('click',function(){$('moments-img-input').click();});
+function updatePhotoPreview(){
+  var btn=$('moments-img-btn');
+  if(momentsImages.length>0){btn.textContent='🖼️✓';btn.style.borderColor='rgba(var(--accent-rgb),.5)';btn.style.color='var(--accent)';}
+  else{btn.textContent='🖼️';btn.style.borderColor='';btn.style.color='';}
+}
+$('moments-img-input').addEventListener('change',function(e){
+  var file=e.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){momentsImages=[ev.target.result];updatePhotoPreview();toast('✓ 图片已选择');};
+  reader.readAsDataURL(file);
+  e.target.value='';
+});
+
+// ===== CHARACTER SWITCHER =====
+function renderCharDropdown(){
+  var dd=$('char-dropdown'),html='';
+  for(var i=0;i<characters.length;i++){
+    var c=characters[i];
+    html+='<div class="char-item'+(c.id===activeCharId?' active':'')+'" data-cid="'+c.id+'"><span class="char-item-dot">'+c.name.charAt(0)+'</span>'+escapeHtml(c.name)+'<button class="char-item-del" data-del="'+c.id+'">✕</button></div>';
+  }
+  html+='<div class="char-item char-item-add" id="char-add-btn">＋ 添加梦角</div>';
+  dd.innerHTML=html;
+}
+
+function toggleCharDropdown(){
+  var dd=$('char-dropdown');
+  renderCharDropdown();
+  dd.classList.toggle('open');
+}
+
+function switchCharacter(cid){
+  activeCharId=cid;
+  saveAll();
+  updateHeader();
+  renderChat();
+  $('char-dropdown').classList.remove('open');
+}
+
+function addCharacter(){
+  var name=prompt('请输入梦角名称：');
+  if(!name||!name.trim()) return;
+  var c={id:Date.now(),name:name.trim(),replyGroup:'',replyDelay:3,replyUnit:'s',chatHistory:[]};
+  characters.push(c);
+  activeCharId=c.id;
+  saveAll();
+  updateHeader();
+  renderChat();
+  renderCharDropdown();
+  $('char-dropdown').classList.add('open');
+}
+
+function deleteCharacter(cid){
+  if(characters.length<=1){toast('至少保留一个梦角');return;}
+  if(!confirm('确定删除这个梦角？所有聊天记录将丢失。'))return;
+  for(var i=0;i<characters.length;i++){if(characters[i].id===cid){characters.splice(i,1);break;}}
+  if(activeCharId===cid) activeCharId=characters[0].id;
+  saveAll();
+  updateHeader();
+  renderChat();
+  renderCharDropdown();
+  $('char-dropdown').classList.add('open');
+  toast('已删除');
+}
+
+// ===== EVENTS =====
+function bindEvents(){
+  // Send
+  $('send-btn').addEventListener('click',sendText);
+  $('msg-input').addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendText();}
+  });
+  // Auto-resize textarea
+  $('msg-input').addEventListener('input',function(){
+    this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';
+  });
+  
+  // Voice button
+  $('voice-btn').addEventListener('click',function(){toast('🎤 语音功能开发中');});
+  
+  // Image button
+  $('image-btn').addEventListener('click',function(){$('image-input').click();});
+  $('image-input').addEventListener('change',function(e){
+    var file=e.target.files[0];if(file){sendImage(file);e.target.value='';}
+  });
+  
+  // Emoji panel
+  $('emoji-btn').addEventListener('click',toggleEmojiPanel);
+  $('emoji-batch-input').addEventListener('change',function(){uploadEmojis(this.files);});
+  $('emoji-panel').addEventListener('click',function(e){
+    var tab=e.target.closest('.emoji-tab');
+    if(tab){
+      document.querySelectorAll('.emoji-tab').forEach(function(t){t.classList.toggle('active',t===tab);});
+      renderEmojiContent();
+      return;
+    }
+    // Handle emoji item click
+    var item=e.target.closest('.emoji-item');
+    if(item){
+      // Custom image emoji (by index)
+      if(item.dataset.eidx!==undefined){
+        var ei=parseInt(item.dataset.eidx);
+        if(customEmojis[ei]) sendEmoji(customEmojis[ei].data);
+        return;
+      }
+      // Yanwenzi text emoji
+      if(item.dataset.emoji){
+        sendEmoji(item.dataset.emoji);
+        return;
+      }
+      // Add button - handled by its own listener
+      if(item.classList.contains('emoji-add')) return;
+    }
+    // Handle delete emoji
+    var del=e.target.closest('.emoji-del');
+    if(del){
+      e.stopPropagation();
+      var parent=del.closest('.emoji-item');
+      if(parent&&parent.dataset.eidx!==undefined){
+        deleteEmoji(parseInt(parent.dataset.eidx));
+      }
+      return;
+    }
+  });
+  
+  // Sidebar
+  $('sidebar-list').addEventListener('click',function(e){
+    var item=e.target.closest('.sidebar-item');if(!item)return;
+    var group=item.dataset.group||null;
+    if(currentGroup===group){currentGroup=null;}else{currentGroup=group;}
+    renderSidebar();
+    toast('回复来源：'+(currentGroup||'全部'));
+  });
+  $('card-search').addEventListener('input',filterSidebarCards);
+  $('add-cards-btn').addEventListener('click',openAddCards);
+  $('sidebar-toggle-btn').addEventListener('click',function(){$('sidebar').classList.toggle('open');});
+
+  // Sidebar collapse/expand (desktop)
+  $('sidebar-collapse-btn').addEventListener('click',function(){
+    $('sidebar').classList.add('collapsed');
+    $('sidebar-expand-btn').classList.add('show');
+  });
+  $('sidebar-expand-btn').addEventListener('click',function(){
+    $('sidebar').classList.remove('collapsed');
+    $('sidebar-expand-btn').classList.remove('show');
+  });
+  
+  // Character dropdown
+  $('header-info').addEventListener('click',function(e){
+    e.stopPropagation();
+    toggleCharDropdown();
+  });
+  $('char-dropdown').addEventListener('click',function(e){
+    var item=e.target.closest('.char-item');
+    if(!item)return;
+    var cid=item.dataset.cid;
+    if(cid){switchCharacter(parseInt(cid));return;}
+    var del=e.target.closest('.char-item-del');
+    if(del){deleteCharacter(parseInt(del.dataset.del));return;}
+    if(item.id==='char-add-btn'){addCharacter();return;}
+  });
+  document.addEventListener('click',function(){$('char-dropdown').classList.remove('open');});
+
+  // Close sidebar on outside click (mobile)
+  document.addEventListener('click',function(e){
+    var sb=$('sidebar');if(!sb.classList.contains('open'))return;
+    if(!sb.contains(e.target)&&e.target!==$('sidebar-toggle-btn')&&!$('sidebar-toggle-btn').contains(e.target)){
+      sb.classList.remove('open');
+    }
+  });
+  
+  // Settings
+  $('redpack-btn').addEventListener('click',function(){openRedpack('to');});
+  $('call-btn').addEventListener('click',function(){
+    if($('call-btn').textContent.includes('🔴')){
+      incomingCall();$('call-btn').textContent='📞';
+    }else{openCall();}
+  });
+  $('moments-btn').addEventListener('click',function(){openMoments();maybeAutoPost();});
+  $('mail-btn').addEventListener('click',openMailbox);
+  $('mail-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+  $('settings-btn').addEventListener('click',openSettings);
+  $('settings-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+  $('import-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+  
+  // Scroll to bottom
+  // Redpack accept/reject in chat
+  $('chat-area').addEventListener('click',function(e){
+    var accept=e.target.closest('.rp-accept-btn');
+    var reject=e.target.closest('.rp-reject-btn');
+    if(!accept&&!reject)return;
+    e.stopPropagation();
+    var rid=parseInt((accept||reject).parentElement.dataset.rid);
+    var c=getActiveChar();if(!c)return;
+    for(var i=0;i<c.chatHistory.length;i++){
+      if(c.chatHistory[i].id===rid){
+        if(accept){
+          c.chatHistory[i].status='accepted';
+          c.chatHistory[i].reply=getRandomCard();
+          addMessage('text','谢谢宝贝的红包~ '+c.chatHistory[i].reply,'me');
+        }else{
+          c.chatHistory[i].status='rejected';
+          addMessage('text','红包已退还', 'me');
+        }
+        saveAll();renderChat();break;
+      }
+    }
+  });
+  $('chat-area').addEventListener('scroll',function(){
+    var a=this,btn=$('scroll-bottom-btn');
+    if(a.scrollHeight-a.scrollTop-a.clientHeight>200){btn.classList.add('show');}else{btn.classList.remove('show');}
+  });
+  $('scroll-bottom-btn').addEventListener('click',scrollToBottom);
+  
+  // System theme change
+  window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',function(){
+    if(settings.theme==='auto')applyTheme();
+  });
+  
+  // Keyboard shortcut
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      closeEmojiPanel();
+      $('settings-overlay').classList.remove('open');
+      $('import-overlay').classList.remove('open');
+      $('sidebar').classList.remove('open');
+    }
+    if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();$('msg-input').focus();}
+  });
+}
+
+// Error reporter
+window.onerror=function(msg,url,line){toast('⚠️ 错误: '+msg+' (行'+line+')');return false;};
+
+// ===== START =====
+init();
+</script>
+</body>
+</html>
