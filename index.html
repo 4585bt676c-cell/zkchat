@@ -1043,7 +1043,7 @@ function renderMailbox(view){
   var c=getActiveChar();var letters=c.letters||[];
   if(!view) view='inbox';
   var panel=$('mail-panel'),html='';
-  html+='<h3>✉️ 信箱 — '+escapeHtml(c.name)+'</h3>';
+  html+='<div style="display:flex;align-items:center;justify-content:space-between"><h3>✉️ 信箱 — '+escapeHtml(c.name)+'</h3><button class="btn btn-sm" onclick="document.getElementById(\'mail-overlay\').classList.remove(\'open\')" style="font-size:16px">✕</button></div>';
   var inboxLetters=letters.filter(function(l){return l.direction==='received';});
   html+='<div class="mail-tabs"><div class="mail-tab'+(view==='inbox'?' active':'')+'" data-mail-tab="inbox">收件箱 ('+inboxLetters.length+')</div><div class="mail-tab'+(view==='compose'?' active':'')+'" data-mail-tab="compose">写信</div><div class="mail-tab'+(view==='sent'?' active':'')+'" data-mail-tab="sent">已发送</div></div>';
 
