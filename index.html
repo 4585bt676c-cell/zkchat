@@ -1450,13 +1450,16 @@ function hangupCall(){
   callActive=false;
   clearInterval(callTimer);clearInterval(callBubbleInterval);
   $('call-overlay').classList.remove('open');
-  $('call-minibar').classList.remove('show');
+  var mb=$('call-minibar');mb.classList.remove('show');
+  mb.style.left='50%';mb.style.top='';mb.style.transform='translateX(-50%)';
   toast('通话结束 ('+$('call-timer').textContent+')');
 }
 
 function minimizeCall(){
   $('call-overlay').classList.remove('open');
-  $('call-minibar').classList.add('show');
+  var mb=$('call-minibar');mb.classList.add('show');
+  // Reset position
+  mb.style.left='50%';mb.style.top='';mb.style.transform='translateX(-50%)';mb.style.transition='';
   var c=getActiveChar();$('cm-avatar').textContent=c?c.name.charAt(0):'✦';
   $('cm-info').textContent='与 '+(c?c.name:'')+' 通话中';
 }
