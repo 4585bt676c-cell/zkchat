@@ -299,7 +299,7 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--acce
     <div class="rp-closed">
       <div class="rp-icon">🧧</div>
       <div class="rp-title">发红包</div>
-      <div style="margin:10px 0"><input type="number" id="rp-amount-input" placeholder="输入金额" step="0.01" min="0.01" style="width:140px;padding:8px 14px;border-radius:20px;border:none;text-align:center;font-size:20px;font-weight:700;color:#c0392b;outline:none"></div>
+      <div style="margin:10px 0"><input type="number" id="rp-amount-input" placeholder="最低520" step="1" min="520" style="width:140px;padding:8px 14px;border-radius:20px;border:none;text-align:center;font-size:20px;font-weight:700;color:#c0392b;outline:none"></div>
       <div style="font-size:11px;color:#ffcccb;margin-bottom:12px">发给 <span id="rp-to-name">梦角</span></div>
       <button class="rp-btn" id="rp-send-btn">塞进红包</button>
     </div>
@@ -1240,7 +1240,7 @@ $('redpack-overlay').addEventListener('click',function(e){if(e.target===this)thi
 
 $('rp-send-btn').addEventListener('click',function(){
   var amount=parseFloat($('rp-amount-input').value);
-  if(!amount||amount<=0){toast('请输入有效金额');return;}
+  if(!amount||amount<520){toast('最低520起，别小气~');return;}
   rpAmount=amount.toFixed(2);
   var card=$('redpack-card'),c=getActiveChar();
   card.classList.add('opened');
