@@ -242,7 +242,8 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--acce
 .call-pickup{background:#2ecc71;color:#fff}
 .call-minimize-btn{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition)}
 .call-minimize-btn:hover{background:rgba(255,255,255,.1);color:#fff}
-.call-minibar{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:1001;background:var(--bg2);border:1px solid var(--border2);border-radius:24px;padding:8px 16px;display:none;align-items:center;gap:10px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeInUp .3s ease}
+.call-minibar{position:fixed;bottom:70px;left:50%;z-index:1001;background:var(--bg2);border:1px solid var(--border2);border-radius:24px;padding:8px 16px;display:none;align-items:center;gap:10px;cursor:grab;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeInUp .3s ease;user-select:none;-webkit-user-select:none}
+.call-minibar:active{cursor:grabbing}
 .call-minibar.show{display:flex}
 .call-minibar .cm-avatar{width:28px;height:28px;border-radius:50%;background:rgba(var(--accent-rgb),.3);display:flex;align-items:center;justify-content:center;font-size:12px}
 .call-minibar .cm-info{font-size:12px;color:var(--text)}
@@ -1467,7 +1468,39 @@ function restoreCall(){
 
 $('call-hangup-btn').addEventListener('click',hangupCall);
 $('call-minimize-btn').addEventListener('click',minimizeCall);
+// Minibar drag
+let minibarDragging=false,minibarStartX=0,minibarStartY=0,minibarOrigX=0,minibarOrigY=0;
+$('call-minibar').addEventListener('mousedown',function(e){
+  if(e.target.closest('.cm-hangup'))return;
+  minibarDragging=true;minibarStartX=e.clientX;minibarStartY=e.clientY;
+  var rect=this.getBoundingClientRect();
+  minibarOrigX=rect.left;minibarOrigY=rect.top;
+  this.style.transition='none';this.style.transform='none';this.style.left=minibarOrigX+'px';this.style.top=minibarOrigY+'px';
+  e.preventDefault();
+});
+$('call-minibar').addEventListener('touchstart',function(e){
+  if(e.target.closest('.cm-hangup'))return;
+  minibarDragging=true;minibarStartX=e.touches[0].clientX;minibarStartY=e.touches[0].clientY;
+  var rect=this.getBoundingClientRect();
+  minibarOrigX=rect.left;minibarOrigY=rect.top;
+  this.style.transition='none';this.style.transform='none';this.style.left=minibarOrigX+'px';this.style.top=minibarOrigY+'px';
+},{passive:false});
+document.addEventListener('mousemove',function(e){
+  if(!minibarDragging)return;
+  var mb=$('call-minibar');
+  mb.style.left=(minibarOrigX+e.clientX-minibarStartX)+'px';
+  mb.style.top=(minibarOrigY+e.clientY-minibarStartY)+'px';
+});
+document.addEventListener('touchmove',function(e){
+  if(!minibarDragging)return;
+  var mb=$('call-minibar');
+  mb.style.left=(minibarOrigX+e.touches[0].clientX-minibarStartX)+'px';
+  mb.style.top=(minibarOrigY+e.touches[0].clientY-minibarStartY)+'px';
+},{passive:false});
+document.addEventListener('mouseup',function(){minibarDragging=false;});
+document.addEventListener('touchend',function(){minibarDragging=false;});
 $('call-minibar').addEventListener('click',function(e){
+  if(minibarDragging)return;
   if(!e.target.closest('.cm-hangup')) restoreCall();
 });
 $('cm-hangup-btn').addEventListener('click',function(e){e.stopPropagation();hangupCall();});
