@@ -1593,28 +1593,10 @@ function bindEvents(){
     }
   });
   
-  // Sidebar
-  $('sidebar-list').addEventListener('click',function(e){
-    var item=e.target.closest('.sidebar-item');if(!item)return;
-    var group=item.dataset.group||null;
-    if(currentGroup===group){currentGroup=null;}else{currentGroup=group;}
-    renderSidebar();
-    toast('回复来源：'+(currentGroup||'全部'));
-  });
-  $('card-search').addEventListener('input',filterSidebarCards);
-  $('add-cards-btn').addEventListener('click',openAddCards);
-  $('sidebar-toggle-btn').addEventListener('click',function(){$('sidebar').classList.toggle('open');});
+  // Mobile sidebar toggle
+  var sbt=document.getElementById('sidebar-toggle-btn');
+  if(sbt)sbt.addEventListener('click',function(){$('sidebar').classList.toggle('open');});
 
-  // Sidebar collapse/expand (desktop)
-  $('sidebar-collapse-btn').addEventListener('click',function(){
-    $('sidebar').classList.add('collapsed');
-    $('sidebar-expand-btn').classList.add('show');
-  });
-  $('sidebar-expand-btn').addEventListener('click',function(){
-    $('sidebar').classList.remove('collapsed');
-    $('sidebar-expand-btn').classList.remove('show');
-  });
-  
   // Character dropdown
   $('header-info').addEventListener('click',function(e){
     e.stopPropagation();
@@ -1633,10 +1615,8 @@ function bindEvents(){
 
   // Close sidebar on outside click (mobile)
   document.addEventListener('click',function(e){
-    var sb=$('sidebar');if(!sb.classList.contains('open'))return;
-    if(!sb.contains(e.target)&&e.target!==$('sidebar-toggle-btn')&&!$('sidebar-toggle-btn').contains(e.target)){
-      sb.classList.remove('open');
-    }
+    var sb=$('sidebar');if(!sb||!sb.classList.contains('open'))return;
+    if(!sb.contains(e.target)){sb.classList.remove('open');}
   });
   
   // Overlay close handlers
