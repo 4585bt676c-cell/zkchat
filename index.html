@@ -732,10 +732,16 @@ function triggerReply(){
   showTyping();
   replyTimer=setTimeout(function(){
     hideTyping();
-    // 30% chance to send a custom emoji instead of text
-    if(customEmojis.length>0&&Math.random()<0.3){
+    var roll=Math.random();
+    if(roll<0.2&&customEmojis.length>0){
+      // 20% custom emoji
       var emoji=customEmojis[Math.floor(Math.random()*customEmojis.length)];
       addMessage('emoji',emoji.data,'partner');
+    }else if(roll<0.35){
+      // 15% 颜文字
+      var yw=GROUPS.find(function(g){return g.name==='颜文字';});
+      if(yw&&yw.items.length>0){addMessage('text',yw.items[Math.floor(Math.random()*yw.items.length)],'partner');}
+      else{addMessage('text',getRandomCard(),'partner');}
     }else{
       addMessage('text',getRandomCard(),'partner');
     }
@@ -1149,9 +1155,12 @@ function startProactiveEvents(){
 
 document.addEventListener('visibilitychange',function(){if(!document.hidden)startProactiveEvents();});
 
+let callActive=false; // true when call is ongoing or incoming
 let incomingCallTimer=null;
 
 function incomingCall(){
+  if(callActive) return;
+  callActive=true;
   var c=getActiveChar();
   $('call-avatar').textContent=c?c.name.charAt(0):'✦';
   $('call-name').textContent=c?c.name:'梦角';
@@ -1177,6 +1186,7 @@ function incomingCall(){
 }
 
 function answerCall(){
+  callActive=true;
   clearTimeout(incomingCallTimer);
   var ca=document.getElementById('call-answer-btn'),cd=document.getElementById('call-decline-btn');
   if(ca)ca.style.display='none';if(cd)cd.style.display='none';
@@ -1195,6 +1205,7 @@ function answerCall(){
 }
 
 function declineCall(){
+  callActive=false;
   clearTimeout(incomingCallTimer);
   var ca=document.getElementById('call-answer-btn'),cd=document.getElementById('call-decline-btn');
   if(ca)ca.style.display='none';if(cd)cd.style.display='none';
@@ -1262,6 +1273,12 @@ $('rp-close-btn').addEventListener('click',function(){$('redpack-overlay').class
 let callTimer=null, callSeconds=0, callBubbleInterval=null;
 
 function openCall(){
+  if(callActive){toast('已在通话中');return;}
+  callActive=true;
+  // Hide answer/decline buttons if visible
+  var ca=document.getElementById('call-answer-btn'),cd=document.getElementById('call-decline-btn');
+  if(ca)ca.style.display='none';if(cd)cd.style.display='none';
+  $('call-minimize-btn').style.display='flex';$('call-hangup-btn').style.display='flex';
   var c=getActiveChar();
   $('call-avatar').textContent=c?c.name.charAt(0):'✦';
   $('call-name').textContent=c?c.name:'梦角';
@@ -1299,6 +1316,7 @@ function updateCallTimer(){
 }
 
 function hangupCall(){
+  callActive=false;
   clearInterval(callTimer);clearInterval(callBubbleInterval);
   $('call-overlay').classList.remove('open');
   $('call-minibar').classList.remove('show');
