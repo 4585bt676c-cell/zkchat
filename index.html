@@ -663,7 +663,7 @@ function renderChat(){
       }
     }else if(m.type==='redpack'){
       if(m.status==='pending'&&m.sender==='partner'){
-        bubbleHtml='<div class="msg-bubble" style="background:linear-gradient(135deg,#e6392e,#c0392b);color:#ffd700;min-width:160px;text-align:center"><div style="font-size:28px;margin-bottom:4px">🧧</div>'+escapeHtml((c?c.name:'')+' 发的红包')+'<div style="font-size:20px;font-weight:700;margin:6px 0">¥'+escapeHtml(m.content)+'</div><div style="display:flex;gap:6px;justify-content:center;margin-top:8px" data-rid="'+m.id+'"><button class="rp-accept-btn" style="padding:5px 16px;border-radius:12px;border:none;background:#ffd700;color:#c0392b;font-weight:700;cursor:pointer;font-size:13px">收下</button><button class="rp-reject-btn" style="padding:5px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#ffcccb;cursor:pointer;font-size:12px">拒绝</button></div></div>';
+        bubbleHtml='<div class="msg-bubble" style="background:linear-gradient(135deg,#e6392e,#c0392b);color:#ffd700;min-width:160px;text-align:center"><div style="font-size:28px;margin-bottom:4px">🧧</div>'+escapeHtml((c?c.name:'')+' 发的红包')+'<div style="font-size:20px;font-weight:700;margin:6px 0">¥'+escapeHtml(m.content)+'</div><div style="display:flex;gap:6px;justify-content:center;margin-top:8px"><button class="rp-accept-btn" data-rid="'+m.id+'" style="padding:5px 16px;border-radius:12px;border:none;background:#ffd700;color:#c0392b;font-weight:700;cursor:pointer;font-size:13px">收下</button><button class="rp-reject-btn" data-rid="'+m.id+'" style="padding:5px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#ffcccb;cursor:pointer;font-size:12px">拒绝</button></div></div>';
       }else if(m.status==='accepted'){
         bubbleHtml='<div class="msg-bubble">🧧 红包 ¥'+escapeHtml(m.content)+' 已收下~ '+escapeHtml(m.reply||'')+'</div>';
       }else if(m.status==='rejected'){
@@ -1651,7 +1651,7 @@ function bindEvents(){
     var reject=e.target.closest('.rp-reject-btn');
     if(!accept&&!reject)return;
     e.stopPropagation();
-    var rid=parseInt((accept||reject).parentElement.dataset.rid);
+    var rid=parseInt((accept||reject).dataset.rid);
     var c=getActiveChar();if(!c)return;
     for(var i=0;i<c.chatHistory.length;i++){
       if(c.chatHistory[i].id===rid){
