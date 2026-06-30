@@ -1295,19 +1295,22 @@ function incomingCall(){
   $('call-status').style.display='block';
   $('call-timer').style.display='none';
   $('call-bubbles').innerHTML='';
-  $('call-overlay').classList.add('open');
+  // Hide outgoing call buttons
   $('call-minimize-btn').style.display='none';
   $('call-hangup-btn').style.display='none';
-  var ca=document.getElementById('call-answer-btn');
-  if(!ca){
-    ca=document.createElement('button');ca.className='call-btn call-pickup';ca.id='call-answer-btn';ca.textContent='接听';
-    var cd=document.createElement('button');cd.className='call-btn call-hangup';cd.id='call-decline-btn';cd.textContent='挂断';
-    document.querySelector('#call-overlay .call-actions').appendChild(ca);
-    document.querySelector('#call-overlay .call-actions').appendChild(cd);
-  }
-  ca.style.display='flex';document.getElementById('call-decline-btn').style.display='flex';
+  // Remove any old answer/decline buttons
+  var oldA=document.getElementById('call-answer-btn');if(oldA)oldA.remove();
+  var oldD=document.getElementById('call-decline-btn');if(oldD)oldD.remove();
+  // Create fresh answer/decline buttons
+  var ca=document.createElement('button');ca.className='call-btn call-pickup';ca.id='call-answer-btn';ca.textContent='接听';
+  var cd=document.createElement('button');cd.className='call-btn call-hangup';cd.id='call-decline-btn';cd.textContent='挂断';
+  ca.style.cssText='width:70px;height:70px;font-size:16px;font-weight:700';
+  cd.style.cssText='width:70px;height:70px;font-size:16px;font-weight:700';
+  document.querySelector('#call-overlay .call-actions').appendChild(ca);
+  document.querySelector('#call-overlay .call-actions').appendChild(cd);
   ca.onclick=function(){answerCall();};
-  document.getElementById('call-decline-btn').onclick=function(){declineCall();};
+  cd.onclick=function(){declineCall();};
+  $('call-overlay').classList.add('open');
   clearTimeout(incomingCallTimer);
   incomingCallTimer=setTimeout(function(){declineCall();},30000);
 }
