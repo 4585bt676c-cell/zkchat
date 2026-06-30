@@ -569,7 +569,7 @@ function applyTheme(){
 function applyColor(){ document.documentElement.setAttribute('data-color-theme',settings.color); }
 
 // ===== SIDEBAR =====
-function renderSidebar(){
+function renderSidebar(){return;/* no-op */
   var list=$('sidebar-list'),totalAll=GROUPS.reduce(function(s,g){return s+g.items.length},0);
   var html='<div class="sidebar-item'+(currentGroup===null?' active':'')+'" data-group=""><span class="sidebar-dot" style="background:var(--accent)"></span>全部<span class="sidebar-count">'+totalAll+'</span></div>';
   html+='<div class="sidebar-divider"></div>';
@@ -625,7 +625,7 @@ function openAddCards(){
   });
 }
 
-function filterSidebarCards(){
+function filterSidebarCards(){return;/* no-op */
   var q=($('card-search').value||'').toLowerCase(),list=$('sidebar-list');
   var items=list.querySelectorAll('.sidebar-item');
   for(var i=0;i<items.length;i++){
@@ -1136,8 +1136,9 @@ function renderMailbox(view){
 }
 
 function updateMailBadge(){
-  var n=getUnreadCount(),btn=$('mail-btn');
-  btn.textContent=n>0?'✉️('+n+')':'✉️';
+  var n=getUnreadCount();
+  var nb=document.getElementById('nav-mail-badge');
+  if(nb){if(n>0)nb.classList.add('show');else nb.classList.remove('show');}
 }
 
 // ===== PROACTIVE EVENTS =====
