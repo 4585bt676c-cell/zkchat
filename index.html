@@ -481,8 +481,17 @@ function openDB(cb){
   req.onerror=function(){db=null;if(cb)cb();};
 }
 function dbSet(key,val,cb){
-  if(!db){localStorage.setItem(key,JSON.stringify(val));if(cb)cb();return;}
-  try{var tx=db.transaction('data','readwrite');tx.objectStore('data').put(val,key);tx.oncomplete=function(){if(cb)cb();};tx.onerror=function(){if(cb)cb();};}catch(e){localStorage.setItem(key,JSON.stringify(val));if(cb)cb();}
+  if(!db){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){toast('⚠️ 存储空间不足，请清理表情包或聊天记录');};if(cb)cb();return;}
+  try{
+    var tx=db.transaction('data','readwrite');
+    var store=tx.objectStore('data');
+    var req=store.put(val,key);
+    tx.oncomplete=function(){if(cb)cb();};
+    tx.onerror=tx.onabort=function(){
+      toast('⚠️ 存储空间不足，请清理表情包或聊天记录');
+      if(cb)cb();
+    };
+  }catch(e){toast('⚠️ 存储空间不足，请清理表情包或聊天记录');if(cb)cb();}
 }
 function dbGet(key,cb){
   if(!db){try{cb(JSON.parse(localStorage.getItem(key)||'null'));}catch(e){cb(null);}return;}
@@ -828,8 +837,9 @@ function uploadEmojis(files){
   }
   function checkDone(){
     if(loaded+failed===total){
-      localStorage.setItem('zk-emoji-library',JSON.stringify(customEmojis));
-      renderEmojiContent();
+      dbSet('zk-emoji-library',customEmojis,function(){
+        renderEmojiContent();
+      });
       var msg='✓ 已添加 '+loaded+' 个';
       if(failed>0) msg+=', 跳过 '+failed+' 个';
       toast(msg);
@@ -839,8 +849,7 @@ function uploadEmojis(files){
 
 function deleteEmoji(idx){
   customEmojis.splice(idx,1);
-  localStorage.setItem('zk-emoji-library',JSON.stringify(customEmojis));
-  renderEmojiContent();
+  dbSet('zk-emoji-library',customEmojis,function(){renderEmojiContent();});
 }
 
 // ===== IMAGE PREVIEW =====
@@ -879,6 +888,7 @@ function openSettings(){
       '<button class="btn btn-sm" id="set-import-cards-btn">📥 导入字卡</button>'+
       '<input type="file" id="set-import-cards-input" accept=".json" style="display:none">'+
       '<button class="btn btn-sm btn-danger" id="set-clear-btn">🗑 清空当前聊天</button>'+
+      '<button class="btn btn-sm btn-danger" id="set-clear-emoji-btn" style="margin-left:4px">🗑 清空表情包</button>'+
       '<button class="btn btn-accent btn-sm" id="set-close-btn">完成</button>'+
     '</div>';
   overlay.classList.add('open');
@@ -970,6 +980,12 @@ function openSettings(){
     renderChat();
     overlay.classList.remove('open');
     toast('✓ 聊天记录已清空');
+  });
+  $('set-clear-emoji-btn').addEventListener('click',function(){
+    if(!confirm('确定清空所有自定义表情包？（'+customEmojis.length+'个）此操作不可撤销。'))return;
+    customEmojis=[];
+    dbSet('zk-emoji-library',[],function(){toast('✓ 表情包已清空，空间已释放');});
+    overlay.classList.remove('open');
   });
 }
 
