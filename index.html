@@ -457,8 +457,10 @@ function getActiveChar(){
 }
 
 // ===== IMAGE COMPRESSION =====
-function compressImage(dataUrl,maxW,maxH,callback){
+function compressImage(dataUrl,maxW,maxH,quality,callback){
   if(!maxW)maxW=300;if(!maxH)maxH=300;
+  if(!quality&&quality!==0)quality=0.7;
+  if(typeof quality==='function'){callback=quality;quality=0.7;}
   var img=new Image();
   img.onload=function(){
     var w=img.width,h=img.height;
@@ -466,7 +468,7 @@ function compressImage(dataUrl,maxW,maxH,callback){
     var ratio=Math.min(maxW/w,maxH/h);
     var c=document.createElement('canvas');c.width=w*ratio;c.height=h*ratio;
     var ctx=c.getContext('2d');ctx.drawImage(img,0,0,c.width,c.height);
-    callback(c.toDataURL('image/jpeg',0.7));
+    callback(c.toDataURL('image/jpeg',quality));
   };
   img.onerror=function(){callback(dataUrl);};
   img.src=dataUrl;
@@ -826,7 +828,7 @@ function uploadEmojis(files){
       }
       var reader=new FileReader();
       reader.onload=function(e){
-        compressImage(e.target.result,200,200,function(compressed){
+        compressImage(e.target.result,120,120,0.5,function(compressed){
           customEmojis.push({id:Date.now()+loaded,data:compressed,name:file.name});
           loaded++;checkDone();
         });
