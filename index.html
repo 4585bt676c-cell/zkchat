@@ -442,54 +442,78 @@ function getActiveChar(){
   return null;
 }
 
-// ===== INIT =====
-function init(){
-  loadAll();
-  generateStars();
-  renderSidebar();
-  renderChat();
-  bindEvents();
-  applyTheme();
-  applyColor();
-  updateHeader();
-  updateMailBadge();
-  startProactiveEvents();
+// ===== IMAGE COMPRESSION =====
+function compressImage(dataUrl,maxW,maxH,callback){
+  if(!maxW)maxW=300;if(!maxH)maxH=300;
+  var img=new Image();
+  img.onload=function(){
+    var w=img.width,h=img.height;
+    if(w<=maxW&&h<=maxH){callback(dataUrl);return;}
+    var ratio=Math.min(maxW/w,maxH/h);
+    var c=document.createElement('canvas');c.width=w*ratio;c.height=h*ratio;
+    var ctx=c.getContext('2d');ctx.drawImage(img,0,0,c.width,c.height);
+    callback(c.toDataURL('image/jpeg',0.7));
+  };
+  img.onerror=function(){callback(dataUrl);};
+  img.src=dataUrl;
 }
 
-function loadAll(){
-  try{
-    var ch=JSON.parse(localStorage.getItem('zk-characters')||'[]');
-    characters=ch;
-  }catch(e){characters=[]}
-  // Migrate old format
-  if(characters.length===0){
-    try{
-      var oldHistory=JSON.parse(localStorage.getItem('zk-chat-history')||'[]');
-      var oldSettings=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');
-      if(oldHistory.length>0||oldSettings.partnerName){
-        characters.push({
-          id:Date.now(),name:oldSettings.partnerName||'梦角',
-          replyGroup:oldSettings.replyGroup||'',replyDelay:oldSettings.replyDelay||3,replyUnit:oldSettings.replyUnit||'s',
-          chatHistory:oldHistory
-        });
+// ===== INDEXEDDB =====
+var db=null;
+function openDB(cb){
+  var req=indexedDB.open('zkchat',1);
+  req.onupgradeneeded=function(e){e.target.result.createObjectStore('data');};
+  req.onsuccess=function(e){db=e.target.result;if(cb)cb();};
+  req.onerror=function(){db=null;if(cb)cb();};
+}
+function dbSet(key,val,cb){
+  if(!db){localStorage.setItem(key,JSON.stringify(val));if(cb)cb();return;}
+  try{var tx=db.transaction('data','readwrite');tx.objectStore('data').put(val,key);tx.oncomplete=function(){if(cb)cb();};tx.onerror=function(){if(cb)cb();};}catch(e){localStorage.setItem(key,JSON.stringify(val));if(cb)cb();}
+}
+function dbGet(key,cb){
+  if(!db){try{cb(JSON.parse(localStorage.getItem(key)||'null'));}catch(e){cb(null);}return;}
+  try{var tx=db.transaction('data','readonly');var req=tx.objectStore('data').get(key);req.onsuccess=function(){cb(req.result!==undefined?req.result:JSON.parse(localStorage.getItem(key)||'null'));};req.onerror=function(){try{cb(JSON.parse(localStorage.getItem(key)||'null'));}catch(e){cb(null);}};}catch(e){try{cb(JSON.parse(localStorage.getItem(key)||'null'));}catch(e2){cb(null);}}
+}
+
+// ===== INIT =====
+function init(){
+  loadAll(function(){
+    generateStars();
+    renderSidebar();
+    renderChat();
+    bindEvents();
+    applyTheme();
+    applyColor();
+    updateHeader();
+    updateMailBadge();
+    startProactiveEvents();
+  });
+}
+
+function loadAll(cb){
+  openDB(function(){
+    // Try IndexedDB first, fallback to localStorage
+    dbGet('zk-characters',function(ch){
+      characters=ch||[];
+      // Migrate old format from localStorage
+      if(characters.length===0){
+        try{
+          var oldHistory=JSON.parse(localStorage.getItem('zk-chat-history')||'[]');
+          var oldSettings=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');
+          if(oldHistory.length>0||oldSettings.partnerName){
+            characters.push({id:Date.now(),name:oldSettings.partnerName||'梦角',replyGroup:oldSettings.replyGroup||'',replyDelay:oldSettings.replyDelay||3,replyUnit:oldSettings.replyUnit||'s',chatHistory:oldHistory});
+          }
+        }catch(e){}
       }
-    }catch(e){}
-  }
-  if(characters.length===0){
-    characters.push({id:Date.now(),name:'梦角',replyGroup:'',replyDelay:3,replyUnit:'s',chatHistory:[]});
-  }
-  try{activeCharId=JSON.parse(localStorage.getItem('zk-active-char'));}catch(e){activeCharId=null;}
-  if(!activeCharId||!getActiveChar()) activeCharId=characters[0].id;
-  try{
-    var s=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');
-    if(s.theme) settings.theme=s.theme;
-    if(s.color) settings.color=s.color;
-  }catch(e){}
-  try{var e=JSON.parse(localStorage.getItem('zk-emoji-library')||'[]');customEmojis=e;}catch(e){customEmojis=[]}
-  try{
-    var cd=JSON.parse(localStorage.getItem('zk-card-data')||'null');
-    if(cd){ GROUPS.length=0; for(var i=0;i<cd.length;i++) GROUPS.push(cd[i]); }
-  }catch(e){}
+      if(characters.length===0){characters.push({id:Date.now(),name:'梦角',replyGroup:'',replyDelay:3,replyUnit:'s',chatHistory:[]});}
+      try{activeCharId=JSON.parse(localStorage.getItem('zk-active-char'));}catch(e){activeCharId=null;}
+      if(!activeCharId||!getActiveChar()) activeCharId=characters[0].id;
+      try{var s=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');if(s.theme)settings.theme=s.theme;if(s.color)settings.color=s.color;}catch(e){}
+      dbGet('zk-emoji-library',function(em){customEmojis=em||[];});
+      try{var cd=JSON.parse(localStorage.getItem('zk-card-data')||'null');if(cd){GROUPS.length=0;for(var i=0;i<cd.length;i++)GROUPS.push(cd[i]);}}catch(e){}
+      if(cb)cb();
+    });
+  });
 }
 
 function updateHeader(){
@@ -499,14 +523,11 @@ function updateHeader(){
 }
 
 function saveAll(){
-  try{
-    var ch=JSON.stringify(characters);
-    if(ch.length>4000000){toast('⚠️ 存储空间不足，请清理聊天记录或表情包');return;}
-    localStorage.setItem('zk-characters',ch);
-    localStorage.setItem('zk-active-char',JSON.stringify(activeCharId));
-    localStorage.setItem('zk-chat-settings',JSON.stringify(settings));
-    localStorage.setItem('zk-emoji-library',JSON.stringify(customEmojis));
-  }catch(e){toast('⚠️ 保存失败，请清理数据');}
+  // Small settings → localStorage; large data → IndexedDB
+  localStorage.setItem('zk-active-char',JSON.stringify(activeCharId));
+  localStorage.setItem('zk-chat-settings',JSON.stringify(settings));
+  dbSet('zk-characters',characters);
+  dbSet('zk-emoji-library',customEmojis);
 }
 
 function generateStars(){
@@ -722,8 +743,10 @@ function sendText(){
 function sendImage(file){
   var reader=new FileReader();
   reader.onload=function(e){
-    addMessage('image',e.target.result,'me');
-    triggerReply();
+    compressImage(e.target.result,400,400,function(compressed){
+      addMessage('image',compressed,'me');
+      triggerReply();
+    });
   };
   reader.readAsDataURL(file);
 }
@@ -775,14 +798,12 @@ function uploadEmojis(files){
       }
       var reader=new FileReader();
       reader.onload=function(e){
-        customEmojis.push({id:Date.now()+loaded,data:e.target.result,name:file.name});
-        loaded++;
-        checkDone();
+        compressImage(e.target.result,200,200,function(compressed){
+          customEmojis.push({id:Date.now()+loaded,data:compressed,name:file.name});
+          loaded++;checkDone();
+        });
       };
-      reader.onerror=function(){
-        failed++;toast('⚠️ 读取失败: '+file.name);
-        checkDone();
-      };
+      reader.onerror=function(){failed++;toast('⚠️ 读取失败: '+file.name);checkDone();};
       reader.readAsDataURL(file);
     })(files[i]);
   }
@@ -1387,7 +1408,7 @@ function updatePhotoPreview(){
 $('moments-img-input').addEventListener('change',function(e){
   var file=e.target.files[0];if(!file)return;
   var reader=new FileReader();
-  reader.onload=function(ev){momentsImages=[ev.target.result];updatePhotoPreview();toast('✓ 图片已选择');};
+  reader.onload=function(ev){compressImage(ev.target.result,600,600,function(c){momentsImages=[c];updatePhotoPreview();toast('✓ 图片已选择');});};
   reader.readAsDataURL(file);
   e.target.value='';
 });
