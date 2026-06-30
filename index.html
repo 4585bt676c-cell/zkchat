@@ -745,15 +745,24 @@ function triggerReply(){
     hideTyping();
     var roll=Math.random();
     if(roll<0.2&&customEmojis.length>0){
-      // 20% custom emoji
       var emoji=customEmojis[Math.floor(Math.random()*customEmojis.length)];
       addMessage('emoji',emoji.data,'partner');
     }else if(roll<0.35){
-      // 15% 颜文字
       var yw=GROUPS.find(function(g){return g.name==='颜文字';});
       if(yw&&yw.items.length>0){addMessage('text',yw.items[Math.floor(Math.random()*yw.items.length)],'partner');}
       else{addMessage('text',getRandomCard(),'partner');}
     }else{
+      // 30% chance to quote-reply to user's last message
+      var cc=getActiveChar();
+      if(cc&&cc.chatHistory.length>0&&Math.random()<0.3){
+        var lastMe=null;
+        for(var i=cc.chatHistory.length-1;i>=0;i--){if(cc.chatHistory[i].sender==='me'){lastMe=cc.chatHistory[i];break;}}
+        if(lastMe&&lastMe.type==='text'){
+          var quote='> 我: '+lastMe.content+'\n'+getRandomCard();
+          addMessage('text',quote,'partner');
+          return;
+        }
+      }
       addMessage('text',getRandomCard(),'partner');
     }
   },delay);
@@ -869,7 +878,12 @@ function openSettings(){
     groupOpts+='<option value="'+GROUPS[i].name.replace(/"/g,'&quot;')+'"'+((c&&c.replyGroup===GROUPS[i].name)?' selected':'')+'>'+GROUPS[i].name+'</option>';
   }
   panel.innerHTML=
-    '<h3>⚙️ 设置 — '+(c?escapeHtml(c.name):'')+'</h3>'+
+    '<div class="emoji-tabs" style="margin-bottom:12px">'+
+      '<div class="emoji-tab active" data-stab="general">⚙️设置</div>'+
+      '<div class="emoji-tab" data-stab="cards">📋字卡</div>'+
+      '<div class="emoji-tab" data-stab="backup">💾备份</div>'+
+    '</div>'+
+    '<div id="stab-general"><h3>⚙️ 设置 — '+(c?escapeHtml(c.name):'')+'</h3>'+
     '<label>梦角名称</label><input type="text" id="set-name" value="'+(c?escapeHtml(c.name):'')+'">'+
     '<label>回复来源分组</label><select id="set-group">'+groupOpts+'</select>'+
     '<label>回复延迟</label><div class="delay-row"><input type="number" id="set-delay" value="'+(c?c.replyDelay:3)+'" min="0"><select id="set-unit"><option value="s"'+(c&&c.replyUnit==='s'?' selected':'')+'>秒</option><option value="m"'+(c&&c.replyUnit==='m'?' selected':'')+'>分</option></select></div>'+
@@ -892,6 +906,17 @@ function openSettings(){
       '<button class="btn btn-sm btn-danger" id="set-clear-btn">🗑 清空当前聊天</button>'+
       '<button class="btn btn-sm btn-danger" id="set-clear-emoji-btn" style="margin-left:4px">🗑 清空表情包</button>'+
       '<button class="btn btn-accent btn-sm" id="set-close-btn">完成</button>'+
+    '</div></div>'+ // close btn-row and stab-general
+    '<div id="stab-cards" style="display:none"><h3>📋 字卡管理</h3>'+
+      '<div style="margin-bottom:8px"><input type="text" id="card-browser-search" placeholder="搜索字卡…" style="width:100%;padding:7px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none"></div>'+
+      '<select id="card-browser-group" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;margin-bottom:8px"><option value="">全部</option>'+GROUPS.map(function(g){return '<option value="'+g.name.replace(/"/g,'&quot;')+'">'+g.name+' ('+g.items.length+')</option>';}).join('')+'</select>'+
+      '<div id="card-browser-list" style="max-height:300px;overflow-y:auto;font-size:13px"></div>'+
+      '<button class="btn btn-sm" id="card-browser-add-btn" style="width:100%;margin-top:8px">＋ 新增字卡</button>'+
+    '</div>'+
+    '<div id="stab-backup" style="display:none"><h3>💾 备份</h3>'+
+      '<p style="font-size:13px;color:var(--text3);margin-bottom:12px">备份包含字卡库、聊天记录、表情包、设置</p>'+
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" id="stab-backup-all-btn">📦 备份全部</button><button class="btn btn-sm" id="stab-restore-btn">📥 恢复备份</button><button class="btn btn-sm" id="stab-export-cards-btn">📤 导出字卡</button><button class="btn btn-sm" id="stab-import-cards-btn">📥 导入字卡</button></div>'+
+      '<input type="file" id="stab-restore-input" accept=".json" style="display:none"><input type="file" id="stab-import-cards-input" accept=".json" style="display:none">'+
     '</div>';
   overlay.classList.add('open');
 
@@ -988,6 +1013,89 @@ function openSettings(){
     customEmojis=[];
     dbSet('zk-emoji-library',[],function(){toast('✓ 表情包已清空，空间已释放');});
     overlay.classList.remove('open');
+  });
+
+  // Settings tab switching
+  panel.querySelectorAll('.emoji-tab').forEach(function(t){t.addEventListener('click',function(){
+    panel.querySelectorAll('.emoji-tab').forEach(function(x){x.classList.remove('active');});
+    this.classList.add('active');
+    var tab=this.dataset.stab;
+    var g=document.getElementById('stab-general'),c=document.getElementById('stab-cards'),b=document.getElementById('stab-backup');
+    if(g)g.style.display=tab==='general'?'':'none';
+    if(c){c.style.display=tab==='cards'?'':'none';if(tab==='cards')renderCardBrowser();}
+    if(b)b.style.display=tab==='backup'?'':'none';
+  });});
+
+  // Card browser
+  function renderCardBrowser(){
+    var q=($('card-browser-search').value||'').toLowerCase();
+    var gname=$('card-browser-group').value;
+    var list=$('card-browser-list'),html='';
+    var results=[];
+    for(var i=0;i<GROUPS.length;i++){
+      if(gname&&GROUPS[i].name!==gname)continue;
+      for(var j=0;j<GROUPS[i].items.length;j++){
+        var item=GROUPS[i].items[j];
+        if(q&&item.toLowerCase().indexOf(q)===-1)continue;
+        results.push({group:GROUPS[i].name,color:GROUPS[i].color,text:item});
+        if(results.length>500)break;
+      }
+      if(results.length>500)break;
+    }
+    if(results.length===0){html='<p style="text-align:center;color:var(--text3);padding:20px">没有找到字卡</p>';}
+    else{html='<p style="font-size:11px;color:var(--text3);margin-bottom:6px">共 '+results.length+' 条</p>';}
+    for(var i=0;i<results.length;i++){
+      var r=results[i];
+      html+='<div style="padding:6px 8px;border-radius:6px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;display:flex;align-items:center;gap:6px" onclick="navigator.clipboard.writeText(this.querySelector(\'span\').textContent).then(function(){toast(\'✓ 已复制\')})"><span style="flex:1">'+escapeHtml(r.text)+'</span><span style="font-size:10px;color:'+r.color+'">'+r.group+'</span></div>';
+    }
+    list.innerHTML=html;
+  }
+  $('card-browser-search').addEventListener('input',renderCardBrowser);
+  $('card-browser-group').addEventListener('change',renderCardBrowser);
+  $('card-browser-add-btn').addEventListener('click',function(){overlay.classList.remove('open');openAddCards();});
+
+  // Backup tab buttons
+  $('stab-backup-all-btn').addEventListener('click',function(){
+    var backup={version:2,date:new Date().toISOString(),cards:GROUPS,characters:characters,activeCharId:activeCharId,emojiLibrary:customEmojis,settings:settings};
+    downloadJSON(backup,'字卡_数据备份_'+new Date().toISOString().slice(0,10)+'.json');
+  });
+  $('stab-restore-btn').addEventListener('click',function(){$('stab-restore-input').click();});
+  $('stab-restore-input').addEventListener('change',function(e){
+    var file=e.target.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var backup=JSON.parse(ev.target.result);
+        if(!backup.cards){toast('格式不对');return;}
+        if(!confirm('恢复备份将覆盖当前数据，确定？'))return;
+        GROUPS.length=0;for(var i=0;i<backup.cards.length;i++)GROUPS.push(backup.cards[i]);
+        if(backup.characters){characters=backup.characters;activeCharId=backup.activeCharId||characters[0].id;}
+        customEmojis=backup.emojiLibrary||[];
+        if(backup.settings){settings=backup.settings;}
+        saveAll();localStorage.setItem('zk-card-data',JSON.stringify(GROUPS));
+        applyTheme();applyColor();updateHeader();renderChat();
+        overlay.classList.remove('open');toast('✓ 数据已恢复');
+      }catch(err){toast('文件解析失败');}
+    };
+    reader.readAsText(file);e.target.value='';
+  });
+  $('stab-export-cards-btn').addEventListener('click',function(){
+    var ed={exportDate:new Date().toISOString(),modules:['replies','groups'],customReplies:GROUPS.reduce(function(a,g){return a.concat(g.items)},[]),customReplyGroups:GROUPS,_groupExport:true,_groupExportType:'replies'};
+    downloadJSON(ed,'字卡_分组导出.json');
+  });
+  $('stab-import-cards-btn').addEventListener('click',function(){$('stab-import-cards-input').click();});
+  $('stab-import-cards-input').addEventListener('change',function(e){
+    var file=e.target.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var data=JSON.parse(ev.target.result);
+        var groups=data.customReplyGroups||[];
+        if(!groups.length){toast('没有分组数据');return;}
+        showCardImportDialog(groups);
+      }catch(err){toast('文件格式错误');}
+    };
+    reader.readAsText(file);e.target.value='';
   });
 }
 
@@ -1646,6 +1754,19 @@ function bindEvents(){
         }
         saveAll();renderChat();break;
       }
+    }
+    // Message quote: click bubble to quote
+    var bubble=e.target.closest('.msg-bubble');
+    if(bubble&&!accept&&!reject){
+      var row=bubble.closest('.msg-row');
+      var text=bubble.textContent.trim();
+      if(text&&row){
+        var sender=row.classList.contains('me')?'我':(getActiveChar()||{}).name||'对方';
+        $('msg-input').value='> '+sender+': '+text+'\n';
+        $('msg-input').focus();
+        $('msg-input').style.height='auto';$('msg-input').style.height=Math.min($('msg-input').scrollHeight,100)+'px';
+      }
+      return;
     }
   });
   $('chat-area').addEventListener('scroll',function(){
