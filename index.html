@@ -263,8 +263,9 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--acce
 .call-pickup{background:#2ecc71;color:#fff}
 .call-minimize-btn{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--transition)}
 .call-minimize-btn:hover{background:rgba(255,255,255,.1);color:#fff}
-.call-minibar{position:fixed;bottom:70px;left:50%;z-index:1001;background:var(--bg2);border:1px solid var(--border2);border-radius:24px;padding:8px 16px;display:none;align-items:center;gap:10px;cursor:grab;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeInUp .3s ease;user-select:none;-webkit-user-select:none}
+.call-minibar{position:fixed;bottom:70px;left:50%;z-index:1001;background:var(--bg2);border:1px solid var(--border2);border-radius:24px;padding:8px 16px;display:none;align-items:center;gap:10px;cursor:grab;box-shadow:0 4px 20px rgba(0,0,0,.4);animation:fadeInUp .3s ease;user-select:none;-webkit-user-select:none;touch-action:none}
 .call-minibar:active{cursor:grabbing}
+.call-minibar.dragging{cursor:grabbing;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:none}
 .call-minibar.show{display:flex}
 .call-minibar .cm-avatar{width:28px;height:28px;border-radius:50%;background:rgba(var(--accent-rgb),.3);display:flex;align-items:center;justify-content:center;font-size:12px}
 .call-minibar .cm-info{font-size:12px;color:var(--text)}
@@ -1883,33 +1884,34 @@ function bindEvents(){
 
   // Call minibar drag
   var mb=$('call-minibar'),mbDrag=false,mbMoved=false,mbSX=0,mbSY=0,mbOX=0,mbOY=0;
-  mb.addEventListener('mousedown',function(e){
+  function mbStart(e){
     if(e.target.closest('.cm-hangup'))return;
-    mbDrag=true;mbMoved=false;mbSX=e.clientX;mbSY=e.clientY;
+    mbDrag=true;mbMoved=false;
+    var ev=e.touches?e.touches[0]:e;
+    mbSX=ev.clientX;mbSY=ev.clientY;
     var r=mb.getBoundingClientRect();mbOX=r.left;mbOY=r.top;
     mb.style.left=mbOX+'px';mb.style.top=mbOY+'px';mb.style.width=r.width+'px';
     mb.style.transform='none';mb.style.transition='none';
-    e.preventDefault();
-  });
-  mb.addEventListener('touchstart',function(e){
-    if(e.target.closest('.cm-hangup'))return;
-    mbDrag=true;mbMoved=false;mbSX=e.touches[0].clientX;mbSY=e.touches[0].clientY;
-    var r=mb.getBoundingClientRect();mbOX=r.left;mbOY=r.top;
-    mb.style.left=mbOX+'px';mb.style.top=mbOY+'px';mb.style.width=r.width+'px';
-    mb.style.transform='none';mb.style.transition='none';
-  },{passive:false});
-  document.addEventListener('mousemove',function(e){
-    if(!mbDrag)return;var dx=e.clientX-mbSX,dy=e.clientY-mbSY;
+    mb.classList.add('dragging');e.preventDefault();
+  }
+  function mbMove(e){
+    if(!mbDrag)return;
+    var ev=e.touches?e.touches[0]:e;
+    var dx=ev.clientX-mbSX,dy=ev.clientY-mbSY;
     if(Math.abs(dx)>2||Math.abs(dy)>2)mbMoved=true;
     mb.style.left=(mbOX+dx)+'px';mb.style.top=(mbOY+dy)+'px';
-  });
-  document.addEventListener('touchmove',function(e){
-    if(!mbDrag)return;var dx=e.touches[0].clientX-mbSX,dy=e.touches[0].clientY-mbSY;
-    if(Math.abs(dx)>2||Math.abs(dy)>2)mbMoved=true;
-    mb.style.left=(mbOX+dx)+'px';mb.style.top=(mbOY+dy)+'px';
-  },{passive:false});
-  document.addEventListener('mouseup',function(){if(mbDrag&&!mbMoved)restoreCall();mbDrag=false;});
-  document.addEventListener('touchend',function(){if(mbDrag&&!mbMoved)restoreCall();mbDrag=false;});
+  }
+  function mbEnd(){
+    if(!mbDrag)return;
+    if(!mbMoved)restoreCall();
+    mbDrag=false;mb.classList.remove('dragging');
+  }
+  mb.addEventListener('mousedown',mbStart);
+  mb.addEventListener('touchstart',mbStart,{passive:false});
+  document.addEventListener('mousemove',mbMove);
+  document.addEventListener('touchmove',mbMove,{passive:false});
+  document.addEventListener('mouseup',mbEnd);
+  document.addEventListener('touchend',mbEnd);
   
   // Scroll to bottom
   // Redpack accept/reject in chat
