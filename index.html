@@ -1530,8 +1530,22 @@ function openCall(){
   $('call-bubbles').innerHTML='';
   $('call-overlay').classList.add('open');
 
-  // Simulate pickup after 2-4 seconds
+  // Simulate response after 2-4 seconds
   setTimeout(function(){
+    var roll=Math.random();
+    if(roll<0.1){
+      // 10% no answer
+      $('call-status').textContent='无人接听';
+      setTimeout(function(){hangupCall();},1500);
+      return;
+    }else if(roll<0.2){
+      // 10% decline
+      $('call-status').textContent='对方已挂断';
+      var c2=getActiveChar();if(c2){c2.chatHistory.push({id:Date.now(),type:'text',content:'📞 未接通话',sender:'partner',time:Date.now()});saveAll();renderChat();}
+      setTimeout(function(){hangupCall();},1500);
+      return;
+    }
+    // 80% answer
     $('call-status').textContent='通话中';
     callSeconds=0;
     $('call-timer').style.display='block';
@@ -1592,17 +1606,18 @@ $('call-minibar').addEventListener('pointerdown',function(e){
   this.style.width=r.width+'px';this.style.transform='none';
   this.setPointerCapture(e.pointerId);e.preventDefault();
 });
-$('call-minibar').addEventListener('pointermove',function(e){
+document.addEventListener('pointermove',function(e){
   if(!mbDragging)return;
-  var dx=e.clientX-mbSX,dy=e.clientY-mbSY;
+  var dx=e.clientX-mbSX,dy=e.clientY-mbSY,mb=$('call-minibar');
   if(Math.abs(dx)>3||Math.abs(dy)>3)mbMoved=true;
-  this.style.left=(mbOX+dx)+'px';this.style.top=(mbOY+dy)+'px';
+  mb.style.left=(mbOX+dx)+'px';mb.style.top=(mbOY+dy)+'px';
 });
-$('call-minibar').addEventListener('pointerup',function(e){
+document.addEventListener('pointerup',function(e){
+  if(!mbDragging)return;
   if(!mbMoved&&!e.target.closest('.cm-hangup'))restoreCall();
   mbDragging=false;
 });
-$('call-minibar').addEventListener('pointercancel',function(){mbDragging=false;});
+document.addEventListener('pointercancel',function(){mbDragging=false;});
 $('cm-hangup-btn').addEventListener('click',function(e){e.stopPropagation();hangupCall();});
 
 // ===== MOMENTS =====
