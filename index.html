@@ -514,6 +514,7 @@ function init(){
     applyColor();
     updateHeader();
     updateMailBadge();
+    checkPendingReplies();
     startProactiveEvents();
   });
 }
@@ -1174,7 +1175,7 @@ function getUnreadCount(){
   return n;
 }
 
-function openMailbox(){renderMailbox();$('mail-overlay').classList.add('open');}
+function openMailbox(){checkPendingReplies();renderMailbox();$('mail-overlay').classList.add('open');}
 
 function renderMailbox(view){
   ensureLetters();
@@ -1231,20 +1232,44 @@ function renderMailbox(view){
   if(sendBtn){sendBtn.addEventListener('click',function(){
     var subject=$('mail-subject').value.trim()||'(无主题)',body=$('mail-body').value.trim();
     if(!body){toast('请输入内容');return;}
-    letters.push({subject:subject,body:body,time:Date.now(),from:'我',to:c.name,direction:'sent',read:true});
-    saveAll();
-    // Auto-reply after 1-3 hours with unlimited random cards
     var delay=3600000+Math.random()*7200000; // 1-3 hours
-    setTimeout(function(){
-      var count=1+Math.floor(Math.random()*Math.random()*60); // 1-60, most short
-      letters.push({subject:'Re: '+subject,body:getRandomCards(1,count),time:Date.now(),from:c.name,to:'我',direction:'received',read:false});
-      saveAll();updateMailBadge();
-      toast('📬 收到 '+c.name+' 的回信！');
-    },delay);
+    letters.push({subject:subject,body:body,time:Date.now(),from:'我',to:c.name,direction:'sent',read:true,replyDue:Date.now()+delay});
+    saveAll();
+    scheduleReply(delay,letters.length-1,subject,c.name);
     toast('✓ 信件已发送（对方将在1-3小时内回信）');
     renderMailbox('inbox');
     updateMailBadge();
   });}
+}
+
+function scheduleReply(delay,idx,subject,name){
+  setTimeout(function(){
+    deliverReply(idx,subject,name);
+  },delay);
+}
+
+function deliverReply(idx,subject,name){
+  var c=getActiveChar();if(!c||!c.letters||!c.letters[idx])return;
+  if(c.letters[idx].replyDelivered)return;
+  var count=1+Math.floor(Math.random()*Math.random()*60);
+  c.letters.push({subject:'Re: '+subject,body:getRandomCards(1,count),time:Date.now(),from:name,to:'我',direction:'received',read:false});
+  c.letters[idx].replyDelivered=true;
+  saveAll();updateMailBadge();
+  toast('📬 收到 '+name+' 的回信！');
+}
+
+function checkPendingReplies(){
+  var c=getActiveChar();if(!c||!c.letters)return;
+  var now=Date.now(),hasNew=false;
+  for(var i=0;i<c.letters.length;i++){
+    var l=c.letters[i];
+    if(l.direction==='sent'&&l.replyDue&&!l.replyDelivered&&now>=l.replyDue){
+      deliverReply(i,l.subject,c.name);hasNew=true;
+    }else if(l.direction==='sent'&&l.replyDue&&!l.replyDelivered&&now<l.replyDue){
+      scheduleReply(l.replyDue-now,i,l.subject,c.name);
+    }
+  }
+  if(hasNew){saveAll();updateMailBadge();}
 }
 
 function updateMailBadge(){
