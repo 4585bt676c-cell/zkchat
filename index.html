@@ -1897,9 +1897,9 @@ function bindEvents(){
   });
   mb.addEventListener('pointermove',function(e){
     if(!mbOn)return;e.preventDefault();
+    mbDragged=true;
     mb.style.left=Math.max(0,Math.min(window.innerWidth-mb.offsetWidth,e.clientX-mbOffX))+'px';
     mb.style.top=Math.max(0,Math.min(window.innerHeight-mb.offsetHeight,e.clientY-mbOffY))+'px';
-    if(Math.abs(e.clientX-(parseFloat(mb.style.left)+mbOffX))>2||Math.abs(e.clientY-(parseFloat(mb.style.top)+mbOffY))>2)mbDragged=true;
   });
   function mbStop(e){
     if(!mbOn)return;mbOn=false;
