@@ -1576,7 +1576,7 @@ function hangupCall(){
   clearInterval(callTimer);clearInterval(callBubbleInterval);
   $('call-overlay').classList.remove('open');
   var mb=$('call-minibar');mb.classList.remove('show');
-  mb.style.left='50%';mb.style.top='';mb.style.width='';mb.style.transform='translateX(-50%)';
+  mb.style.position='';mb.style.left='';mb.style.top='';mb.style.width='';mb.style.transform='';mb.style.transition='';
   toast('通话结束 ('+$('call-timer').textContent+')');
 }
 
@@ -1584,7 +1584,7 @@ function minimizeCall(){
   $('call-overlay').classList.remove('open');
   var mb=$('call-minibar');mb.classList.add('show');
   // Reset position
-  mb.style.left='50%';mb.style.top='';mb.style.width='';mb.style.transform='translateX(-50%)';mb.style.transition='';
+  mb.style.position='';mb.style.left='';mb.style.top='';mb.style.width='';mb.style.transform='';mb.style.transition='';mb.style.transition='';
   var c=getActiveChar();$('cm-avatar').textContent=c?c.name.charAt(0):'✦';
   $('cm-info').textContent='与 '+(c?c.name:'')+' 通话中';
 }
@@ -1597,27 +1597,37 @@ function restoreCall(){
 $('call-hangup-btn').addEventListener('click',hangupCall);
 $('call-minimize-btn').addEventListener('click',minimizeCall);
 // Minibar drag
-let mbDragging=false,mbMoved=false,mbSX=0,mbSY=0,mbOX=0,mbOY=0;
-$('call-minibar').addEventListener('pointerdown',function(e){
-  if(e.target.closest('.cm-hangup'))return;
-  mbDragging=true;mbMoved=false;mbSX=e.clientX;mbSY=e.clientY;
-  var r=this.getBoundingClientRect();mbOX=r.left;mbOY=r.top;
-  this.style.transition='none';this.style.left=mbOX+'px';this.style.top=mbOY+'px';
-  this.style.width=r.width+'px';this.style.transform='none';
-  this.setPointerCapture(e.pointerId);e.preventDefault();
-});
-document.addEventListener('pointermove',function(e){
-  if(!mbDragging)return;
-  var dx=e.clientX-mbSX,dy=e.clientY-mbSY,mb=$('call-minibar');
-  if(Math.abs(dx)>3||Math.abs(dy)>3)mbMoved=true;
-  mb.style.left=(mbOX+dx)+'px';mb.style.top=(mbOY+dy)+'px';
-});
-document.addEventListener('pointerup',function(e){
-  if(!mbDragging)return;
-  if(!mbMoved&&!e.target.closest('.cm-hangup'))restoreCall();
-  mbDragging=false;
-});
-document.addEventListener('pointercancel',function(){mbDragging=false;});
+(function(){
+  var mb=$('call-minibar'),dragging=false,moved=false,sx=0,sy=0,ox=0,oy=0;
+  mb.addEventListener('mousedown',startDrag);
+  mb.addEventListener('touchstart',startDrag,{passive:false});
+  function startDrag(e){
+    if(e.target.closest('.cm-hangup'))return;
+    dragging=true;moved=false;
+    var ev=e.touches?e.touches[0]:e;
+    sx=ev.clientX;sy=ev.clientY;
+    var r=mb.getBoundingClientRect();ox=r.left;oy=r.top;
+    mb.style.position='fixed';mb.style.left=ox+'px';mb.style.top=oy+'px';
+    mb.style.width=r.width+'px';mb.style.transform='none';mb.style.transition='none';
+    e.preventDefault();
+  }
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('mouseup',onEnd);
+  document.addEventListener('touchend',onEnd);
+  function onMove(e){
+    if(!dragging)return;
+    var ev=e.touches?e.touches[0]:e;
+    var dx=ev.clientX-sx,dy=ev.clientY-sy;
+    if(Math.abs(dx)>2||Math.abs(dy)>2)moved=true;
+    mb.style.left=(ox+dx)+'px';mb.style.top=(oy+dy)+'px';
+  }
+  function onEnd(e){
+    if(!dragging)return;
+    dragging=false;
+    if(!moved){restoreCall();}
+  }
+})();
 $('cm-hangup-btn').addEventListener('click',function(e){e.stopPropagation();hangupCall();});
 
 // ===== MOMENTS =====
