@@ -1562,7 +1562,7 @@ function hangupCall(){
   clearInterval(callTimer);clearInterval(callBubbleInterval);
   $('call-overlay').classList.remove('open');
   var mb=$('call-minibar');mb.classList.remove('show');
-  mb.style.left='50%';mb.style.top='';mb.style.transform='translateX(-50%)';
+  mb.style.left='50%';mb.style.top='';mb.style.width='';mb.style.transform='translateX(-50%)';
   toast('通话结束 ('+$('call-timer').textContent+')');
 }
 
@@ -1570,7 +1570,7 @@ function minimizeCall(){
   $('call-overlay').classList.remove('open');
   var mb=$('call-minibar');mb.classList.add('show');
   // Reset position
-  mb.style.left='50%';mb.style.top='';mb.style.transform='translateX(-50%)';mb.style.transition='';
+  mb.style.left='50%';mb.style.top='';mb.style.width='';mb.style.transform='translateX(-50%)';mb.style.transition='';
   var c=getActiveChar();$('cm-avatar').textContent=c?c.name.charAt(0):'✦';
   $('cm-info').textContent='与 '+(c?c.name:'')+' 通话中';
 }
@@ -1588,7 +1588,8 @@ $('call-minibar').addEventListener('pointerdown',function(e){
   if(e.target.closest('.cm-hangup'))return;
   mbDragging=true;mbMoved=false;mbSX=e.clientX;mbSY=e.clientY;
   var r=this.getBoundingClientRect();mbOX=r.left;mbOY=r.top;
-  this.style.transition='none';this.style.left=mbOX+'px';this.style.top=mbOY+'px';this.style.transform='none';
+  this.style.transition='none';this.style.left=mbOX+'px';this.style.top=mbOY+'px';
+  this.style.width=r.width+'px';this.style.transform='none';
   this.setPointerCapture(e.pointerId);e.preventDefault();
 });
 $('call-minibar').addEventListener('pointermove',function(e){
