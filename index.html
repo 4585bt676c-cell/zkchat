@@ -515,6 +515,7 @@ function init(){
     updateHeader();
     updateMailBadge();
     checkPendingReplies();
+    checkPendingComments();
     startProactiveEvents();
   });
 }
@@ -1531,6 +1532,7 @@ function ensureMoments(){
 
 function openMoments(){
   ensureMoments();
+  checkPendingComments();
   $('moments-overlay').classList.add('open');
   renderMoments();
 }
@@ -1578,16 +1580,30 @@ function renderMoments(){
 
 function postMoment(text,img,from){
   ensureMoments();var c=getActiveChar();if(!from)from='我';
-  c.moments.push({text:text,img:img||null,from:from,time:Date.now(),comments:[]});
-  var postIdx=c.moments.length-1;
-  var delay=3600000+Math.random()*3600000;
-  setTimeout(function(){
-    var card=getRandomCards(2,5);
-    var commenter=from==='我'?c.name:'我';
-    c.moments[postIdx].comments.push({from:commenter,text:card,time:Date.now()});
-    saveAll();if($('moments-overlay').classList.contains('open')) renderMoments();
-  },delay);
+  var commentDue=Date.now()+3600000+Math.random()*3600000;
+  c.moments.push({text:text,img:img||null,from:from,time:Date.now(),comments:[],commentDue:commentDue});
   saveAll();renderMoments();
+  checkPendingComments();
+}
+
+function deliverComment(post){
+  var c=getActiveChar();if(!c||post.commentDelivered)return;
+  var card=getRandomCards(2,5);
+  var commenter=post.from==='我'?c.name:'我';
+  post.comments.push({from:commenter,text:card,time:Date.now()});
+  post.commentDelivered=true;
+  saveAll();if($('moments-overlay').classList.contains('open')) renderMoments();
+}
+
+function checkPendingComments(){
+  var c=getActiveChar();if(!c||!c.moments)return;
+  var now=Date.now();
+  for(var i=0;i<c.moments.length;i++){
+    var p=c.moments[i];
+    if(p.commentDue&&!p.commentDelivered&&now>=p.commentDue){
+      deliverComment(p);
+    }
+  }
 }
 
 function maybeAutoPost(){
