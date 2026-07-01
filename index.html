@@ -1882,36 +1882,33 @@ function bindEvents(){
   $('settings-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   $('import-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 
-  // Call minibar drag
-  var mb=$('call-minibar'),mbDrag=false,mbMoved=false,mbSX=0,mbSY=0,mbOX=0,mbOY=0;
-  function mbStart(e){
+  // Call minibar drag (ref: wanwanxuan.github.io)
+  var mb=$('call-minibar'),mbOn=false,mbDragged=false,mbOffX=0,mbOffY=0;
+  mb.addEventListener('pointerdown',function(e){
     if(e.target.closest('.cm-hangup'))return;
-    mbDrag=true;mbMoved=false;
-    var ev=e.touches?e.touches[0]:e;
-    mbSX=ev.clientX;mbSY=ev.clientY;
-    var r=mb.getBoundingClientRect();mbOX=r.left;mbOY=r.top;
-    mb.style.left=mbOX+'px';mb.style.top=mbOY+'px';mb.style.width=r.width+'px';
+    e.preventDefault();mbOn=true;mbDragged=false;
+    var r=mb.getBoundingClientRect();
+    mbOffX=e.clientX-r.left;mbOffY=e.clientY-r.top;
+    mb.style.left=r.left+'px';mb.style.top=r.top+'px';
+    mb.style.width=r.width+'px';mb.style.right='auto';mb.style.bottom='auto';
     mb.style.transform='none';mb.style.transition='none';
-    mb.classList.add('dragging');e.preventDefault();
+    mb.classList.add('dragging');
+    try{mb.setPointerCapture(e.pointerId);}catch(_){}
+  });
+  mb.addEventListener('pointermove',function(e){
+    if(!mbOn)return;e.preventDefault();
+    mb.style.left=Math.max(0,Math.min(window.innerWidth-mb.offsetWidth,e.clientX-mbOffX))+'px';
+    mb.style.top=Math.max(0,Math.min(window.innerHeight-mb.offsetHeight,e.clientY-mbOffY))+'px';
+    if(Math.abs(e.clientX-(parseFloat(mb.style.left)+mbOffX))>2||Math.abs(e.clientY-(parseFloat(mb.style.top)+mbOffY))>2)mbDragged=true;
+  });
+  function mbStop(e){
+    if(!mbOn)return;mbOn=false;
+    if(!mbDragged&&!e.target.closest('.cm-hangup'))restoreCall();
+    mb.classList.remove('dragging');
+    try{mb.releasePointerCapture(e.pointerId);}catch(_){}
   }
-  function mbMove(e){
-    if(!mbDrag)return;
-    var ev=e.touches?e.touches[0]:e;
-    var dx=ev.clientX-mbSX,dy=ev.clientY-mbSY;
-    if(Math.abs(dx)>2||Math.abs(dy)>2)mbMoved=true;
-    mb.style.left=(mbOX+dx)+'px';mb.style.top=(mbOY+dy)+'px';
-  }
-  function mbEnd(){
-    if(!mbDrag)return;
-    if(!mbMoved)restoreCall();
-    mbDrag=false;mb.classList.remove('dragging');
-  }
-  mb.addEventListener('mousedown',mbStart);
-  mb.addEventListener('touchstart',mbStart,{passive:false});
-  document.addEventListener('mousemove',mbMove);
-  document.addEventListener('touchmove',mbMove,{passive:false});
-  document.addEventListener('mouseup',mbEnd);
-  document.addEventListener('touchend',mbEnd);
+  mb.addEventListener('pointerup',mbStop);
+  mb.addEventListener('pointercancel',mbStop);
   
   // Scroll to bottom
   // Redpack accept/reject in chat
