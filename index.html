@@ -1822,24 +1822,7 @@ function bindEvents(){
       renderEmojiContent();
       return;
     }
-    // Handle emoji item click
-    var item=e.target.closest('.emoji-item');
-    if(item){
-      // Custom image emoji (by index)
-      if(item.dataset.eidx!==undefined){
-        var ei=parseInt(item.dataset.eidx);
-        if(customEmojis[ei]) sendEmoji(customEmojis[ei].data);
-        return;
-      }
-      // Yanwenzi text emoji
-      if(item.dataset.emoji){
-        sendEmoji(item.dataset.emoji);
-        return;
-      }
-      // Add button - handled by its own listener
-      if(item.classList.contains('emoji-add')) return;
-    }
-    // Handle delete emoji
+    // Handle delete emoji FIRST (before send)
     var del=e.target.closest('.emoji-del');
     if(del){
       e.stopPropagation();
@@ -1848,6 +1831,20 @@ function bindEvents(){
         deleteEmoji(parseInt(parent.dataset.eidx));
       }
       return;
+    }
+    // Handle emoji item click
+    var item=e.target.closest('.emoji-item');
+    if(item){
+      if(item.dataset.eidx!==undefined){
+        var ei=parseInt(item.dataset.eidx);
+        if(customEmojis[ei]) sendEmoji(customEmojis[ei].data);
+        return;
+      }
+      if(item.dataset.emoji){
+        sendEmoji(item.dataset.emoji);
+        return;
+      }
+      if(item.classList.contains('emoji-add')) return;
     }
   });
   
