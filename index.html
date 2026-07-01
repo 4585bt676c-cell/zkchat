@@ -1304,7 +1304,8 @@ function startProactiveEvents(){
         setTimeout(function(){var b=document.getElementById('nav-moments-badge');if(b)b.classList.remove('show');},30000);
       }
     }else if(roll<0.4){
-      var cb=document.getElementById('nav-call-badge');if(cb)cb.classList.add('show');toast('📞 '+(c.name)+' 给你打电话…');
+      var cb=document.getElementById('nav-call-badge');if(cb)cb.classList.add('show');
+      incomingCall();
       setTimeout(function(){var b=document.getElementById('nav-call-badge');if(b)b.classList.remove('show');},30000);
     }
   },45000+Math.random()*45000);
@@ -1708,7 +1709,11 @@ function bindEvents(){
   // Nav
   var nc=document.getElementById('nav-chat');if(nc)nc.addEventListener('click',function(){setActiveNav(this);});
   var nm=document.getElementById('nav-mail');if(nm)nm.addEventListener('click',function(){setActiveNav(this);openMailbox();});
-  var ncl=document.getElementById('nav-call');if(ncl)ncl.addEventListener('click',function(){setActiveNav(this);document.getElementById('nav-call-badge').classList.remove('show');openCall();});
+  var ncl=document.getElementById('nav-call');if(ncl)ncl.addEventListener('click',function(){
+    setActiveNav(this);document.getElementById('nav-call-badge').classList.remove('show');
+    if(callActive){/* already in call - focus or show minibar */if($('call-minibar').classList.contains('show'))restoreCall();}
+    else{openCall();}
+  });
   var nrp=document.getElementById('nav-redpack');if(nrp)nrp.addEventListener('click',function(){setActiveNav(this);document.getElementById('nav-redpack-badge').classList.remove('show');openRedpack('to');});
   var nmo=document.getElementById('nav-moments');if(nmo)nmo.addEventListener('click',function(){setActiveNav(this);document.getElementById('nav-moments-badge').classList.remove('show');openMoments();maybeAutoPost();});
   var ns=document.getElementById('nav-settings');if(ns)ns.addEventListener('click',function(){setActiveNav(this);openSettings();});
