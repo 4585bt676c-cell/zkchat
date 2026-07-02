@@ -1306,7 +1306,6 @@ function renderMailbox(view){
     detail+='<div class="btn-row"><button class="btn btn-sm" id="mail-back-btn">← 返回</button></div>';
     panel.innerHTML=detail;
     panel.querySelector('#mail-back-btn').addEventListener('click',function(){renderMailbox('inbox');});
-    $('mail-btn').textContent='✉️';
   });});
 
   // Send mail
