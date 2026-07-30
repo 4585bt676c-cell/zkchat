@@ -1206,6 +1206,75 @@ function openMoments(){
   renderMoments();
 }
 
+// ===== CHAT RENDER =====
+function renderChat(){
+  var area=$('chat-area'),empty=$('empty-chat'),scrollBtn=$('scroll-bottom-btn');
+  var children=area.children;
+  for(var i=children.length-1;i>=0;i--){
+    if(children[i]!==empty&&children[i]!==scrollBtn) area.removeChild(children[i]);
+  }
+  var ch=getActiveChar();var chatHistory=ch?ch.chatHistory:[];
+  if(chatHistory.length===0){empty.style.display='flex';scrollBtn.classList.remove('show');return;}
+  empty.style.display='none';
+  var frag=document.createDocumentFragment();
+  for(var i=0;i<chatHistory.length;i++){
+    var m=chatHistory[i],row=document.createElement('div');
+    row.className='msg-row '+(m.sender==='me'?'me':'partner');
+    var c=getActiveChar();
+    var senderIsMe=m.sender==='me';var senderName=senderIsMe?(settings.myName||'我'):(m.sender==='partner'?(c?c.name:'?'):m.sender);
+    var avatarHtml='<div class="msg-avatar" title="'+senderName+'">'+senderName.charAt(0)+'</div>';
+    var bubbleHtml='';
+    if(m.type==='text'){
+      var textContent=m.content;
+      if(textContent.indexOf('> '+(settings.myName||'我')+': ')>-1||textContent.indexOf('> '+((c?c.name:'')||'对方')+': ')>-1){
+        var lines=textContent.split('\n');var quotePart='',replyPart='';
+        for(var li=0;li<lines.length;li++){
+          if(lines[li].indexOf('> '+(settings.myName||'我')+': ')>-1||lines[li].indexOf('> '+((c?c.name:'')||'对方')+': ')>-1){quotePart+=lines[li].replace(/^> /,'')+'\n';}
+          else if(lines[li].trim()){replyPart+=lines[li]+'\n';}
+        }
+        if(quotePart){bubbleHtml='<div class="msg-bubble"><div class="msg-quote-block">'+escapeHtml(quotePart.trim())+'</div>'+escapeHtml(replyPart.trim())+'</div>';}
+        else{bubbleHtml='<div class="msg-bubble">'+escapeHtml(textContent)+'</div>';}
+      }else{bubbleHtml='<div class="msg-bubble">'+escapeHtml(textContent)+'</div>';}
+    }else if(m.type==='image'){
+      bubbleHtml='<div class="msg-img-wrap"><img class="msg-img" src="'+m.content+'" loading="lazy" onclick="previewImage(this.src)"></div>';
+    }else if(m.type==='emoji'){
+      if(m.content.startsWith('data:')){bubbleHtml='<div class="msg-img-wrap"><img class="msg-img" src="'+m.content+'" loading="lazy" onclick="previewImage(this.src)" style="max-width:120px;max-height:120px"></div>';}
+      else{bubbleHtml='<div class="msg-emoji-large">'+m.content+'</div>';}
+    }else if(m.type==='redpack'){
+      if(m.status==='pending'&&m.sender==='partner'){
+        bubbleHtml='<div class="msg-bubble" style="background:linear-gradient(135deg,#e6392e,#c0392b);color:#ffd700;min-width:160px;text-align:center"><div style="font-size:28px;margin-bottom:4px">🧧</div>'+escapeHtml((c?c.name:'')+' 发的红包')+'<div style="font-size:20px;font-weight:700;margin:6px 0">¥'+escapeHtml(m.content)+'</div><div style="display:flex;gap:6px;justify-content:center;margin-top:8px"><button class="rp-accept-btn" data-rid="'+m.id+'" style="padding:5px 16px;border-radius:12px;border:none;background:#ffd700;color:#c0392b;font-weight:700;cursor:pointer;font-size:13px">收下</button><button class="rp-reject-btn" data-rid="'+m.id+'" style="padding:5px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#ffcccb;cursor:pointer;font-size:12px">拒绝</button></div></div>';
+      }else if(m.status==='accepted'){bubbleHtml='<div class="msg-bubble">🧧 红包 ¥'+escapeHtml(m.content)+' 已收下~ '+escapeHtml(m.reply||'')+'</div>';}
+      else if(m.status==='rejected'){bubbleHtml='<div class="msg-bubble" style="opacity:.6">🧧 红包 ¥'+escapeHtml(m.content)+' 已退还</div>';}
+      else{bubbleHtml='<div class="msg-bubble">🧧 红包 ¥'+escapeHtml(m.content)+'</div>';}
+    }else if(m.type==='survey'){
+      bubbleHtml='<div class="msg-bubble">'+renderSurveyInChat(m,c)+'</div>';
+    }
+    row.innerHTML=avatarHtml+bubbleHtml+'<div class="msg-time">'+timeStr(m.time)+'</div>';
+    frag.appendChild(row);
+  }
+  area.insertBefore(frag,empty.nextSibling||null);
+  scrollToBottom();
+}
+
+function scrollToBottom(){var area=$('chat-area');setTimeout(function(){area.scrollTop=area.scrollHeight;},50);}
+
+function addMessage(type,content,sender){
+  var c=getActiveChar();if(!c)return;
+  c.chatHistory.push({id:Date.now(),type:type,content:content,sender:sender,time:Date.now()});
+  saveAll();renderChat();
+}
+
+function showTyping(who){
+  var area=$('chat-area'),empty=$('empty-chat');
+  if(empty.style.display!=='none') empty.style.display='none';
+  var name=who?who.name:((getActiveChar()||{}).name||'对方');
+  var div=document.createElement('div');div.className='typing-indicator';div.id='typing-indicator';
+  div.innerHTML='<span style="font-size:11px">'+name+' 正在输入</span><div class="typing-dots"><span></span><span></span><span></span></div>';
+  area.appendChild(div);scrollToBottom();
+}
+
+function hideTyping(){var el=document.getElementById('typing-indicator');if(el)el.remove();}
+
 function renderMoments(){
   var c=getActiveChar();var posts=c.moments||[];
   var body=$('moments-body'),html='';
