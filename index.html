@@ -613,8 +613,11 @@ function applyTheme(){
 function applyColor(){ document.documentElement.setAttribute('data-color-theme',settings.color); }
 function applyChatBg(){
   var area=$('chat-area');if(!area)return;
-  if(settings.chatBg){area.style.background=settings.chatBg.startsWith('#')||settings.chatBg.startsWith('rgb')||settings.chatBg.startsWith('url')?settings.chatBg:settings.chatBg;area.style.backgroundSize='cover';}
-  else{area.style.background='';}
+  if(settings.chatBg){
+    if(settings.chatBg.startsWith('data:')){area.style.backgroundImage='url('+settings.chatBg+')';area.style.backgroundSize='cover';area.style.backgroundPosition='center';}
+    else if(settings.chatBg.startsWith('http')){area.style.backgroundImage='url('+settings.chatBg+')';area.style.backgroundSize='cover';area.style.backgroundPosition='center';}
+    else{area.style.background=settings.chatBg;area.style.backgroundImage='none';}
+  }else{area.style.background='';area.style.backgroundImage='none';}
 }
 
 // ===== SIDEBAR =====
@@ -937,7 +940,7 @@ function openSettings(){
     '<div id="stab-general"><h3>⚙️ 设置 — '+(c?escapeHtml(c.name):'')+'</h3>'+
     '<label>梦角名称</label><input type="text" id="set-name" value="'+(c?escapeHtml(c.name):'')+'">'+
     '<label>我的名称</label><input type="text" id="set-myname" value="'+escapeHtml(settings.myName||'我')+'">'+
-    '<label>聊天背景</label><input type="text" id="set-bg" value="'+escapeHtml(settings.chatBg||'')+'" placeholder="颜色如#1a1a2e或留空">'+
+    '<label>聊天背景</label><div style="display:flex;gap:6px"><input type="text" id="set-bg" value="'+escapeHtml(settings.chatBg||'')+'" placeholder="颜色如#1a1a2e或图片URL" style="flex:1"><button class="btn btn-sm" id="set-bg-img-btn">🖼️</button></div><input type="file" id="set-bg-img-input" accept="image/*" style="display:none">'+
     '<label>回复来源分组</label><select id="set-group">'+groupOpts+'</select>'+
     '<label>回复延迟</label><div class="delay-row"><input type="number" id="set-delay" value="'+(c?c.replyDelay:3)+'" min="0"><select id="set-unit"><option value="s"'+(c&&c.replyUnit==='s'?' selected':'')+'>秒</option><option value="m"'+(c&&c.replyUnit==='m'?' selected':'')+'>分</option></select></div>'+
     '<label>主题模式</label><div style="display:flex;gap:6px"><button class="btn btn-sm sel-theme" data-v="auto">自动</button><button class="btn btn-sm sel-theme" data-v="dark">暗色</button><button class="btn btn-sm sel-theme" data-v="light">亮色</button></div>'+
@@ -990,6 +993,13 @@ function openSettings(){
     var cbs=panel.querySelectorAll('.sel-color');for(var i=0;i<cbs.length;i++)cbs[i].classList.toggle('btn-accent',cbs[i].dataset.v===settings.color);
   });
 
+  $('set-bg-img-btn').addEventListener('click',function(){$('set-bg-img-input').click();});
+  $('set-bg-img-input').addEventListener('change',function(e){
+    var file=e.target.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){$('set-bg').value=ev.target.result;toast('✓ 背景图已选择');};
+    reader.readAsDataURL(file);e.target.value='';
+  });
   $('set-close-btn').addEventListener('click',function(){
     var ch=getActiveChar();if(!ch)return;
     ch.name=$('set-name').value.trim()||'梦角';
