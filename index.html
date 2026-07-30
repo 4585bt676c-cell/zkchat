@@ -483,7 +483,7 @@ const GROUPS = [{name:"默认",color:"#888",items:[]}];
 let currentGroup = null;
 let characters = [];
 let activeCharId = null;
-let settings = { theme:'auto', color:'gold', myName:'我', chatBg:'', groupMode:false };
+let settings = { theme:'auto', color:'gold', myName:'我', chatBg:'' };
 let customEmojis = [];
 let emojiPanelOpen = false;
 let replyTimer = null;
@@ -601,7 +601,11 @@ function loadAll(cb){
       if(characters.length===0){characters.push({id:Date.now(),name:'梦角',replyGroup:'',replyDelay:3,replyUnit:'s',chatHistory:[]});}
       try{activeCharId=JSON.parse(localStorage.getItem('zk-active-char'));}catch(e){activeCharId=null;}
       if(!activeCharId||!getActiveChar()) activeCharId=characters[0].id;
-      try{var s=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');if(s.theme)settings.theme=s.theme;if(s.color)settings.color=s.color;if(s.myName)settings.myName=s.myName;if(s.chatBg!==undefined)settings.chatBg=s.chatBg;if(s.groupMode!==undefined)settings.groupMode=s.groupMode;}catch(e){}
+  // Ensure group chat exists
+  var hasGroup=false;
+  for(var i=0;i<characters.length;i++){if(characters[i].isGroup){hasGroup=true;break;}}
+  if(!hasGroup){characters.push({id:'group',name:'群聊',replyGroup:'',replyDelay:3,replyUnit:'s',chatHistory:[],isGroup:true,members:[]});}
+      try{var s=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');if(s.theme)settings.theme=s.theme;if(s.color)settings.color=s.color;if(s.myName)settings.myName=s.myName;if(s.chatBg!==undefined)settings.chatBg=s.chatBg;}catch(e){}
       dbGet('zk-emoji-library',function(em){customEmojis=em||[];});
       try{var cd=JSON.parse(localStorage.getItem('zk-card-data')||'null');if(cd){GROUPS.length=0;for(var i=0;i<cd.length;i++)GROUPS.push(cd[i]);}}catch(e){}
       if(cb)cb();
@@ -612,7 +616,13 @@ function loadAll(cb){
 function updateHeader(){
   var c=getActiveChar();
   $('header-name').textContent=c?c.name:'梦角';
-  $('header-avatar').textContent=c?c.name.charAt(0):'✦';
+  if(c&&c.isGroup){
+    $('header-avatar').innerHTML='<span style="font-size:20px">👥</span>';
+    $('header-status').innerHTML='<span style="font-size:10px">'+(c.members||[]).length+'人在线</span>';
+  }else{
+    $('header-avatar').textContent=c?c.name.charAt(0):'✦';
+    $('header-status').innerHTML='在线';
+  }
 }
 
 function saveAll(){
@@ -671,6 +681,19 @@ function openAddCards(){
     '<div class="add-cards-panel"><label style="margin-top:10px">字卡内容（一行一条）</label><textarea id="add-cards-text" placeholder="粘贴字卡内容，一行一条..."></textarea><div class="hint">自动过滤重复字卡</div><div class="result" id="add-result"></div></div>'+
     '<div class="btn-row"><button class="btn" id="add-cancel-btn">取消</button><button class="btn btn-accent btn-sm" id="add-confirm-btn">确认添加</button></div>';
   overlay.classList.add('open');
+  // Render group members if group chat
+  if(c&&c.isGroup){
+    var gmDiv=document.getElementById('set-group-members');
+    if(gmDiv){
+      var gmHtml='';
+      for(var i=0;i<characters.length;i++){
+        var ch=characters[i];if(ch.isGroup)continue;
+        var inGroup=(c.members||[]).indexOf(ch.id)>=0;
+        gmHtml+='<label style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:13px;cursor:pointer"><input type="checkbox" class="gm-check" data-cid="'+ch.id+'"'+(inGroup?' checked':'')+'>'+escapeHtml(ch.name)+'</label>';
+      }
+      gmDiv.innerHTML=gmHtml;
+    }
+  }
 
   function close(){overlay.classList.remove('open');}
   $('add-cancel-btn').addEventListener('click',close);
@@ -837,13 +860,14 @@ function triggerReply(){
   var delay=(c?c.replyDelay:3)||3;
   if(c&&c.replyUnit==='m') delay*=60;
   delay*=1000;
-  // Group mode: pick random character to reply
+  // Group mode: pick random member to reply
   var replyChar=c;
-  if(settings.groupMode&&characters.length>1){
-    replyChar=characters[Math.floor(Math.random()*characters.length)];
-    if(!replyChar)replyChar=c;
+  var senderName='partner';
+  if(c&&c.isGroup&&c.members&&c.members.length>0){
+    var pool=[];for(var gi=0;gi<characters.length;gi++){if(!characters[gi].isGroup&&c.members.indexOf(characters[gi].id)>=0)pool.push(characters[gi]);}
+    if(pool.length>0){replyChar=pool[Math.floor(Math.random()*pool.length)];senderName=replyChar.name;}
+    else{senderName='partner';}
   }
-  var senderName=settings.groupMode?(replyChar?replyChar.name:'partner'):'partner';
   showTyping(replyChar);
   replyTimer=setTimeout(function(){
     hideTyping();
@@ -984,10 +1008,11 @@ function openSettings(){
       '<div class="emoji-tab" data-stab="backup">💾备份</div>'+
     '</div>'+
     '<div id="stab-general"><h3>⚙️ 设置 — '+(c?escapeHtml(c.name):'')+'</h3>'+
-    '<label>梦角名称</label><input type="text" id="set-name" value="'+(c?escapeHtml(c.name):'')+'">'+
+    '<label>梦角名称</label><input type="text" id="set-name" value="'+(c?escapeHtml(c.name):'')+'"'+(c&&c.isGroup?' readonly style="opacity:.6"':'')+'>'+
+    (c&&c.isGroup?'<label>群聊成员</label><div id="set-group-members" style="max-height:120px;overflow-y:auto;margin-bottom:8px"></div>':'')+
     '<label>我的名称</label><input type="text" id="set-myname" value="'+escapeHtml(settings.myName||'我')+'">'+
     '<label>聊天背景</label><div style="display:flex;gap:6px"><input type="text" id="set-bg" value="'+escapeHtml(settings.chatBg||'')+'" placeholder="颜色如#1a1a2e或图片URL" style="flex:1"><button class="btn btn-sm" id="set-bg-img-btn">🖼️</button></div><input type="file" id="set-bg-img-input" accept="image/*" style="display:none">'+
-    '<label>群聊模式</label><div style="display:flex;gap:6px"><button class="btn btn-sm sel-groupmode" data-v="1">开启</button><button class="btn btn-sm sel-groupmode" data-v="0">关闭</button></div>'+
+    
     '<label>回复来源分组</label><select id="set-group">'+groupOpts+'</select>'+
     '<label>回复延迟</label><div class="delay-row"><input type="number" id="set-delay" value="'+(c?c.replyDelay:3)+'" min="0"><select id="set-unit"><option value="s"'+(c&&c.replyUnit==='s'?' selected':'')+'>秒</option><option value="m"'+(c&&c.replyUnit==='m'?' selected':'')+'>分</option></select></div>'+
     '<label>主题模式</label><div style="display:flex;gap:6px"><button class="btn btn-sm sel-theme" data-v="auto">自动</button><button class="btn btn-sm sel-theme" data-v="dark">暗色</button><button class="btn btn-sm sel-theme" data-v="light">亮色</button></div>'+
@@ -1023,11 +1048,23 @@ function openSettings(){
       '<input type="file" id="stab-restore-input" accept=".json" style="display:none"><input type="file" id="stab-import-cards-input" accept=".json" style="display:none">'+
     '</div>';
   overlay.classList.add('open');
+  // Render group members if group chat
+  if(c&&c.isGroup){
+    var gmDiv=document.getElementById('set-group-members');
+    if(gmDiv){
+      var gmHtml='';
+      for(var i=0;i<characters.length;i++){
+        var ch=characters[i];if(ch.isGroup)continue;
+        var inGroup=(c.members||[]).indexOf(ch.id)>=0;
+        gmHtml+='<label style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:13px;cursor:pointer"><input type="checkbox" class="gm-check" data-cid="'+ch.id+'"'+(inGroup?' checked':'')+'>'+escapeHtml(ch.name)+'</label>';
+      }
+      gmDiv.innerHTML=gmHtml;
+    }
+  }
 
   setTimeout(function(){
     var tbs=panel.querySelectorAll('.sel-theme');for(var i=0;i<tbs.length;i++)tbs[i].classList.toggle('btn-accent',tbs[i].dataset.v===settings.theme);
     var cbs=panel.querySelectorAll('.sel-color');for(var i=0;i<cbs.length;i++)cbs[i].classList.toggle('btn-accent',cbs[i].dataset.v===settings.color);
-    var gms=panel.querySelectorAll('.sel-groupmode');for(var i=0;i<gms.length;i++)gms[i].classList.toggle('btn-accent',gms[i].dataset.v===(settings.groupMode?'1':'0'));
   },10);
 
   panel.querySelector('.sel-theme:nth-child(1)').parentElement.addEventListener('click',function(e){
@@ -1044,7 +1081,6 @@ function openSettings(){
   panel.querySelector('.sel-groupmode:nth-child(1)').parentElement.addEventListener('click',function(e){
     var b=e.target.closest('.sel-groupmode');if(!b)return;
     settings.groupMode=b.dataset.v==='1';saveAll();
-    var gms=panel.querySelectorAll('.sel-groupmode');for(var i=0;i<gms.length;i++)gms[i].classList.toggle('btn-accent',gms[i].dataset.v===(settings.groupMode?'1':'0'));
     updateGroupModeUI();
   });
   $('set-bg-img-btn').addEventListener('click',function(){$('set-bg-img-input').click();});
@@ -1059,6 +1095,11 @@ function openSettings(){
   $('set-close-btn').addEventListener('click',function(){
     var ch=getActiveChar();if(!ch)return;
     ch.name=$('set-name').value.trim()||'梦角';
+    if(ch.isGroup){
+      ch.members=[];
+      var checks=document.querySelectorAll('.gm-check');
+      for(var i=0;i<checks.length;i++){if(checks[i].checked)ch.members.push(checks[i].dataset.cid);}
+    }
     settings.myName=$('set-myname').value.trim()||'我';
     settings.chatBg=$('set-bg').value.trim();
     applyChatBg();
@@ -1293,6 +1334,19 @@ function showCardImportDialog(groups){
       '<button class="btn" id="import-cancel-btn">取消</button>'+
     '</div>';
   overlay.classList.add('open');
+  // Render group members if group chat
+  if(c&&c.isGroup){
+    var gmDiv=document.getElementById('set-group-members');
+    if(gmDiv){
+      var gmHtml='';
+      for(var i=0;i<characters.length;i++){
+        var ch=characters[i];if(ch.isGroup)continue;
+        var inGroup=(c.members||[]).indexOf(ch.id)>=0;
+        gmHtml+='<label style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:13px;cursor:pointer"><input type="checkbox" class="gm-check" data-cid="'+ch.id+'"'+(inGroup?' checked':'')+'>'+escapeHtml(ch.name)+'</label>';
+      }
+      gmDiv.innerHTML=gmHtml;
+    }
+  }
 
   function close(){overlay.classList.remove('open');}
   $('import-cancel-btn').addEventListener('click',close);
@@ -1394,8 +1448,7 @@ function renderMailbox(view){
   // Click mail item to view
   panel.querySelectorAll('.mail-item').forEach(function(item){item.addEventListener('click',function(){
     var idx=parseInt(this.dataset.midx),l=letters[idx];
-    l.read=true;saveAll();updateGroupModeUI();
-    updateMailBadge();
+    l.read=true;saveAll();updateMailBadge();
     var detail='<h3>📧 '+escapeHtml(l.subject||'(无主题)')+'</h3>';
     detail+='<p style="font-size:12px;color:var(--text3);margin-bottom:12px">'+(l.direction==='sent'?'发给 '+escapeHtml(l.to||'梦角'):'来自 '+escapeHtml(l.from||'梦角'))+' · '+new Date(l.time).toLocaleString('zh-CN')+'</p>';
     detail+='<div class="mail-body">'+escapeHtml(l.body||'')+'</div>';
@@ -1449,10 +1502,6 @@ function checkPendingReplies(){
   if(hasNew){saveAll();updateMailBadge();}
 }
 
-function updateGroupModeUI(){
-  var status=$('header-status');
-  if(status)status.innerHTML=settings.groupMode?'<span style="font-size:10px">👥 群聊中</span>':'在线';
-}
 function updateMailBadge(){
   var n=getUnreadCount();
   var nb=document.getElementById('nav-mail-badge');
@@ -1842,8 +1891,8 @@ $('moments-img-input').addEventListener('change',function(e){
 function renderCharDropdown(){
   var dd=$('char-dropdown'),html='';
   for(var i=0;i<characters.length;i++){
-    var c=characters[i];
-    html+='<div class="char-item'+(c.id===activeCharId?' active':'')+'" data-cid="'+c.id+'"><span class="char-item-dot">'+c.name.charAt(0)+'</span>'+escapeHtml(c.name)+'<button class="char-item-del" data-del="'+c.id+'">✕</button></div>';
+    var c=characters[i],isGrp=c.isGroup;
+    html+='<div class="char-item'+(c.id===activeCharId?' active':'')+'" data-cid="'+c.id+'" style="'+(isGrp?'border-bottom:2px solid var(--border);':'')+'"><span class="char-item-dot" style="'+(isGrp?'font-size:16px;':'')+'">'+(isGrp?'👥':c.name.charAt(0))+'</span>'+escapeHtml(c.name)+(isGrp?'<span style="font-size:10px;color:var(--accent);margin-left:4px">'+(c.members||[]).length+'人</span>':'')+'<button class="char-item-del" data-del="'+c.id+'">✕</button></div>';
   }
   html+='<div class="char-item char-item-add" id="char-add-btn">＋ 添加梦角</div>';
   dd.innerHTML=html;
@@ -1877,6 +1926,8 @@ function addCharacter(){
 }
 
 function deleteCharacter(cid){
+  var ch=null;for(var i=0;i<characters.length;i++){if(characters[i].id===cid){ch=characters[i];break;}}
+  if(ch&&ch.isGroup){toast('群聊不可删除');return;}
   if(characters.length<=1){toast('至少保留一个梦角');return;}
   if(!confirm('确定删除这个梦角？所有聊天记录将丢失。'))return;
   for(var i=0;i<characters.length;i++){if(characters[i].id===cid){characters.splice(i,1);break;}}
@@ -1898,6 +1949,19 @@ function openSurvey(){
     '<button class="btn btn-sm" id="sq-add-opt" style="margin-top:8px">＋ 添加选项</button>'+
     '<div class="btn-row"><button class="btn" id="sq-cancel-btn">取消</button><button class="btn btn-accent btn-sm" id="sq-send-btn">发送问卷</button></div>';
   overlay.classList.add('open');
+  // Render group members if group chat
+  if(c&&c.isGroup){
+    var gmDiv=document.getElementById('set-group-members');
+    if(gmDiv){
+      var gmHtml='';
+      for(var i=0;i<characters.length;i++){
+        var ch=characters[i];if(ch.isGroup)continue;
+        var inGroup=(c.members||[]).indexOf(ch.id)>=0;
+        gmHtml+='<label style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:13px;cursor:pointer"><input type="checkbox" class="gm-check" data-cid="'+ch.id+'"'+(inGroup?' checked':'')+'>'+escapeHtml(ch.name)+'</label>';
+      }
+      gmDiv.innerHTML=gmHtml;
+    }
+  }
 
   function renderOpts(){
     var container=document.getElementById('sq-options'),opts=[];
