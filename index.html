@@ -1861,7 +1861,6 @@ function openSurvey(){
       var pick=ch.chatHistory[sid].options[Math.floor(Math.random()*ch.chatHistory[sid].options.length)];
       ch.chatHistory[sid].status='answered';
       ch.chatHistory[sid].answer=pick;
-      addMessage('text','📋 问卷回复：我选「'+pick+'」', 'partner');
       saveAll();renderChat();
     },delay);
     toast('✓ 问卷已发送（1-2分钟内回复）');
