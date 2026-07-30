@@ -1622,7 +1622,7 @@ $('call-minimize-btn').addEventListener('click',minimizeCall);
 $('cm-hangup-btn').addEventListener('click',function(e){e.stopPropagation();hangupCall();});
 
 // ===== MOMENTS =====
-let momentsImages=[];
+let momentsPendingImg=null;
 
 function ensureMoments(){
   var c=getActiveChar();if(!c)return;
@@ -1708,23 +1708,23 @@ function maybeAutoPost(){
 
 $('moments-back-btn').addEventListener('click',function(){$('moments-overlay').classList.remove('open');updatePhotoPreview();});
 $('moments-send-btn').addEventListener('click',function(){
-  var text=$('moments-input').value.trim(),img=momentsImages.length>0?momentsImages[0]:null;
+  var text=$('moments-input').value.trim(),img=momentsPendingImg;
   if(!text&&!img){toast('请输入内容');return;}
   postMoment(text,img,'我');
-  $('moments-input').value='';momentsImages=[];updatePhotoPreview();
+  $('moments-input').value='';momentsPendingImg=null;updatePhotoPreview();
   var c=getActiveChar();
   setTimeout(function(){postMoment(getRandomCards(2,4),null,c.name);},3600000+Math.random()*3600000);
 });
 $('moments-img-btn').addEventListener('click',function(){$('moments-img-input').click();});
 function updatePhotoPreview(){
   var btn=$('moments-img-btn');
-  if(momentsImages.length>0){btn.textContent='🖼️✓';btn.style.borderColor='rgba(var(--accent-rgb),.5)';btn.style.color='var(--accent)';}
+  if(momentsPendingImg){btn.textContent='🖼️✓';btn.style.borderColor='rgba(var(--accent-rgb),.5)';btn.style.color='var(--accent)';}
   else{btn.textContent='🖼️';btn.style.borderColor='';btn.style.color='';}
 }
 $('moments-img-input').addEventListener('change',function(e){
   var file=e.target.files[0];if(!file)return;
   var reader=new FileReader();
-  reader.onload=function(ev){compressImage(ev.target.result,600,600,function(c){momentsImages=[c];updatePhotoPreview();toast('✓ 图片已选择');});};
+  reader.onload=function(ev){compressImage(ev.target.result,600,600,function(c){momentsPendingImg=c;updatePhotoPreview();toast('✓ 图片已选择');});};
   reader.readAsDataURL(file);
   e.target.value='';
 });
