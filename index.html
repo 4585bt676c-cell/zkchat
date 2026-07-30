@@ -482,7 +482,7 @@ const GROUPS = [{name:"默认",color:"#888",items:[]}];
 let currentGroup = null;
 let characters = [];
 let activeCharId = null;
-let settings = { theme:'auto', color:'gold', myName:'我', chatBg:'' };
+let settings = { theme:'auto', color:'gold', myName:'我', chatBg:'', groupMode:false };
 let customEmojis = [];
 let emojiPanelOpen = false;
 let replyTimer = null;
@@ -600,7 +600,7 @@ function loadAll(cb){
       if(characters.length===0){characters.push({id:Date.now(),name:'梦角',replyGroup:'',replyDelay:3,replyUnit:'s',chatHistory:[]});}
       try{activeCharId=JSON.parse(localStorage.getItem('zk-active-char'));}catch(e){activeCharId=null;}
       if(!activeCharId||!getActiveChar()) activeCharId=characters[0].id;
-      try{var s=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');if(s.theme)settings.theme=s.theme;if(s.color)settings.color=s.color;if(s.myName)settings.myName=s.myName;if(s.chatBg!==undefined)settings.chatBg=s.chatBg;}catch(e){}
+      try{var s=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');if(s.theme)settings.theme=s.theme;if(s.color)settings.color=s.color;if(s.myName)settings.myName=s.myName;if(s.chatBg!==undefined)settings.chatBg=s.chatBg;if(s.groupMode!==undefined)settings.groupMode=s.groupMode;}catch(e){}
       dbGet('zk-emoji-library',function(em){customEmojis=em||[];});
       try{var cd=JSON.parse(localStorage.getItem('zk-card-data')||'null');if(cd){GROUPS.length=0;for(var i=0;i<cd.length;i++)GROUPS.push(cd[i]);}}catch(e){}
       if(cb)cb();
@@ -725,7 +725,7 @@ function renderChat(){
     var m=chatHistory[i],row=document.createElement('div');
     row.className='msg-row '+(m.sender==='me'?'me':'partner');
     var c=getActiveChar();
-    var avatarHtml='<div class="msg-avatar">'+(m.sender==='me'?(settings.myName||'我').charAt(0):(c?c.name.charAt(0):'?'))+'</div>';
+    var senderIsMe=m.sender==='me';var senderName=senderIsMe?(settings.myName||'我'):(m.sender==='partner'?(c?c.name:'?'):m.sender);var avatarHtml='<div class="msg-avatar" title="'+senderName+'">'+senderName.charAt(0)+'</div>';
     var bubbleHtml='';
     if(m.type==='text'){
       bubbleHtml='<div class="msg-bubble">'+escapeHtml(m.content)+'</div>';
@@ -769,10 +769,10 @@ function addMessage(type,content,sender){
   renderChat();
 }
 
-function showTyping(){
+function showTyping(who){
   var area=$('chat-area'),empty=$('empty-chat');
   if(empty.style.display!=='none') empty.style.display='none';
-  var c=getActiveChar(),name=c?c.name:'对方';
+  var name=who?who.name:((getActiveChar()||{}).name||'对方');
   var div=document.createElement('div');div.className='typing-indicator';div.id='typing-indicator';
   div.innerHTML='<span style="font-size:11px">'+name+' 正在输入</span><div class="typing-dots"><span></span><span></span><span></span></div>';
   area.appendChild(div);
@@ -818,30 +818,33 @@ function triggerReply(){
   var delay=(c?c.replyDelay:3)||3;
   if(c&&c.replyUnit==='m') delay*=60;
   delay*=1000;
-  showTyping();
+  // Group mode: pick random character to reply
+  var replyChar=c;
+  if(settings.groupMode&&characters.length>1){
+    replyChar=characters[Math.floor(Math.random()*characters.length)];
+    if(!replyChar)replyChar=c;
+  }
+  var senderName=settings.groupMode?(replyChar?replyChar.name:'partner'):'partner';
+  showTyping(replyChar);
   replyTimer=setTimeout(function(){
     hideTyping();
     var roll=Math.random();
     if(roll<0.2&&customEmojis.length>0){
-      var emoji=customEmojis[Math.floor(Math.random()*customEmojis.length)];
-      addMessage('emoji',emoji.data,'partner');
+      addMessage('emoji',customEmojis[Math.floor(Math.random()*customEmojis.length)].data,senderName);
     }else if(roll<0.35){
       var yw=GROUPS.find(function(g){return g.name==='颜文字';});
-      if(yw&&yw.items.length>0){addMessage('text',yw.items[Math.floor(Math.random()*yw.items.length)],'partner');}
-      else{addMessage('text',getRandomCard(),'partner');}
+      if(yw&&yw.items.length>0){addMessage('text',yw.items[Math.floor(Math.random()*yw.items.length)],senderName);}
+      else{addMessage('text',getRandomCard(),senderName);}
     }else{
-      // 30% chance to quote-reply to user's last message
-      var cc=getActiveChar();
-      if(cc&&cc.chatHistory.length>0&&Math.random()<0.3){
+      if(replyChar&&replyChar.chatHistory&&replyChar.chatHistory.length>0&&Math.random()<0.3){
         var lastMe=null;
-        for(var i=cc.chatHistory.length-1;i>=0;i--){if(cc.chatHistory[i].sender==='me'){lastMe=cc.chatHistory[i];break;}}
+        for(var i=replyChar.chatHistory.length-1;i>=0;i--){if(replyChar.chatHistory[i].sender==='me'){lastMe=replyChar.chatHistory[i];break;}}
         if(lastMe&&lastMe.type==='text'){
-          var quote='> 我: '+lastMe.content+'\n'+getRandomCard();
-          addMessage('text',quote,'partner');
+          addMessage('text','> 我: '+lastMe.content+'\n'+getRandomCard(),senderName);
           return;
         }
       }
-      addMessage('text',getRandomCard(),'partner');
+      addMessage('text',getRandomCard(),senderName);
     }
   },delay);
 }
@@ -965,6 +968,7 @@ function openSettings(){
     '<label>梦角名称</label><input type="text" id="set-name" value="'+(c?escapeHtml(c.name):'')+'">'+
     '<label>我的名称</label><input type="text" id="set-myname" value="'+escapeHtml(settings.myName||'我')+'">'+
     '<label>聊天背景</label><div style="display:flex;gap:6px"><input type="text" id="set-bg" value="'+escapeHtml(settings.chatBg||'')+'" placeholder="颜色如#1a1a2e或图片URL" style="flex:1"><button class="btn btn-sm" id="set-bg-img-btn">🖼️</button></div><input type="file" id="set-bg-img-input" accept="image/*" style="display:none">'+
+    '<label>群聊模式</label><div style="display:flex;gap:6px"><button class="btn btn-sm sel-groupmode" data-v="1">开启</button><button class="btn btn-sm sel-groupmode" data-v="0">关闭</button></div>'+
     '<label>回复来源分组</label><select id="set-group">'+groupOpts+'</select>'+
     '<label>回复延迟</label><div class="delay-row"><input type="number" id="set-delay" value="'+(c?c.replyDelay:3)+'" min="0"><select id="set-unit"><option value="s"'+(c&&c.replyUnit==='s'?' selected':'')+'>秒</option><option value="m"'+(c&&c.replyUnit==='m'?' selected':'')+'>分</option></select></div>'+
     '<label>主题模式</label><div style="display:flex;gap:6px"><button class="btn btn-sm sel-theme" data-v="auto">自动</button><button class="btn btn-sm sel-theme" data-v="dark">暗色</button><button class="btn btn-sm sel-theme" data-v="light">亮色</button></div>'+
@@ -1004,6 +1008,7 @@ function openSettings(){
   setTimeout(function(){
     var tbs=panel.querySelectorAll('.sel-theme');for(var i=0;i<tbs.length;i++)tbs[i].classList.toggle('btn-accent',tbs[i].dataset.v===settings.theme);
     var cbs=panel.querySelectorAll('.sel-color');for(var i=0;i<cbs.length;i++)cbs[i].classList.toggle('btn-accent',cbs[i].dataset.v===settings.color);
+    var gms=panel.querySelectorAll('.sel-groupmode');for(var i=0;i<gms.length;i++)gms[i].classList.toggle('btn-accent',gms[i].dataset.v===(settings.groupMode?'1':'0'));
   },10);
 
   panel.querySelector('.sel-theme:nth-child(1)').parentElement.addEventListener('click',function(e){
@@ -1017,6 +1022,12 @@ function openSettings(){
     var cbs=panel.querySelectorAll('.sel-color');for(var i=0;i<cbs.length;i++)cbs[i].classList.toggle('btn-accent',cbs[i].dataset.v===settings.color);
   });
 
+  panel.querySelector('.sel-groupmode:nth-child(1)').parentElement.addEventListener('click',function(e){
+    var b=e.target.closest('.sel-groupmode');if(!b)return;
+    settings.groupMode=b.dataset.v==='1';saveAll();
+    var gms=panel.querySelectorAll('.sel-groupmode');for(var i=0;i<gms.length;i++)gms[i].classList.toggle('btn-accent',gms[i].dataset.v===(settings.groupMode?'1':'0'));
+    updateGroupModeUI();
+  });
   $('set-bg-img-btn').addEventListener('click',function(){$('set-bg-img-input').click();});
   $('set-bg-img-input').addEventListener('change',function(e){
     var file=e.target.files[0];if(!file)return;
@@ -1364,7 +1375,8 @@ function renderMailbox(view){
   // Click mail item to view
   panel.querySelectorAll('.mail-item').forEach(function(item){item.addEventListener('click',function(){
     var idx=parseInt(this.dataset.midx),l=letters[idx];
-    l.read=true;saveAll();updateMailBadge();
+    l.read=true;saveAll();updateGroupModeUI();
+    updateMailBadge();
     var detail='<h3>📧 '+escapeHtml(l.subject||'(无主题)')+'</h3>';
     detail+='<p style="font-size:12px;color:var(--text3);margin-bottom:12px">'+(l.direction==='sent'?'发给 '+escapeHtml(l.to||'梦角'):'来自 '+escapeHtml(l.from||'梦角'))+' · '+new Date(l.time).toLocaleString('zh-CN')+'</p>';
     detail+='<div class="mail-body">'+escapeHtml(l.body||'')+'</div>';
@@ -1418,6 +1430,10 @@ function checkPendingReplies(){
   if(hasNew){saveAll();updateMailBadge();}
 }
 
+function updateGroupModeUI(){
+  var status=$('header-status');
+  if(status)status.innerHTML=settings.groupMode?'<span style="font-size:10px">👥 群聊中</span>':'在线';
+}
 function updateMailBadge(){
   var n=getUnreadCount();
   var nb=document.getElementById('nav-mail-badge');
