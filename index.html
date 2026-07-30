@@ -997,7 +997,9 @@ function openSettings(){
   $('set-bg-img-input').addEventListener('change',function(e){
     var file=e.target.files[0];if(!file)return;
     var reader=new FileReader();
-    reader.onload=function(ev){$('set-bg').value=ev.target.result;toast('✓ 背景图已选择');};
+    reader.onload=function(ev){
+      compressImage(ev.target.result,800,600,0.5,function(c){$('set-bg').value=c;toast('✓ 背景图已选择（已压缩）');});
+    };
     reader.readAsDataURL(file);e.target.value='';
   });
   $('set-close-btn').addEventListener('click',function(){
