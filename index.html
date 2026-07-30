@@ -1436,6 +1436,45 @@ function sendEmoji(content){
   closeEmojiPanel();triggerReply();
 }
 
+// ===== EMOJI PANEL =====
+function openEmojiPanel(){ $('emoji-panel').classList.add('open');emojiPanelOpen=true;renderEmojiContent();$('emoji-btn').classList.add('active'); }
+function closeEmojiPanel(){ $('emoji-panel').classList.remove('open');emojiPanelOpen=false;$('emoji-btn').classList.remove('active'); }
+function toggleEmojiPanel(){ if(emojiPanelOpen)closeEmojiPanel();else openEmojiPanel(); }
+function deleteEmoji(idx){customEmojis.splice(idx,1);dbSet('zk-emoji-library',customEmojis,function(){renderEmojiContent();});}
+
+function renderEmojiContent(){
+  var activeTab=document.querySelector('.emoji-tab.active'),tab=activeTab?activeTab.dataset.tab:'yanwenzi';
+  var content=$('emoji-content');
+  if(tab==='yanwenzi'){
+    var yanwenzi=GROUPS.find(function(g){return g.name==='颜文字';});
+    var items=yanwenzi?yanwenzi.items:[];
+    var html='<div class="emoji-grid">';
+    for(var i=0;i<items.length;i++){html+='<div class="emoji-item" data-emoji="'+items[i].replace(/"/g,'&quot;')+'">'+items[i]+'</div>';}
+    html+='</div>';content.innerHTML=html;
+  }else{
+    var html='<div class="emoji-grid">';
+    for(var i=0;i<customEmojis.length;i++){html+='<div class="emoji-item emoji-image" style="position:relative" data-eidx="'+i+'"><img src="'+customEmojis[i].data+'"><span class="emoji-del">✕</span></div>';}
+    html+='<div class="emoji-item emoji-add" id="emoji-add-btn">＋</div></div>';
+    content.innerHTML=html;
+    var addBtn=$('emoji-add-btn');if(addBtn)addBtn.addEventListener('click',function(){$('emoji-batch-input').click();});
+  }
+}
+
+function uploadEmojis(files){
+  if(!files||files.length===0) return;
+  var total=files.length,loaded=0,failed=0;
+  for(var i=0;i<files.length;i++){
+    (function(file){
+      if(!file.type.match(/^image\//)){failed++;return;}
+      var reader=new FileReader();
+      reader.onload=function(e){compressImage(e.target.result,120,120,0.5,function(c){customEmojis.push({id:Date.now()+loaded,data:c,name:file.name});loaded++;checkDone();});};
+      reader.onerror=function(){failed++;checkDone();};
+      reader.readAsDataURL(file);
+    })(files[i]);
+  }
+  function checkDone(){if(loaded+failed===total){dbSet('zk-emoji-library',customEmojis,function(){renderEmojiContent();});var msg='✓ 已添加 '+loaded+' 个';if(failed>0)msg+=', 跳过 '+failed+' 个';toast(msg);}}
+}
+
 function renderMoments(){
   var c=getActiveChar();var posts=c.moments||[];
   var body=$('moments-body'),html='';
