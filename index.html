@@ -743,6 +743,100 @@ function openAddCards(){
   $('set-import-cards-input').onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){try{var d=JSON.parse(ev.target.result);var gs=d.customReplyGroups||[];if(!gs.length){toast('没有分组');return;}showCardImportDialog(gs);}catch(err){toast('格式错误');}};r.readAsText(f);e.target.value='';};
 }
 
+// ===== IMAGE PREVIEW =====
+function previewImage(src){$('img-preview-img').src=src;$('img-preview').style.display='flex';}
+
+// ===== SETTINGS =====
+function openSettings(){
+  var overlay=$('settings-overlay'),panel=$('settings-panel');
+  var c=getActiveChar();
+  var groupOpts='<option value=\"\">全部随机</option>';
+  for(var i=0;i<GROUPS.length;i++){groupOpts+='<option value=\"'+GROUPS[i].name.replace(/\"/g,'&quot;')+'\"'+((c&&c.replyGroup===GROUPS[i].name)?' selected':'')+'>'+GROUPS[i].name+'</option>';}
+  panel.innerHTML='<h3>⚙️ 设置 — '+(c?escapeHtml(c.name):'')+'</h3>'+
+    '<label>梦角名称</label><input type=\"text\" id=\"set-name\" value=\"'+(c?escapeHtml(c.name):'')+'\">'+
+    (c&&c.isGroup?'<label>群聊成员</label><div id=\"set-group-members\" style=\"max-height:120px;overflow-y:auto;margin-bottom:4px;font-size:13px\"></div>':'')+
+    '<label>我的名称</label><input type=\"text\" id=\"set-myname\" value=\"'+escapeHtml(settings.myName||'我')+'\">'+
+    '<label>回复来源分组</label><select id=\"set-group\">'+groupOpts+'</select>'+
+    '<label>回复延迟</label><div class=\"delay-row\"><input type=\"number\" id=\"set-delay\" value=\"'+(c?c.replyDelay:3)+'\" min=\"1\"><select id=\"set-unit\"><option value=\"s\"'+(c&&c.replyUnit==='s'?' selected':'')+'>秒</option><option value=\"m\"'+(c&&c.replyUnit==='m'?' selected':'')+'>分</option></select></div>'+
+    '<label>聊天背景</label><div style=\"display:flex;gap:6px\"><input type=\"text\" id=\"set-bg\" value=\"'+escapeHtml(settings.chatBg||'')+'\" placeholder=\"颜色或留空\" style=\"flex:1\"><button class=\"btn btn-sm\" id=\"set-bg-img-btn\">🖼️</button></div><input type=\"file\" id=\"set-bg-img-input\" accept=\"image/*\" style=\"display:none\">'+
+    '<label>主题</label><div style=\"display:flex;gap:6px;flex-wrap:wrap\"><button class=\"btn btn-sm sel-theme\" data-v=\"auto\">自动</button><button class=\"btn btn-sm sel-theme\" data-v=\"dark\">暗色</button><button class=\"btn btn-sm sel-theme\" data-v=\"light\">亮色</button></div>'+
+    '<label>强调色</label><div style=\"display:flex;gap:4px;flex-wrap:wrap\">'+
+      '<button class=\"btn btn-sm sel-color\" data-v=\"gold\"><span style=\"display:inline-block;width:10px;height:10px;border-radius:50%;background:#c5a47e;margin-right:3px\"></span>金</button>'+
+      '<button class=\"btn btn-sm sel-color\" data-v=\"blue\"><span style=\"display:inline-block;width:10px;height:10px;border-radius:50%;background:#7FA6CD;margin-right:3px\"></span>蓝</button>'+
+      '<button class=\"btn btn-sm sel-color\" data-v=\"purple\"><span style=\"display:inline-block;width:10px;height:10px;border-radius:50%;background:#BB9EC7;margin-right:3px\"></span>紫</button>'+
+      '<button class=\"btn btn-sm sel-color\" data-v=\"pink\"><span style=\"display:inline-block;width:10px;height:10px;border-radius:50%;background:#F4A6B3;margin-right:3px\"></span>粉</button>'+
+      '<button class=\"btn btn-sm sel-color\" data-v=\"mono\"><span style=\"display:inline-block;width:10px;height:10px;border-radius:50%;background:#888;margin-right:3px\"></span>墨</button>'+
+      '<button class=\"btn btn-sm sel-color\" data-v=\"sunset\"><span style=\"display:inline-block;width:10px;height:10px;border-radius:50%;background:#FF9A8B;margin-right:3px\"></span>橙</button>'+
+    '</div>'+
+    '<div class=\"btn-row\" style=\"flex-wrap:wrap;margin-top:12px\">'+
+      '<button class=\"btn btn-sm\" id=\"set-add-cards-btn\">＋ 新增字卡</button>'+
+      '<button class=\"btn btn-sm\" id=\"set-backup-btn\">📦 备份</button>'+
+      '<button class=\"btn btn-sm\" id=\"set-restore-btn\">📥 恢复</button>'+
+      '<input type=\"file\" id=\"set-restore-input\" accept=\".json\" style=\"display:none\">'+
+      '<button class=\"btn btn-sm\" id=\"set-export-cards-btn\">📤 导出字卡</button>'+
+      '<button class=\"btn btn-sm\" id=\"set-import-cards-btn\">📥 导入字卡</button>'+
+      '<input type=\"file\" id=\"set-import-cards-input\" accept=\".json\" style=\"display:none\">'+
+      '<button class=\"btn btn-sm btn-danger\" id=\"set-clear-btn\">🗑 清空聊天</button>'+
+      '<button class=\"btn btn-sm btn-danger\" id=\"set-clear-emoji-btn\">🗑 清空表情</button>'+
+      '<button class=\"btn btn-accent btn-sm\" id=\"set-close-btn\">完成</button>'+
+    '</div>';
+  overlay.classList.add('open');
+
+  // Highlight theme/color
+  setTimeout(function(){
+    var tbs=panel.querySelectorAll('.sel-theme');for(var i=0;i<tbs.length;i++)tbs[i].classList.toggle('btn-accent',tbs[i].dataset.v===settings.theme);
+    var cbs=panel.querySelectorAll('.sel-color');for(var i=0;i<cbs.length;i++)cbs[i].classList.toggle('btn-accent',cbs[i].dataset.v===settings.color);
+  },10);
+
+  // Theme buttons
+  panel.querySelector('.sel-theme:nth-child(1)').parentElement.addEventListener('click',function(e){
+    var b=e.target.closest('.sel-theme');if(!b)return;
+    settings.theme=b.dataset.v;applyTheme();saveAll();
+    var tbs=panel.querySelectorAll('.sel-theme');for(var i=0;i<tbs.length;i++)tbs[i].classList.toggle('btn-accent',tbs[i].dataset.v===settings.theme);
+  });
+  panel.querySelector('.sel-color:nth-child(1)').parentElement.addEventListener('click',function(e){
+    var b=e.target.closest('.sel-color');if(!b)return;
+    settings.color=b.dataset.v;applyColor();saveAll();
+    var cbs=panel.querySelectorAll('.sel-color');for(var i=0;i<cbs.length;i++)cbs[i].classList.toggle('btn-accent',cbs[i].dataset.v===settings.color);
+  });
+
+  // BG image
+  $('set-bg-img-btn').onclick=function(){$('set-bg-img-input').click();};
+  $('set-bg-img-input').onchange=function(e){
+    var f=e.target.files[0];if(!f)return;
+    var r=new FileReader();r.onload=function(ev){compressImage(ev.target.result,800,600,0.5,function(c){$('set-bg').value=c;toast('✓ 已选择');});};r.readAsDataURL(f);e.target.value='';
+  };
+
+  // Group members
+  if(c&&c.isGroup){
+    var gm=document.getElementById('set-group-members');
+    if(gm){var h='';for(var i=0;i<characters.length;i++){var ch=characters[i];if(ch.isGroup)continue;var inG=(c.members||[]).indexOf(ch.id)>=0;h+='<label style=\"display:flex;align-items:center;gap:6px;padding:3px 0;font-size:13px;cursor:pointer\"><input type=\"checkbox\" class=\"gm-check\" data-cid=\"'+ch.id+'\"'+(inG?' checked':'')+'>'+escapeHtml(ch.name)+'</label>';}gm.innerHTML=h;}
+  }
+
+  // Close/save
+  $('set-close-btn').onclick=function(){
+    var ch=getActiveChar();if(!ch)return;
+    ch.name=$('set-name').value.trim()||'梦角';
+    if(ch.isGroup){ch.members=[];var cs=document.querySelectorAll('.gm-check');for(var i=0;i<cs.length;i++){if(cs[i].checked)ch.members.push(cs[i].dataset.cid);}}
+    settings.myName=$('set-myname').value.trim()||'我';
+    settings.chatBg=$('set-bg').value.trim();applyChatBg();
+    ch.replyGroup=$('set-group').value;
+    ch.replyDelay=parseInt($('set-delay').value)||3;ch.replyUnit=$('set-unit').value;
+    saveAll();updateHeader();overlay.classList.remove('open');toast('✓ 设置已保存');
+  };
+
+  // Other buttons
+  $('set-clear-btn').onclick=function(){if(!confirm('确定清空聊天？'))return;var c2=getActiveChar();if(c2)c2.chatHistory=[];saveAll();renderChat();overlay.classList.remove('open');toast('✓ 已清空');};
+  $('set-clear-emoji-btn').onclick=function(){if(!confirm('清空所有表情？'))return;customEmojis=[];dbSet('zk-emoji-library',[],function(){toast('✓ 已清空');});overlay.classList.remove('open');};
+  $('set-add-cards-btn').onclick=function(){overlay.classList.remove('open');openAddCards();};
+  $('set-backup-btn').onclick=function(){var bk={version:2,date:new Date().toISOString(),cards:GROUPS,characters:characters,activeCharId:activeCharId,emojiLibrary:customEmojis,settings:settings};downloadJSON(bk,'备份_'+new Date().toISOString().slice(0,10)+'.json');};
+  $('set-restore-btn').onclick=function(){$('set-restore-input').click();};
+  $('set-restore-input').onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){try{var b=JSON.parse(ev.target.result);if(!b.cards)return;if(!confirm('恢复将覆盖数据，确定？'))return;GROUPS.length=0;for(var i=0;i<b.cards.length;i++)GROUPS.push(b.cards[i]);if(b.characters){characters=b.characters;activeCharId=b.activeCharId||characters[0].id;}customEmojis=b.emojiLibrary||[];if(b.settings)settings=b.settings;saveAll();localStorage.setItem('zk-card-data',JSON.stringify(GROUPS));applyTheme();applyColor();updateHeader();renderChat();overlay.classList.remove('open');toast('✓ 已恢复');}catch(err){toast('解析失败');}};r.readAsText(f);e.target.value='';};
+  $('set-export-cards-btn').onclick=function(){var ed={exportDate:new Date().toISOString(),modules:['replies','groups'],customReplies:GROUPS.reduce(function(a,g){return a.concat(g.items)},[]),customReplyGroups:GROUPS,_groupExport:true,_groupExportType:'replies'};downloadJSON(ed,'字卡_导出.json');};
+  $('set-import-cards-btn').onclick=function(){$('set-import-cards-input').click();};
+  $('set-import-cards-input').onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){try{var d=JSON.parse(ev.target.result);var gs=d.customReplyGroups||[];if(!gs.length){toast('无分组');return;}showCardImportDialog(gs);}catch(err){toast('格式错误');}};r.readAsText(f);e.target.value='';};
+}
+
 function showCardImportDialog(groups){
   var overlay=$('import-overlay'),panel=$('import-panel');
   var totalItems=groups.reduce(function(s,g){return s+(g.items||[]).length},0);
