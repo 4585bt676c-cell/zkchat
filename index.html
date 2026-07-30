@@ -471,7 +471,7 @@ html[data-theme="light"] .moments-comment .mc-name{color:#3a6ea5}
       <div class="input-wrap">
         <textarea id="msg-input" rows="1" placeholder="输入消息…" autocomplete="off"></textarea>
       </div>
-      <button class="send-btn" id="send-btn" title="发送">📤</button>
+      <button class="send-btn" id="send-btn" title="发送">➤</button>
     </div>
   </div>
 </div>
@@ -482,7 +482,7 @@ const GROUPS = [{name:"默认",color:"#888",items:[]}];
 let currentGroup = null;
 let characters = [];
 let activeCharId = null;
-let settings = { theme:'auto', color:'gold' };
+let settings = { theme:'auto', color:'gold', myName:'我', chatBg:'' };
 let customEmojis = [];
 let emojiPanelOpen = false;
 let replyTimer = null;
@@ -550,6 +550,7 @@ function init(){
     bindEvents();
     applyTheme();
     applyColor();
+    applyChatBg();
     updateHeader();
     updateMailBadge();
     checkPendingReplies();
@@ -575,7 +576,7 @@ function loadAll(cb){
       if(characters.length===0){characters.push({id:Date.now(),name:'梦角',replyGroup:'',replyDelay:3,replyUnit:'s',chatHistory:[]});}
       try{activeCharId=JSON.parse(localStorage.getItem('zk-active-char'));}catch(e){activeCharId=null;}
       if(!activeCharId||!getActiveChar()) activeCharId=characters[0].id;
-      try{var s=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');if(s.theme)settings.theme=s.theme;if(s.color)settings.color=s.color;}catch(e){}
+      try{var s=JSON.parse(localStorage.getItem('zk-chat-settings')||'{}');if(s.theme)settings.theme=s.theme;if(s.color)settings.color=s.color;if(s.myName)settings.myName=s.myName;if(s.chatBg!==undefined)settings.chatBg=s.chatBg;}catch(e){}
       dbGet('zk-emoji-library',function(em){customEmojis=em||[];});
       try{var cd=JSON.parse(localStorage.getItem('zk-card-data')||'null');if(cd){GROUPS.length=0;for(var i=0;i<cd.length;i++)GROUPS.push(cd[i]);}}catch(e){}
       if(cb)cb();
@@ -610,6 +611,11 @@ function applyTheme(){
   document.documentElement.setAttribute('data-theme',actual);
 }
 function applyColor(){ document.documentElement.setAttribute('data-color-theme',settings.color); }
+function applyChatBg(){
+  var area=$('chat-area');if(!area)return;
+  if(settings.chatBg){area.style.background=settings.chatBg.startsWith('#')||settings.chatBg.startsWith('rgb')||settings.chatBg.startsWith('url')?settings.chatBg:settings.chatBg;area.style.backgroundSize='cover';}
+  else{area.style.background='';}
+}
 
 // ===== SIDEBAR =====
 function renderSidebar(){return;/* no-op */
@@ -692,7 +698,7 @@ function renderChat(){
     var m=chatHistory[i],row=document.createElement('div');
     row.className='msg-row '+(m.sender==='me'?'me':'partner');
     var c=getActiveChar();
-    var avatarHtml='<div class="msg-avatar">'+(m.sender==='me'?'我':(c?c.name.charAt(0):'?'))+'</div>';
+    var avatarHtml='<div class="msg-avatar">'+(m.sender==='me'?(settings.myName||'我').charAt(0):(c?c.name.charAt(0):'?'))+'</div>';
     var bubbleHtml='';
     if(m.type==='text'){
       bubbleHtml='<div class="msg-bubble">'+escapeHtml(m.content)+'</div>';
@@ -930,6 +936,8 @@ function openSettings(){
     '</div>'+
     '<div id="stab-general"><h3>⚙️ 设置 — '+(c?escapeHtml(c.name):'')+'</h3>'+
     '<label>梦角名称</label><input type="text" id="set-name" value="'+(c?escapeHtml(c.name):'')+'">'+
+    '<label>我的名称</label><input type="text" id="set-myname" value="'+escapeHtml(settings.myName||'我')+'">'+
+    '<label>聊天背景</label><input type="text" id="set-bg" value="'+escapeHtml(settings.chatBg||'')+'" placeholder="颜色如#1a1a2e或留空">'+
     '<label>回复来源分组</label><select id="set-group">'+groupOpts+'</select>'+
     '<label>回复延迟</label><div class="delay-row"><input type="number" id="set-delay" value="'+(c?c.replyDelay:3)+'" min="0"><select id="set-unit"><option value="s"'+(c&&c.replyUnit==='s'?' selected':'')+'>秒</option><option value="m"'+(c&&c.replyUnit==='m'?' selected':'')+'>分</option></select></div>'+
     '<label>主题模式</label><div style="display:flex;gap:6px"><button class="btn btn-sm sel-theme" data-v="auto">自动</button><button class="btn btn-sm sel-theme" data-v="dark">暗色</button><button class="btn btn-sm sel-theme" data-v="light">亮色</button></div>'+
@@ -985,6 +993,9 @@ function openSettings(){
   $('set-close-btn').addEventListener('click',function(){
     var ch=getActiveChar();if(!ch)return;
     ch.name=$('set-name').value.trim()||'梦角';
+    settings.myName=$('set-myname').value.trim()||'我';
+    settings.chatBg=$('set-bg').value.trim();
+    applyChatBg();
     ch.replyGroup=$('set-group').value;
     ch.replyDelay=parseInt($('set-delay').value)||3;
     ch.replyUnit=$('set-unit').value;
