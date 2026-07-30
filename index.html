@@ -536,7 +536,6 @@ function init(){
     updateHeader();
     updateMailBadge();
     checkPendingReplies();
-    checkPendingComments();
     startProactiveEvents();
   });
 }
@@ -1632,7 +1631,6 @@ function ensureMoments(){
 
 function openMoments(){
   ensureMoments();
-  checkPendingComments();
   $('moments-overlay').classList.add('open');
   renderMoments();
 }
@@ -1661,15 +1659,17 @@ function renderMoments(){
     var cc=getActiveChar();if(!cc)return;
     var idx=parseInt(this.dataset.pidx),input=this.parentElement.querySelector('.mp-comment-input');
     var text=input.value.trim();if(!text||!cc.moments[idx])return;
+    var isMeReply=cc.moments[idx].from!=='我'; // I'm replying to character's post
     cc.moments[idx].comments.push({from:'我',text:text,time:Date.now()});
-    saveAll();
+    saveAll();renderMoments();
+    // Character always replies to my comment (2-5s for my post, 5-15s for their post)
     var selfIdx=idx,selfName=cc.name;
+    var delay=isMeReply?(5000+Math.random()*10000):(2000+Math.random()*3000);
     setTimeout(function(){
       var c2=getActiveChar();if(!c2||!c2.moments[selfIdx])return;
-      c2.moments[selfIdx].comments.push({from:selfName,text:getRandomCards(1,2),time:Date.now()});
+      c2.moments[selfIdx].comments.push({from:selfName,text:getRandomCards(1,3),time:Date.now()});
       saveAll();if($('moments-overlay').classList.contains('open'))renderMoments();
-    },2000+Math.random()*3000);
-    renderMoments();
+    },delay);
   });});
   // Enter key on comment input
   body.querySelectorAll('.mp-comment-input').forEach(function(inp){inp.addEventListener('keydown',function(e){
@@ -1680,29 +1680,16 @@ function renderMoments(){
 
 function postMoment(text,img,from){
   ensureMoments();var c=getActiveChar();if(!from)from='我';
-  var commentDue=Date.now()+3600000+Math.random()*3600000;
-  c.moments.push({text:text,img:img||null,from:from,time:Date.now(),comments:[],commentDue:commentDue});
+  c.moments.push({text:text,img:img||null,from:from,time:Date.now(),comments:[]});
   saveAll();renderMoments();
-  checkPendingComments();
-}
-
-function deliverComment(post){
-  var c=getActiveChar();if(!c||post.commentDelivered)return;
-  var card=getRandomCards(2,5);
-  var commenter=post.from==='我'?c.name:'我';
-  post.comments.push({from:commenter,text:card,time:Date.now()});
-  post.commentDelivered=true;
-  saveAll();if($('moments-overlay').classList.contains('open')) renderMoments();
-}
-
-function checkPendingComments(){
-  var c=getActiveChar();if(!c||!c.moments)return;
-  var now=Date.now();
-  for(var i=0;i<c.moments.length;i++){
-    var p=c.moments[i];
-    if(p.commentDue&&!p.commentDelivered&&now>=p.commentDue){
-      deliverComment(p);
-    }
+  // Character auto-replies to user's post after 1-2h
+  if(from==='我'){
+    var pi=c.moments.length-1;
+    setTimeout(function(){
+      var cc=getActiveChar();if(!cc||!cc.moments[pi])return;
+      cc.moments[pi].comments.push({from:cc.name,text:getRandomCards(2,5),time:Date.now()});
+      saveAll();if($('moments-overlay').classList.contains('open'))renderMoments();
+    },3600000+Math.random()*3600000);
   }
 }
 
