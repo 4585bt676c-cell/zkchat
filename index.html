@@ -1724,7 +1724,12 @@ function updatePhotoPreview(){
 $('moments-img-input').addEventListener('change',function(e){
   var file=e.target.files[0];if(!file)return;
   var reader=new FileReader();
-  reader.onload=function(ev){compressImage(ev.target.result,600,600,function(c){momentsPendingImg=c;updatePhotoPreview();toast('✓ 图片已选择');});};
+  reader.onload=function(ev){
+    momentsPendingImg=ev.target.result;updatePhotoPreview();toast('✓ 图片已选择');
+    // Compress in background for storage
+    compressImage(ev.target.result,800,800,0.6,function(c){if(c)momentsPendingImg=c;});
+  };
+  reader.onerror=function(){toast('⚠️ 读取失败');};
   reader.readAsDataURL(file);
   e.target.value='';
 });
