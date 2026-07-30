@@ -201,6 +201,15 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--acce
 .add-cards-panel textarea:focus{border-color:rgba(var(--accent-rgb),.5)}
 .add-cards-panel .hint{font-size:11px;color:var(--text3);margin-top:6px}
 .add-cards-panel .result{font-size:13px;color:var(--accent);margin-top:8px;text-align:center}
+/* Survey */
+.survey-card{border:1px solid rgba(var(--accent-rgb),.3);background:rgba(var(--accent-rgb),.05);border-radius:var(--radius-sm);padding:14px 16px;margin:4px 0}
+.survey-card .sq-question{font-weight:600;color:var(--text);margin-bottom:10px;font-size:15px}
+.survey-card .sq-option{padding:6px 12px;margin:3px 0;border-radius:12px;border:1px solid var(--border2);background:var(--bg3);font-size:13px;color:var(--text2);display:inline-block;margin-right:6px}
+.survey-card .sq-option.selected{background:rgba(var(--accent-rgb),.2);border-color:rgba(var(--accent-rgb),.5);color:var(--accent)}
+.survey-card .sq-status{font-size:11px;color:var(--text3);margin-top:8px}
+.survey-opt-row{display:flex;gap:8px;align-items:center;margin-bottom:6px}
+.survey-opt-row input{flex:1;padding:8px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none}
+.survey-opt-row button{width:28px;height:28px;border-radius:50%;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
 
 /* Scroll to bottom button */
 .scroll-bottom{position:absolute;bottom:80px;right:20px;width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);color:var(--text2);cursor:pointer;font-size:14px;display:none;align-items:center;justify-content:center;z-index:5;box-shadow:0 2px 8px rgba(0,0,0,.3)}
@@ -379,6 +388,11 @@ html[data-theme="light"] .moments-comment .mc-name{color:#3a6ea5}
   </div>
 </div>
 
+<!-- Survey overlay -->
+<div class="overlay" id="survey-overlay">
+  <div class="panel" id="survey-panel"></div>
+</div>
+
 <!-- Mail overlay -->
 <div class="overlay" id="mail-overlay">
   <div class="panel" id="mail-panel"></div>
@@ -456,6 +470,7 @@ html[data-theme="light"] .moments-comment .mc-name{color:#3a6ea5}
     <!-- Input bar -->
     <div class="input-bar">
       <button id="image-btn" title="图片">📷</button>
+      <button id="survey-btn" title="问卷">📋</button>
       <button id="emoji-btn" title="表情">😊</button>
       <input type="file" id="image-input" accept="image/*" style="display:none">
       <div class="input-wrap">
@@ -704,6 +719,8 @@ function renderChat(){
       }else{
         bubbleHtml='<div class="msg-bubble">🧧 红包 ¥'+escapeHtml(m.content)+'</div>';
       }
+    }else if(m.type==='survey'){
+      bubbleHtml='<div class="msg-bubble">'+renderSurveyInChat(m,c)+'</div>';
     }
     row.innerHTML=avatarHtml+bubbleHtml+'<div class="msg-time">'+timeStr(m.time)+'</div>';
     frag.appendChild(row);
@@ -1795,6 +1812,81 @@ function deleteCharacter(cid){
   toast('已删除');
 }
 
+// ===== SURVEY =====
+function openSurvey(){
+  var overlay=$('survey-overlay'),panel=$('survey-panel'),c=getActiveChar();
+  panel.innerHTML='<h3>📋 问卷调查 — '+escapeHtml(c?c.name:'')+'</h3>'+
+    '<label>问题</label><input type="text" id="sq-question" placeholder="输入你的问题…">'+
+    '<label style="margin-top:10px">选项（对方可从中选择）</label><div id="sq-options"></div>'+
+    '<button class="btn btn-sm" id="sq-add-opt" style="margin-top:8px">＋ 添加选项</button>'+
+    '<div class="btn-row"><button class="btn" id="sq-cancel-btn">取消</button><button class="btn btn-accent btn-sm" id="sq-send-btn">发送问卷</button></div>';
+  overlay.classList.add('open');
+
+  function renderOpts(){
+    var container=document.getElementById('sq-options'),opts=[];
+    container.querySelectorAll('input').forEach(function(inp){opts.push(inp.value);});
+    if(opts.length===0)opts=['',''];
+    var html='';
+    for(var i=0;i<opts.length;i++){
+      html+='<div class="survey-opt-row"><input type="text" class="sq-opt-input" value="'+escapeHtml(opts[i])+'" placeholder="选项'+(i+1)+'"><button class="sq-opt-del">✕</button></div>';
+    }
+    container.innerHTML=html;
+    container.querySelectorAll('.sq-opt-del').forEach(function(b){b.addEventListener('click',function(){
+      this.parentElement.remove();
+      var rem=document.querySelectorAll('.sq-opt-input');
+      if(rem.length===0)renderOpts();
+    });});
+  }
+  renderOpts();
+
+  $('sq-add-opt').addEventListener('click',function(){
+    var container=document.getElementById('sq-options');
+    var div=document.createElement('div');div.className='survey-opt-row';
+    div.innerHTML='<input type="text" class="sq-opt-input" placeholder="新选项"><button class="sq-opt-del">✕</button>';
+    container.appendChild(div);
+    div.querySelector('.sq-opt-del').addEventListener('click',function(){div.remove();});
+  });
+
+  $('sq-cancel-btn').addEventListener('click',function(){overlay.classList.remove('open');});
+  overlay.addEventListener('click',function(e){if(e.target===this)overlay.classList.remove('open');});
+
+  $('sq-send-btn').addEventListener('click',function(){
+    var q=$('sq-question').value.trim();if(!q){toast('请输入问题');return;}
+    var opts=[];document.querySelectorAll('.sq-opt-input').forEach(function(inp){var v=inp.value.trim();if(v)opts.push(v);});
+    if(opts.length<2){toast('至少需要2个选项');return;}
+    overlay.classList.remove('open');
+    var c=getActiveChar();if(!c)return;
+    c.chatHistory.push({id:Date.now(),type:'survey',content:q,sender:'me',time:Date.now(),options:opts,status:'pending'});
+    saveAll();renderChat();
+    // Character replies in 1-2 minutes
+    var delay=60000+Math.random()*60000; // 1-2 min
+    var sid=c.chatHistory.length-1;
+    setTimeout(function(){
+      var ch=getActiveChar();if(!ch||!ch.chatHistory[sid])return;
+      var pick=ch.chatHistory[sid].options[Math.floor(Math.random()*ch.chatHistory[sid].options.length)];
+      ch.chatHistory[sid].status='answered';
+      ch.chatHistory[sid].answer=pick;
+      addMessage('text','📋 问卷回复：我选「'+pick+'」', 'partner');
+      saveAll();renderChat();
+    },delay);
+    toast('✓ 问卷已发送（1-2分钟内回复）');
+  });
+}
+
+function renderSurveyInChat(m,c){
+  var html='<div class="survey-card">';
+  html+='<div class="sq-question">📋 '+escapeHtml(m.content)+'</div>';
+  if(m.options){
+    for(var i=0;i<m.options.length;i++){
+      var sel=m.status==='answered'&&m.answer===m.options[i];
+      html+='<span class="sq-option'+(sel?' selected':'')+'">'+(sel?'✓ ':'')+escapeHtml(m.options[i])+'</span>';
+    }
+  }
+  html+='<div class="sq-status">'+(m.status==='answered'?'已回复：'+escapeHtml(m.answer):'等待回复中…（1-2分钟）')+'</div>';
+  html+='</div>';
+  return html;
+}
+
 // ===== NAV =====
 function setActiveNav(el){
   document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active');});
@@ -1832,6 +1924,8 @@ function bindEvents(){
   $('voice-btn').addEventListener('click',function(){toast('🎤 语音功能开发中');});
   
   // Image button
+  $('survey-btn').addEventListener('click',openSurvey);
+  $('survey-overlay').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   $('image-btn').addEventListener('click',function(){$('image-input').click();});
   $('image-input').addEventListener('change',function(e){
     var file=e.target.files[0];if(file){sendImage(file);e.target.value='';}
