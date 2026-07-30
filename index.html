@@ -2103,39 +2103,42 @@ function bindEvents(){
   mb.addEventListener('pointercancel',mbStop);
   
   // Scroll to bottom
-  // Redpack accept/reject in chat
+  // Chat area click: redpack + message quote
   $('chat-area').addEventListener('click',function(e){
     var accept=e.target.closest('.rp-accept-btn');
     var reject=e.target.closest('.rp-reject-btn');
-    if(!accept&&!reject)return;
-    e.stopPropagation();
-    var rid=parseInt((accept||reject).dataset.rid);
-    var c=getActiveChar();if(!c)return;
-    for(var i=0;i<c.chatHistory.length;i++){
-      if(c.chatHistory[i].id===rid){
-        if(accept){
-          c.chatHistory[i].status='accepted';
-          c.chatHistory[i].reply=getRandomCard();
-          addMessage('text','谢谢宝贝的红包~ '+c.chatHistory[i].reply,'me');
-        }else{
-          c.chatHistory[i].status='rejected';
-          addMessage('text','红包已退还', 'me');
+    // Handle redpack accept/reject
+    if(accept||reject){
+      e.stopPropagation();
+      var rid=parseInt((accept||reject).dataset.rid);
+      var c=getActiveChar();if(!c)return;
+      for(var i=0;i<c.chatHistory.length;i++){
+        if(c.chatHistory[i].id===rid){
+          if(accept){
+            c.chatHistory[i].status='accepted';
+            c.chatHistory[i].reply=getRandomCard();
+            addMessage('text','谢谢宝贝的红包~ '+c.chatHistory[i].reply,'me');
+          }else{
+            c.chatHistory[i].status='rejected';
+            addMessage('text','红包已退还', 'me');
+          }
+          saveAll();renderChat();break;
         }
-        saveAll();renderChat();break;
       }
+      return;
     }
     // Message quote: click bubble to quote
     var bubble=e.target.closest('.msg-bubble');
-    if(bubble&&!accept&&!reject){
+    if(bubble){
       var row=bubble.closest('.msg-row');
       var text=bubble.textContent.trim();
       if(text&&row){
-        var sender=row.classList.contains('me')?'我':(getActiveChar()||{}).name||'对方';
+        var c2=getActiveChar();
+        var sender=row.classList.contains('me')?(settings.myName||'我'):(c2?c2.name:'对方');
         $('msg-input').value='> '+sender+': '+text+'\n';
         $('msg-input').focus();
         $('msg-input').style.height='auto';$('msg-input').style.height=Math.min($('msg-input').scrollHeight,100)+'px';
       }
-      return;
     }
   });
   $('chat-area').addEventListener('scroll',function(){
