@@ -2131,13 +2131,18 @@ function bindEvents(){
     var bubble=e.target.closest('.msg-bubble');
     if(bubble){
       var row=bubble.closest('.msg-row');
-      var text=bubble.textContent.trim();
-      if(text&&row){
+      if(!row)return;
+      // Get text without button text
+      var clone=bubble.cloneNode(true);
+      var btns=clone.querySelectorAll('button');for(var bi=0;bi<btns.length;bi++)btns[bi].remove();
+      var text=clone.textContent.trim();
+      if(text){
         var c2=getActiveChar();
         var sender=row.classList.contains('me')?(settings.myName||'我'):(c2?c2.name:'对方');
         $('msg-input').value='> '+sender+': '+text+'\n';
         $('msg-input').focus();
         $('msg-input').style.height='auto';$('msg-input').style.height=Math.min($('msg-input').scrollHeight,100)+'px';
+        toast('已引用');
       }
     }
   });
