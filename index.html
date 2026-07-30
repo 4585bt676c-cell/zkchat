@@ -57,7 +57,6 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--acce
 .sidebar.collapsed{width:0;border-right:none;padding:0}
 
 
-
 .sidebar-expand-btn{position:fixed;left:0;top:50%;transform:translateY(-50%);width:22px;height:60px;border-radius:0 8px 8px 0;border:1px solid var(--border2);border-left:none;background:var(--bg2);color:var(--text3);cursor:pointer;font-size:10px;display:none;z-index:25;transition:var(--transition)}
 .sidebar-expand-btn:hover{color:var(--accent);border-color:rgba(var(--accent-rgb),.4);background:var(--bg3)}
 .sidebar-expand-btn.show{display:flex;align-items:center;justify-content:center}
@@ -67,10 +66,6 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--acce
 .nav-item .nav-icon{font-size:20px;line-height:1}
 .nav-item .nav-badge{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:#e74c3c;display:none}
 .nav-item .nav-badge.show{display:block}
-
-
-
-
 
 
 
@@ -1921,7 +1916,7 @@ function bindEvents(){
   });
   
   // Voice button
-  $('voice-btn').addEventListener('click',function(){toast('🎤 语音功能开发中');});
+  
   
   // Image button
   $('survey-btn').addEventListener('click',openSurvey);
