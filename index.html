@@ -128,6 +128,7 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139;--acce
 .msg-img:hover{transform:scale(1.02)}
 .msg-img-wrap{position:relative}
 .msg-emoji-large{font-size:var(--font-size);line-height:1.5}
+.msg-quote-block{background:rgba(var(--accent-rgb),.06);border-left:3px solid rgba(var(--accent-rgb),.4);padding:5px 10px;margin-bottom:6px;border-radius:0 6px 6px 0;font-size:12px;color:var(--text2);white-space:pre-wrap;max-height:50px;overflow:hidden}
 
 .typing-indicator{display:flex;align-items:center;gap:4px;padding:8px 16px;color:var(--text3);font-size:12px;align-self:flex-start}
 .typing-dots{display:flex;gap:3px}
@@ -728,7 +729,25 @@ function renderChat(){
     var senderIsMe=m.sender==='me';var senderName=senderIsMe?(settings.myName||'我'):(m.sender==='partner'?(c?c.name:'?'):m.sender);var avatarHtml='<div class="msg-avatar" title="'+senderName+'">'+senderName.charAt(0)+'</div>';
     var bubbleHtml='';
     if(m.type==='text'){
-      bubbleHtml='<div class="msg-bubble">'+escapeHtml(m.content)+'</div>';
+      var textContent=m.content;
+      if(textContent.indexOf('> '+(settings.myName||'我')+': ')>-1||textContent.indexOf('> '+((c?c.name:'')||'对方')+': ')>-1){
+        var lines=textContent.split('\n');
+        var quotePart='',replyPart='';
+        for(var li=0;li<lines.length;li++){
+          if(lines[li].indexOf('> '+(settings.myName||'我')+': ')>-1||lines[li].indexOf('> '+((c?c.name:'')||'对方')+': ')>-1){
+            quotePart+=lines[li].replace(/^> /,'')+'\n';
+          }else if(lines[li].trim()){
+            replyPart+=lines[li]+'\n';
+          }
+        }
+        if(quotePart){
+          bubbleHtml='<div class="msg-bubble"><div class="msg-quote-block">'+escapeHtml(quotePart.trim())+'</div>'+escapeHtml(replyPart.trim())+'</div>';
+        }else{
+          bubbleHtml='<div class="msg-bubble">'+escapeHtml(textContent)+'</div>';
+        }
+      }else{
+        bubbleHtml='<div class="msg-bubble">'+escapeHtml(textContent)+'</div>';
+      }
     }else if(m.type==='image'){
       bubbleHtml='<div class="msg-img-wrap"><img class="msg-img" src="'+m.content+'" loading="lazy" onclick="previewImage(this.src)"></div>';
     }else if(m.type==='emoji'){
