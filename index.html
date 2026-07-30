@@ -1275,6 +1275,73 @@ function showTyping(who){
 
 function hideTyping(){var el=document.getElementById('typing-indicator');if(el)el.remove();}
 
+// ===== REPLY LOGIC =====
+function getRandomCard(){
+  var c=getActiveChar(),pool=[];
+  var replyGroup=c?c.replyGroup:'';
+  if(replyGroup){for(var i=0;i<GROUPS.length;i++){if(GROUPS[i].name===replyGroup){pool=GROUPS[i].items;break;}}}
+  if(pool.length===0){for(var i=0;i<GROUPS.length;i++){pool=pool.concat(GROUPS[i].items);}}
+  if(pool.length===0) return '……';
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function getRandomCards(min,max){
+  if(!min)min=2;if(!max)max=5;
+  var count=min+Math.floor(Math.random()*(max-min+1));
+  var cards=[],used={};
+  for(var i=0;i<count;i++){var card=getRandomCard();if(used[card]){i--;continue;}used[card]=true;cards.push(card);}
+  return cards.join('；');
+}
+function triggerReply(){
+  clearTimeout(replyTimer);
+  var c=getActiveChar();
+  var delay=(c?c.replyDelay:3)||3;
+  if(c&&c.replyUnit==='m') delay*=60;
+  delay*=1000;
+  var replyChar=c;
+  var senderName='partner';
+  if(c&&c.isGroup&&c.members&&c.members.length>0){
+    var pool=[];for(var gi=0;gi<characters.length;gi++){if(!characters[gi].isGroup&&c.members.indexOf(characters[gi].id)>=0)pool.push(characters[gi]);}
+    if(pool.length>0){replyChar=pool[Math.floor(Math.random()*pool.length)];senderName=replyChar.name;}
+  }
+  showTyping(replyChar);
+  replyTimer=setTimeout(function(){
+    hideTyping();
+    var roll=Math.random();
+    if(roll<0.2&&customEmojis.length>0){
+      addMessage('emoji',customEmojis[Math.floor(Math.random()*customEmojis.length)].data,senderName);
+    }else if(roll<0.35){
+      var yw=GROUPS.find(function(g){return g.name==='颜文字';});
+      if(yw&&yw.items.length>0){addMessage('text',yw.items[Math.floor(Math.random()*yw.items.length)],senderName);}
+      else{addMessage('text',getRandomCard(),senderName);}
+    }else{
+      if(replyChar&&replyChar.chatHistory&&replyChar.chatHistory.length>0&&Math.random()<0.3){
+        var lastMe=null;
+        for(var i=replyChar.chatHistory.length-1;i>=0;i--){if(replyChar.chatHistory[i].sender==='me'){lastMe=replyChar.chatHistory[i];break;}}
+        if(lastMe&&lastMe.type==='text'){addMessage('text','> 我: '+lastMe.content+'\n'+getRandomCard(),senderName);return;}
+      }
+      addMessage('text',getRandomCard(),senderName);
+    }
+  },delay);
+}
+
+// ===== SEND =====
+function sendText(){
+  var input=$('msg-input'),text=input.value.trim();
+  if(!text) return;
+  addMessage('text',text,'me');
+  input.value='';input.style.height='auto';
+  triggerReply();
+}
+function sendImage(file){
+  var reader=new FileReader();
+  reader.onload=function(e){compressImage(e.target.result,400,400,function(c){addMessage('image',c,'me');triggerReply();});};
+  reader.readAsDataURL(file);
+}
+function sendEmoji(content){
+  addMessage('emoji',content,'me');
+  closeEmojiPanel();triggerReply();
+}
+
 function renderMoments(){
   var c=getActiveChar();var posts=c.moments||[];
   var body=$('moments-body'),html='';
