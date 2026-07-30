@@ -1048,6 +1048,26 @@ function openSettings(){
       '<input type="file" id="stab-restore-input" accept=".json" style="display:none"><input type="file" id="stab-import-cards-input" accept=".json" style="display:none">'+
     '</div>';
   overlay.classList.add('open');
+
+  // Highlight current theme/color
+  setTimeout(function(){
+    var tbs=panel.querySelectorAll('.sel-theme');for(var i=0;i<tbs.length;i++)tbs[i].classList.toggle('btn-accent',tbs[i].dataset.v===settings.theme);
+    var cbs=panel.querySelectorAll('.sel-color');for(var i=0;i<cbs.length;i++)cbs[i].classList.toggle('btn-accent',cbs[i].dataset.v===settings.color);
+  },10);
+
+  // Theme buttons
+  panel.querySelector('.sel-theme:nth-child(1)').parentElement.addEventListener('click',function(e){
+    var b=e.target.closest('.sel-theme');if(!b)return;
+    settings.theme=b.dataset.v;applyTheme();saveAll();
+    var tbs=panel.querySelectorAll('.sel-theme');for(var i=0;i<tbs.length;i++)tbs[i].classList.toggle('btn-accent',tbs[i].dataset.v===settings.theme);
+  });
+  // Color buttons
+  panel.querySelector('.sel-color:nth-child(1)').parentElement.addEventListener('click',function(e){
+    var b=e.target.closest('.sel-color');if(!b)return;
+    settings.color=b.dataset.v;applyColor();saveAll();
+    var cbs=panel.querySelectorAll('.sel-color');for(var i=0;i<cbs.length;i++)cbs[i].classList.toggle('btn-accent',cbs[i].dataset.v===settings.color);
+  });
+
   // Settings tab switching
   panel.querySelectorAll('.emoji-tab').forEach(function(t){t.addEventListener('click',function(){
     panel.querySelectorAll('.emoji-tab').forEach(function(x){x.classList.remove('active');});
@@ -1145,6 +1165,47 @@ function openSettings(){
   $('card-browser-search').addEventListener('input',renderCardBrowser);
   $('card-browser-group').addEventListener('change',function(){cardBrowserSelected={};renderCardBrowser();});
   $('card-browser-add-btn').addEventListener('click',function(){overlay.classList.remove('open');openAddCards();});
+
+  // BG image upload
+  var bgImgBtn=document.getElementById('set-bg-img-btn');
+  var bgImgInput=document.getElementById('set-bg-img-input');
+  if(bgImgBtn)bgImgBtn.addEventListener('click',function(){bgImgInput.click();});
+  if(bgImgInput)bgImgInput.addEventListener('change',function(e){
+    var file=e.target.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){compressImage(ev.target.result,800,600,0.5,function(c){$('set-bg').value=c;toast('✓ 背景图已选择');});};
+    reader.readAsDataURL(file);e.target.value='';
+  });
+
+  // Close/save settings
+  $('set-close-btn').addEventListener('click',function(){
+    var ch=getActiveChar();if(!ch)return;
+    ch.name=$('set-name').value.trim()||'梦角';
+    if(ch.isGroup){
+      ch.members=[];
+      var checks=document.querySelectorAll('.gm-check');
+      for(var i=0;i<checks.length;i++){if(checks[i].checked)ch.members.push(checks[i].dataset.cid);}
+    }
+    settings.myName=$('set-myname').value.trim()||'我';
+    settings.chatBg=$('set-bg').value.trim();
+    applyChatBg();
+    ch.replyGroup=$('set-group').value;
+    ch.replyDelay=parseInt($('set-delay').value)||3;
+    ch.replyUnit=$('set-unit').value;
+    saveAll();updateHeader();overlay.classList.remove('open');toast('✓ 设置已保存');
+  });
+
+  // Clear buttons
+  var clearBtn=document.getElementById('set-clear-btn');
+  if(clearBtn)clearBtn.addEventListener('click',function(){
+    if(!confirm('确定清空当前梦角的所有聊天记录？此操作不可撤销。'))return;
+    var c2=getActiveChar();if(c2){c2.chatHistory=[];}saveAll();renderChat();overlay.classList.remove('open');toast('✓ 聊天记录已清空');
+  });
+  var clearEmoji=document.getElementById('set-clear-emoji-btn');
+  if(clearEmoji)clearEmoji.addEventListener('click',function(){
+    if(!confirm('确定清空所有自定义表情包？（'+customEmojis.length+'个）此操作不可撤销。'))return;
+    customEmojis=[];dbSet('zk-emoji-library',[],function(){toast('✓ 表情包已清空');});overlay.classList.remove('open');
+  });
 
   // Backup tab buttons
   $('stab-backup-all-btn').addEventListener('click',function(){
