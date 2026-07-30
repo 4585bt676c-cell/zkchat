@@ -1078,11 +1078,6 @@ function openSettings(){
     var cbs=panel.querySelectorAll('.sel-color');for(var i=0;i<cbs.length;i++)cbs[i].classList.toggle('btn-accent',cbs[i].dataset.v===settings.color);
   });
 
-  panel.querySelector('.sel-groupmode:nth-child(1)').parentElement.addEventListener('click',function(e){
-    var b=e.target.closest('.sel-groupmode');if(!b)return;
-    settings.groupMode=b.dataset.v==='1';saveAll();
-    updateGroupModeUI();
-  });
   $('set-bg-img-btn').addEventListener('click',function(){$('set-bg-img-input').click();});
   $('set-bg-img-input').addEventListener('change',function(e){
     var file=e.target.files[0];if(!file)return;
