@@ -1682,14 +1682,14 @@ function postMoment(text,img,from){
   ensureMoments();var c=getActiveChar();if(!from)from='我';
   c.moments.push({text:text,img:img||null,from:from,time:Date.now(),comments:[]});
   saveAll();renderMoments();
-  // Character auto-replies to user's post after 1-2h
+  // Character auto-replies to user's post after 20-60s
   if(from==='我'){
     var pi=c.moments.length-1;
     setTimeout(function(){
       var cc=getActiveChar();if(!cc||!cc.moments[pi])return;
       cc.moments[pi].comments.push({from:cc.name,text:getRandomCards(2,5),time:Date.now()});
       saveAll();if($('moments-overlay').classList.contains('open'))renderMoments();
-    },3600000+Math.random()*3600000);
+    },20000+Math.random()*40000);
   }
 }
 
