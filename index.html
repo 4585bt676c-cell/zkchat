@@ -1707,6 +1707,7 @@ $('moments-back-btn').addEventListener('click',function(){$('moments-overlay').c
 $('moments-send-btn').addEventListener('click',function(){
   var text=$('moments-input').value.trim(),img=momentsPendingImg;
   if(!text&&!img){toast('请输入内容');return;}
+  if(img)toast('📷 图片已附上');
   postMoment(text,img,'我');
   $('moments-input').value='';momentsPendingImg=null;updatePhotoPreview();
   var c=getActiveChar();
