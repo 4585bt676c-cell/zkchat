@@ -525,17 +525,41 @@ function openDB(cb){
   req.onerror=function(){db=null;if(cb)cb();};
 }
 function dbSet(key,val,cb){
-  if(!db){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){toast('⚠️ 存储空间不足，请清理表情包或聊天记录');};if(cb)cb();return;}
+  if(!db){toast('⚠️ 数据库未就绪，请刷新重试');if(cb)cb();return;}
   try{
     var tx=db.transaction('data','readwrite');
     var store=tx.objectStore('data');
     var req=store.put(val,key);
     tx.oncomplete=function(){if(cb)cb();};
-    tx.onerror=tx.onabort=function(){
-      toast('⚠️ 存储空间不足，请清理表情包或聊天记录');
+    tx.onerror=tx.onabort=function(e){
+      e.preventDefault();
+      toast('⚠️ 存储空间不足，请去设置清理表情包或旧聊天');
       if(cb)cb();
     };
-  }catch(e){toast('⚠️ 存储空间不足，请清理表情包或聊天记录');if(cb)cb();}
+  }catch(e){toast('⚠️ 存储异常，请去设置清理表情包或旧聊天');if(cb)cb();}
+}
+
+function getStorageUsage(cb){
+  if(!db){cb(0);return;}
+  try{
+    var tx=db.transaction('data','readonly');
+    var store=tx.objectStore('data');
+    var req=store.getAllKeys();
+    req.onsuccess=function(){
+      var total=0,count=req.result.length;
+      var keys=req.result.slice(0,Math.min(10,count));
+      var remaining=keys.length;
+      function sizeOne(){
+        if(keys.length===0){cb(total+'B~'+(total/1024/1024).toFixed(1)+'MB');return;}
+        var k=keys.shift();
+        var r2=store.get(k);
+        r2.onsuccess=function(){total+=JSON.stringify(r2.result||'').length;sizeOne();};
+        r2.onerror=function(){sizeOne();};
+      }
+      sizeOne();
+    };
+    req.onerror=function(){cb(0);};
+  }catch(e){cb(0);}
 }
 function dbGet(key,cb){
   if(!db){try{cb(JSON.parse(localStorage.getItem(key)||'null'));}catch(e){cb(null);}return;}
@@ -971,7 +995,7 @@ function openSettings(){
       '<button class="btn btn-sm" id="card-browser-add-btn" style="width:100%;margin-top:8px">＋ 新增字卡</button>'+
     '</div>'+
     '<div id="stab-backup" style="display:none"><h3>💾 备份</h3>'+
-      '<p style="font-size:13px;color:var(--text3);margin-bottom:12px">备份包含字卡库、聊天记录、表情包、设置</p>'+
+      '<p style="font-size:13px;color:var(--text3);margin-bottom:12px">备份包含字卡库、聊天记录、表情包、设置<br><span id="storage-info" style="color:var(--accent)">计算中…</span></p>'+
       '<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-sm" id="stab-backup-all-btn">📦 备份全部</button><button class="btn btn-sm" id="stab-restore-btn">📥 恢复备份</button><button class="btn btn-sm" id="stab-export-cards-btn">📤 导出字卡</button><button class="btn btn-sm" id="stab-import-cards-btn">📥 导入字卡</button></div>'+
       '<input type="file" id="stab-restore-input" accept=".json" style="display:none"><input type="file" id="stab-import-cards-input" accept=".json" style="display:none">'+
     '</div>';
@@ -1092,7 +1116,7 @@ function openSettings(){
     var g=document.getElementById('stab-general'),c=document.getElementById('stab-cards'),b=document.getElementById('stab-backup');
     if(g)g.style.display=tab==='general'?'':'none';
     if(c){c.style.display=tab==='cards'?'':'none';if(tab==='cards')renderCardBrowser();}
-    if(b)b.style.display=tab==='backup'?'':'none';
+    if(b){b.style.display=tab==='backup'?'':'none';if(tab==='backup'){getStorageUsage(function(s){var el=document.getElementById('storage-info');if(el)el.textContent='存储用量 ≈ '+s;});}}
   });});
 
   // Card browser
