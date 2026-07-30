@@ -744,7 +744,6 @@ function openAddCards(){
 }
 
 function showCardImportDialog(groups){
-function showCardImportDialog(groups){
   var overlay=$('import-overlay'),panel=$('import-panel');
   var totalItems=groups.reduce(function(s,g){return s+(g.items||[]).length},0);
   panel.innerHTML=
