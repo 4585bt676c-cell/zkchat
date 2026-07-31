@@ -344,6 +344,7 @@ function init(){
       updateHeader();
       updateMailBadge();
       checkPendingReplies();
+      checkPendingSurveys();
       startProactiveEvents();
     });
   });
@@ -377,11 +378,10 @@ function applyTheme(){
 }
 function applyColor(){document.documentElement.setAttribute("data-color-theme",settings.color);}
 function applyChatBg(){
-  var area=$("chat-area");if(!area)return;
   if(settings.chatBg){
-    if(settings.chatBg.startsWith("data:")||settings.chatBg.startsWith("http")){area.style.backgroundImage="url("+settings.chatBg+")";area.style.backgroundSize="cover";area.style.backgroundPosition="center";area.style.background="";}
-    else{area.style.background=settings.chatBg;area.style.backgroundImage="none";}
-  }else{area.style.background="";area.style.backgroundImage="none";}
+    if(settings.chatBg.startsWith("data:")||settings.chatBg.startsWith("http")){document.body.style.background="url("+settings.chatBg+") center/cover no-repeat";}
+    else{document.body.style.background=settings.chatBg;}
+  }
 }
 function updateHeader(){
   var c=getActiveChar();
@@ -743,10 +743,10 @@ function openSurvey(){
     if(opts.length<2){toast("至少需要2个选项");return;}
     overlay.classList.remove("open");
     var c2=getActiveChar();if(!c2)return;
-    var surveyId=Date.now();
-    c2.chatHistory.push({id:surveyId,type:"survey",content:q,sender:"me",time:Date.now(),options:opts,status:"pending"});
+    var surveyId=Date.now(),replyDue=Date.now()+60000+Math.random()*60000;
+    c2.chatHistory.push({id:surveyId,type:"survey",content:q,sender:"me",time:Date.now(),options:opts,status:"pending",replyDue:replyDue});
     saveAll();renderChat();
-    setTimeout(function(){var ch=getActiveChar();if(!ch)return;var found=null;for(var k=0;k<ch.chatHistory.length;k++){if(ch.chatHistory[k].id===surveyId){found=ch.chatHistory[k];break;}}if(!found)return;var pick=opts[Math.floor(Math.random()*opts.length)];found.status="answered";found.answer=pick;saveAll();renderChat();},60000+Math.random()*60000);
+    setTimeout(function(){deliverSurveyReply(surveyId,opts);},replyDue-Date.now());
     toast("问卷已发送（1-2分钟内回复）");
   };
 }
@@ -908,6 +908,25 @@ function openCardBrowser(){
   $("cb-search").oninput=function(){q=this.value;render();};
   }
   render();
+}
+function deliverSurveyReply(surveyId,opts){
+  var ch=getActiveChar();if(!ch)return;
+  var found=null;for(var k=0;k<ch.chatHistory.length;k++){if(ch.chatHistory[k].id===surveyId){found=ch.chatHistory[k];break;}}
+  if(!found||found.status==="answered")return;
+  var pick=opts[Math.floor(Math.random()*opts.length)];
+  found.status="answered";found.answer=pick;saveAll();renderChat();
+}
+function checkPendingSurveys(){
+  var ch=getActiveChar();if(!ch)return;
+  var now=Date.now();
+  for(var i=0;i<ch.chatHistory.length;i++){
+    var m=ch.chatHistory[i];
+    if(m.type==="survey"&&m.status==="pending"&&m.replyDue&&now>=m.replyDue&&m.options){
+      deliverSurveyReply(m.id,m.options);
+    }else if(m.type==="survey"&&m.status==="pending"&&m.replyDue&&now<m.replyDue){
+      setTimeout(function(){deliverSurveyReply(m.id,m.options);},m.replyDue-now);
+    }
+  }
 }
 function downloadJSON(data,filename){
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
