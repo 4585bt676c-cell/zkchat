@@ -172,7 +172,7 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139}
   .panel{width:95vw!important;max-height:85vh;padding:16px}
   .emoji-panel{max-height:260px;bottom:120px}
 }
-.moments-post .mp-img{max-width:50px;max-height:50px;border-radius:4px;cursor:pointer;object-fit:cover;display:block;margin-bottom:6px}
+.moments-post .mp-img{max-width:80px;max-height:80px;border-radius:6px;cursor:pointer;object-fit:cover;display:block;margin-bottom:6px}
 .mail-list{max-height:300px;overflow-y:auto}
 .mail-item{padding:12px 14px;border-radius:10px;border:1px solid var(--border2);margin-bottom:8px;cursor:pointer;transition:var(--transition);background:var(--card-bg);font-size:13px}
 .mail-item:hover{background:var(--card-hover)}
@@ -617,8 +617,8 @@ function renderMoments(){
   var body=$("moments-body"),html="";
   if(posts.length===0){html='<div style="text-align:center;color:var(--text3);padding:60px 20px"><div style="font-size:48px;opacity:.3;margin-bottom:12px">🌐</div>还没有动态</div>';}
   for(var i=posts.length-1;i>=0;i--){
-    var p=posts[i],isMe=p.from==="我";if(isMe)p.from=settings.myName||"我";
-    html+='<div class="moments-post" data-pidx="'+i+'"><div class="mp-avatar" style="'+(isMe?'':'background:rgba(var(--accent-rgb),.3)')+'">'+p.from.charAt(0)+'</div><div class="mp-right"><div class="mp-name">'+escapeHtml(p.from)+'</div><div class="mp-content">'+escapeHtml(p.text||"")+'</div>';
+    var p=posts[i],isMe=p.from==="我";
+    html+='<div class="moments-post" data-pidx="'+i+'"><div class="mp-avatar" style="'+(isMe?'':'background:rgba(var(--accent-rgb),.3)')+'">'+(isMe?(settings.myName||'我').charAt(0):p.from.charAt(0))+'</div><div class="mp-right"><div class="mp-name">'+(isMe?escapeHtml(settings.myName||'我'):escapeHtml(p.from))+'</div><div class="mp-content">'+escapeHtml(p.text||"")+'</div>';
     if(p.img)html+='<img class="mp-img" src="'+p.img+'" onclick="previewImage(this.src)">';
     html+='<div class="mp-time-row"><span>'+new Date(p.time).toLocaleString("zh-CN")+'</span></div>';
     if(isMe)html+='<button class="mp-delete" data-pidx="'+i+'">✕</button>';
