@@ -179,6 +179,7 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139}
 <div class="glow-1"></div>
 <div class="glow-2"></div>
 <div class="toast" id="toast"></div>
+<input type="file" id="bg-static-input" accept="image/*" style="display:none" onchange="var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(e){document.body.style.background=&apos;url(&apos;+e.target.result+&apos;) center/cover no-repeat&apos;};r.readAsDataURL(f);this.value=&apos;&apos;">
 <div class="img-preview-overlay" id="img-preview" onclick="this.style.display='none'"><img id="img-preview-img" src=""></div>
 
 <div class="overlay" id="settings-overlay"><div class="panel" id="settings-panel"></div></div>
