@@ -236,12 +236,12 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139}
       <input type="file" id="emoji-batch-input" accept="image/*" multiple style="display:none">
     </div>
     <div class="input-bar">
-      <button id="image-btn" title="图片">📷</button>
-      <button id="survey-btn" title="问卷">📋</button>
-      <button id="emoji-btn" title="表情">😊</button>
+      <button id="image-btn" title="图片" onclick="document.getElementById('image-input').click()">📷</button>
+      <button id="survey-btn" title="问卷" onclick="openSurvey()">📋</button>
+      <button id="emoji-btn" title="表情" onclick="toggleEmojiPanel()">😊</button>
       <input type="file" id="image-input" accept="image/*" style="display:none">
       <div class="input-wrap"><textarea id="msg-input" rows="1" placeholder="输入消息…" autocomplete="off"></textarea></div>
-      <button class="send-btn" id="send-btn">➤</button>
+      <button class="send-btn" id="send-btn" onclick="sendText()">➤</button>
     </div>
   </div>
 </div>
