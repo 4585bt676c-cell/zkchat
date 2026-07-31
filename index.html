@@ -609,7 +609,7 @@ function renderMoments(){
   var body=$("moments-body"),html="";
   if(posts.length===0){html='<div style="text-align:center;color:var(--text3);padding:60px 20px"><div style="font-size:48px;opacity:.3;margin-bottom:12px">🌐</div>还没有动态</div>';}
   for(var i=posts.length-1;i>=0;i--){
-    var p=posts[i],isMe=p.from==="我";
+    var p=posts[i],isMe=p.from==="我";if(isMe)p.from=settings.myName||"我";
     html+='<div class="moments-post" data-pidx="'+i+'"><div class="mp-avatar" style="'+(isMe?'':'background:rgba(var(--accent-rgb),.3)')+'">'+p.from.charAt(0)+'</div><div class="mp-right"><div class="mp-name">'+escapeHtml(p.from)+'</div><div class="mp-content">'+escapeHtml(p.text||"")+'</div>';
     if(p.img)html+='<img class="mp-img" src="'+p.img+'" onclick="previewImage(this.src)">';
     html+='<div class="mp-time-row"><span>'+new Date(p.time).toLocaleString("zh-CN")+'</span></div>';
