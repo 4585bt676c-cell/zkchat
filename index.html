@@ -287,11 +287,11 @@ function saveAll(){
 }
 
 function init(){
+  bindEvents();
   openDB(function(){
     loadAll(function(){
       generateStars();
       renderChat();
-      bindEvents();
       applyTheme();
       applyColor();
       applyChatBg();
