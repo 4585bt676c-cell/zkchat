@@ -361,7 +361,7 @@ function loadAll(cb){
     try{activeCharId=JSON.parse(localStorage.getItem("zk-active-char"));}catch(e){activeCharId=null;}
     if(!activeCharId||!getActiveChar())activeCharId=characters[0].id;
     try{var s=JSON.parse(localStorage.getItem("zk-chat-settings")||"{}");if(s.theme)settings.theme=s.theme;if(s.color)settings.color=s.color;if(s.myName)settings.myName=s.myName;if(s.chatBg!==undefined)settings.chatBg=s.chatBg;
-      var savedBg=localStorage.getItem("zk-chat-bg");if(savedBg)settings.chatBg=savedBg;}catch(e){}
+      dbGet("zk-chat-bg",function(bg){if(bg){settings.chatBg=bg;applyChatBg();}});}catch(e){}
     dbGet("zk-emoji-library",function(em){customEmojis=em||[];});
     try{var cd=JSON.parse(localStorage.getItem("zk-card-data")||"null");if(cd){GROUPS.length=0;for(var i=0;i<cd.length;i++)GROUPS.push(cd[i]);}}catch(e){}
     if(cb)cb();
@@ -379,7 +379,7 @@ function applyTheme(){
 }
 function applyColor(){document.documentElement.setAttribute("data-color-theme",settings.color);}
 function applyChatBg(){
-  var bg=settings.chatBg||localStorage.getItem("zk-chat-bg");
+  var bg=settings.chatBg;
   if(bg){
     if(bg.startsWith("data:")||bg.startsWith("http")){document.body.style.background="url("+bg+") center/cover no-repeat";}
     else{document.body.style.background=bg;}
