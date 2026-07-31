@@ -743,10 +743,10 @@ function openSurvey(){
     if(opts.length<2){toast("至少需要2个选项");return;}
     overlay.classList.remove("open");
     var c2=getActiveChar();if(!c2)return;
-    c2.chatHistory.push({id:Date.now(),type:"survey",content:q,sender:"me",time:Date.now(),options:opts,status:"pending"});
+    var surveyId=Date.now();
+    c2.chatHistory.push({id:surveyId,type:"survey",content:q,sender:"me",time:Date.now(),options:opts,status:"pending"});
     saveAll();renderChat();
-    var sid=c2.chatHistory.length-1;
-    setTimeout(function(){var ch=getActiveChar();if(!ch||!ch.chatHistory[sid])return;var pick=opts[Math.floor(Math.random()*opts.length)];ch.chatHistory[sid].status="answered";ch.chatHistory[sid].answer=pick;saveAll();renderChat();},60000+Math.random()*60000);
+    setTimeout(function(){var ch=getActiveChar();if(!ch)return;var found=null;for(var k=0;k<ch.chatHistory.length;k++){if(ch.chatHistory[k].id===surveyId){found=ch.chatHistory[k];break;}}if(!found)return;var pick=opts[Math.floor(Math.random()*opts.length)];found.status="answered";found.answer=pick;saveAll();renderChat();},60000+Math.random()*60000);
     toast("问卷已发送（1-2分钟内回复）");
   };
 }
