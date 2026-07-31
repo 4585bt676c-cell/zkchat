@@ -249,7 +249,7 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139}
     <div class="input-bar">
       <button id="image-btn" title="图片" onclick="document.getElementById('image-input').click()">📷</button>
       <button id="survey-btn" title="问卷" onclick="openSurvey()">📋</button>
-      <button id="emoji-btn" title="表情" onclick="toggleEmojiPanel()">😊</button>
+      <button id="emoji-btn" title="表情" onclick="var p=document.getElementById('emoji-panel');if(p.classList.contains('open')){p.classList.remove('open');}else{p.classList.add('open');try{renderEmojiContent();}catch(e){}}">😊</button>
       <input type="file" id="image-input" accept="image/*" style="display:none">
       <div class="input-wrap"><textarea id="msg-input" rows="1" placeholder="输入消息…" autocomplete="off"></textarea></div>
       <button class="send-btn" id="send-btn" onclick="sendText()">➤</button>
