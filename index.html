@@ -618,7 +618,7 @@ function renderMoments(){
   if(posts.length===0){html='<div style="text-align:center;color:var(--text3);padding:60px 20px"><div style="font-size:48px;opacity:.3;margin-bottom:12px">🌐</div>还没有动态</div>';}
   for(var i=posts.length-1;i>=0;i--){
     var p=posts[i],isMe=p.from==="我";
-    html+='<div class="moments-post" data-pidx="'+i+'"><div class="mp-avatar" style="'+(isMe?'':'background:rgba(var(--accent-rgb),.3)')+'">'+(isMe?(settings.myName||'我').charAt(0):p.from.charAt(0))+'</div><div class="mp-right"><div class="mp-name">'+(isMe?escapeHtml(settings.myName||'我'):escapeHtml(p.from))+'</div><div class="mp-content">'+escapeHtml(p.text||"")+'</div>';
+    html+='<div class="moments-post" data-pidx="'+i+'"><div class="mp-avatar" style="'+(isMe?'':'background:rgba(var(--accent-rgb),.3)')+'">'+(isMe?(settings.myName||'我').charAt(0):p.from.charAt(0))+'</div><div class="mp-right"><div class="mp-name">'+escapeHtml(p.from)+'</div><div class="mp-content">'+escapeHtml(p.text||"")+'</div>';
     if(p.img)html+='<img class="mp-img" src="'+p.img+'" onclick="previewImage(this.src)">';
     html+='<div class="mp-time-row"><span>'+new Date(p.time).toLocaleString("zh-CN")+'</span></div>';
     if(isMe)html+='<button class="mp-delete" data-pidx="'+i+'">✕</button>';
@@ -632,7 +632,7 @@ function renderMoments(){
     var cc=getActiveChar();if(!cc)return;
     var idx=parseInt(this.dataset.pidx),input=this.parentElement.querySelector(".mp-comment-input");
     var text=input.value.trim();if(!text||!cc.moments[idx])return;
-    cc.moments[idx].comments.push({from:"我",text:text,time:Date.now()});
+    cc.moments[idx].comments.push({from:settings.myName||"我",text:text,time:Date.now()});
     var post=cc.moments[idx],cname=cc.name;
     setTimeout(function(){post.comments.push({from:cname,text:getRandomCards(1,3),time:Date.now()});saveAll();if($("moments-overlay").classList.contains("open"))renderMoments();},3000+Math.random()*5000);
     saveAll();renderMoments();
@@ -642,7 +642,7 @@ function renderMoments(){
 }
 function postMoment(text,img,from){
   ensureMoments();var c=getActiveChar();if(!from)from="我";
-  c.moments.push({text:text,img:img||null,from:from,time:Date.now(),comments:[]});
+  c.moments.push({text:text,img:img||null,from:from==="我"?(settings.myName||"我"):from,time:Date.now(),comments:[]});
   saveAll();renderMoments();
   if(from==="我"){
     var pi=c.moments.length-1;
