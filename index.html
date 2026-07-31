@@ -479,7 +479,7 @@ function triggerReply(){
       addMessage("emoji",customEmojis[Math.floor(Math.random()*customEmojis.length)].data,senderName);
     }else if(roll<0.35){
       var yw=GROUPS.find(function(g){return g.name==="颜文字";});
-      if(yw&&yw.items.length>0)addMessage("text",yw.items[Math.floor(Math.random()*yw.items.length)],senderName);
+      if(yw&&yw.items&&yw.items.length>0)addMessage("text",yw.items[Math.floor(Math.random()*yw.items.length)],senderName);
       else addMessage("text",getRandomCard(),senderName);
     }else{
       if(replyChar&&replyChar.chatHistory&&replyChar.chatHistory.length>0&&Math.random()<0.3){
@@ -505,7 +505,7 @@ function sendImage(file){
   reader.readAsDataURL(file);
 }
 
-function openEmojiPanel(){$("emoji-panel").classList.add("open");emojiPanelOpen=true;renderEmojiContent();$("emoji-btn").classList.add("active");}
+function openEmojiPanel(){$("emoji-panel").classList.add("open");emojiPanelOpen=true;try{renderEmojiContent();}catch(e){};$("emoji-btn").classList.add("active");}
 function closeEmojiPanel(){$("emoji-panel").classList.remove("open");emojiPanelOpen=false;$("emoji-btn").classList.remove("active");}
 function toggleEmojiPanel(){if(emojiPanelOpen)closeEmojiPanel();else openEmojiPanel();}
 function deleteEmoji(idx){customEmojis.splice(idx,1);dbSet("zk-emoji-library",customEmojis,function(){renderEmojiContent();});}
@@ -514,7 +514,7 @@ function renderEmojiContent(){
   var at=document.querySelector(".emoji-tab.active"),tab=at?at.dataset.tab:"yanwenzi";
   var content=$("emoji-content");
   if(tab==="yanwenzi"){
-    var yw=GROUPS.find(function(g){return g.name==="颜文字";}),items=yw?yw.items:[];
+    var yw=GROUPS.find(function(g){return g.name==="颜文字";}),items=(yw&&yw.items)?yw.items:[];
     var html='<div class="emoji-grid">';
     for(var i=0;i<items.length;i++)html+='<div class="emoji-item" data-emoji="'+items[i].replace(/"/g,"&quot;")+'">'+items[i]+'</div>';
     html+='</div>';content.innerHTML=html;
