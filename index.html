@@ -829,7 +829,7 @@ function openSettings(){
   h+='</div><label>强调色</label><div style="display:flex;gap:4px;flex-wrap:wrap">';
   [{v:"gold",l:"金",c:"#c5a47e"},{v:"blue",l:"蓝",c:"#7FA6CD"},{v:"purple",l:"紫",c:"#BB9EC7"},{v:"pink",l:"粉",c:"#F4A6B3"},{v:"mono",l:"墨",c:"#888"},{v:"sunset",l:"橙",c:"#FF9A8B"}].forEach(function(x){h+='<button class="btn btn-sm sel-color'+(settings.color===x.v?" btn-accent":"")+'" data-v="'+x.v+'"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+x.c+';margin-right:3px"></span>'+x.l+'</button>';});
   h+='</div><div class="btn-row" style="flex-wrap:wrap;margin-top:12px">';
-  h+='<button class="btn btn-sm" id="set-add-cards-btn">+ 新增字卡</button><button class="btn btn-sm" id="set-backup-btn">备份</button><button class="btn btn-sm" id="set-restore-btn">恢复</button><input type="file" id="set-restore-input" accept=".json" style="display:none">';
+  h+='<button class="btn btn-sm" id="set-add-cards-btn">+ 新增字卡</button><button class="btn btn-sm" id="set-browse-cards-btn">浏览字卡</button><button class="btn btn-sm" id="set-backup-btn">备份</button><button class="btn btn-sm" id="set-restore-btn">恢复</button><input type="file" id="set-restore-input" accept=".json" style="display:none">';
   h+='<button class="btn btn-sm" id="set-export-cards-btn">导出字卡</button><button class="btn btn-sm" id="set-import-cards-btn">导入字卡</button><input type="file" id="set-import-cards-input" accept=".json" style="display:none">';
   h+='<button class="btn btn-sm btn-danger" id="set-clear-btn">清空聊天</button><button class="btn btn-sm btn-danger" id="set-clear-emoji-btn">清空表情</button>';
   h+='<button class="btn btn-accent btn-sm" id="set-close-btn">完成</button></div>';
@@ -854,6 +854,7 @@ function openSettings(){
   $("set-clear-btn").onclick=function(){if(!confirm("清空聊天？"))return;c.chatHistory=[];saveAll();renderChat();overlay.classList.remove("open");toast("已清空");};
   $("set-clear-emoji-btn").onclick=function(){if(!confirm("清空表情？"))return;customEmojis=[];dbSet("zk-emoji-library",[],function(){toast("已清空");});overlay.classList.remove("open");};
   $("set-add-cards-btn").onclick=function(){overlay.classList.remove("open");openAddCards();};
+  $("set-browse-cards-btn").onclick=function(){overlay.classList.remove("open");openCardBrowser();};
   $("set-backup-btn").onclick=function(){var bk={version:2,date:new Date().toISOString(),cards:GROUPS,characters:characters,activeCharId:activeCharId,emojiLibrary:customEmojis,settings:settings};downloadJSON(bk,"备份_"+new Date().toISOString().slice(0,10)+".json");};
   $("set-restore-btn").onclick=function(){$("set-restore-input").click();};
   $("set-restore-input").onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){try{var b=JSON.parse(ev.target.result);if(!b.cards||!confirm("恢复覆盖数据？"))return;GROUPS.length=0;for(var i=0;i<b.cards.length;i++)GROUPS.push(b.cards[i]);if(b.characters){characters=b.characters;activeCharId=b.activeCharId||characters[0].id;}customEmojis=b.emojiLibrary||[];if(b.settings)settings=b.settings;saveAll();localStorage.setItem("zk-card-data",JSON.stringify(GROUPS));applyTheme();applyColor();updateHeader();renderChat();overlay.classList.remove("open");toast("已恢复");}catch(err){toast("解析失败");}};r.readAsText(f);e.target.value="";};
@@ -892,6 +893,19 @@ function openAddCards(){
   };
 }
 
+function openCardBrowser(){
+  var overlay=$("import-overlay"),panel=$("import-panel"),q="";
+  function render(){var h='<h3>字卡浏览</h3><input type="text" id="cb-search" placeholder="搜索…" value="'+q+'" style="width:100%;padding:7px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:8px"><div id="cb-list" style="max-height:50vh;overflow-y:auto;font-size:13px"></div><button class="btn btn-sm" id="cb-close-btn" style="margin-top:8px">关闭</button>';
+  panel.innerHTML=h;overlay.classList.add("open");
+  var list=$("cb-list"),html2="";var count=0;
+  for(var i=0;i<GROUPS.length;i++){var g=GROUPS[i];for(var j=0;j<g.items.length;j++){var item=g.items[j];if(q&&item.toLowerCase().indexOf(q.toLowerCase())===-1)continue;count++;html2+='<div style="padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px"><span style="flex:1;font-size:12px;cursor:pointer" onclick="navigator.clipboard.writeText(this.textContent);toast(\'已复制\')">'+escapeHtml(item)+'</span><span style="font-size:10px;color:'+g.color+';flex-shrink:0">'+g.name+'</span><button style="width:20px;height:20px;border-radius:50%;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:12px;flex-shrink:0" onclick="if(confirm(\'删除？\')){GROUPS['+i+'].items.splice('+j+',1);localStorage.setItem(\'zk-card-data\',JSON.stringify(GROUPS));toast(\'已删除\');render();}">✕</button></div>';}}
+  if(count===0)html2='<p style="text-align:center;color:var(--text3);padding:20px">没有找到字卡</p>';
+  list.innerHTML=html2;
+  $("cb-close-btn").onclick=function(){overlay.classList.remove("open");};
+  $("cb-search").oninput=function(){q=this.value;render();};
+  }
+  render();
+}
 function downloadJSON(data,filename){
   var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   var url=URL.createObjectURL(blob),a=document.createElement("a");
@@ -908,8 +922,7 @@ function bindEvents(){
   $("msg-input").addEventListener("keydown",function(e){if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendText();}});
   $("msg-input").addEventListener("input",function(){this.style.height="auto";this.style.height=Math.min(this.scrollHeight,100)+"px";});
   // Image, Survey, Emoji
-  $("image-btn").addEventListener("click",function(){$("image-input").click();});
-  $("image-input").addEventListener("change",function(e){var f=e.target.files[0];if(f){sendImage(f);e.target.value="";}});
+  if($("image-btn")&&$("image-input")){$("image-btn").onclick=function(){$("image-input").click();};$("image-input").onchange=function(e){var f=e.target.files[0];if(f){sendImage(f);e.target.value="";}};}
   $("survey-btn").addEventListener("click",openSurvey);
   $("emoji-btn").addEventListener("click",toggleEmojiPanel);
   $("emoji-batch-input").addEventListener("change",function(){uploadEmojis(this.files);});
