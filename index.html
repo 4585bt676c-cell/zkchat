@@ -836,7 +836,7 @@ function openSettings(){
   h+='</div><div class="btn-row" style="flex-wrap:wrap;margin-top:12px">';
   h+='<button class="btn btn-sm" id="set-add-cards-btn">+ 新增字卡</button><button class="btn btn-sm" id="set-browse-cards-btn">浏览字卡</button><button class="btn btn-sm" id="set-backup-btn">备份</button><button class="btn btn-sm" id="set-restore-btn">恢复</button><input type="file" id="set-restore-input" accept=".json" style="display:none">';
   h+='<button class="btn btn-sm" id="set-export-cards-btn">导出字卡</button><button class="btn btn-sm" id="set-import-cards-btn">导入字卡</button><input type="file" id="set-import-cards-input" accept=".json" style="display:none">';
-  h+='<button class="btn btn-sm btn-danger" id="set-clear-btn">清空聊天</button><button class="btn btn-sm btn-danger" id="set-clear-emoji-btn">清空表情</button>';
+  h+='<button class="btn btn-sm btn-danger" id="set-clear-btn">清空聊天</button><button class="btn btn-sm btn-danger" id="set-clear-emoji-btn">清空表情</button><button class="btn btn-sm btn-danger" id="set-clear-all-btn">清除全部</button>';
   h+='<button class="btn btn-accent btn-sm" id="set-close-btn">完成</button></div>';
   panel.innerHTML=h;
   overlay.classList.add("open");
@@ -902,7 +902,14 @@ function openCardBrowser(){
   var overlay=$("import-overlay"),panel=$("import-panel"),q="";
   function render(){var h='<h3>字卡浏览</h3><input type="text" id="cb-search" placeholder="搜索…" value="'+q+'" style="width:100%;padding:7px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:8px"><div id="cb-list" style="max-height:50vh;overflow-y:auto;font-size:13px"></div><button class="btn btn-sm" id="cb-close-btn" style="margin-top:8px">关闭</button>';
   panel.innerHTML=h;overlay.classList.add("open");
-  var list=$("cb-list"),html2="";var count=0;
+  var list=$("cb-list"),html2="";
+  html2+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">';
+  for(var gi=0;gi<GROUPS.length;gi++){
+    var gn=GROUPS[gi].name.replace(/'/g,"\\'"),gc=GROUPS[gi].items.length;
+    html2+='<button style="padding:2px 8px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);cursor:pointer;font-size:10px" onclick="if(confirm(\'删除分组：'+gn+'（'+gc+'条）？\')){GROUPS.splice('+gi+',1);localStorage.setItem(\'zk-card-data\',JSON.stringify(GROUPS));toast(\'已删除\');render();}">✕ '+GROUPS[gi].name+'</button>';
+  }
+  html2+='</div>';
+  var count=0;
   for(var i=0;i<GROUPS.length;i++){var g=GROUPS[i];for(var j=0;j<g.items.length;j++){var item=g.items[j];if(q&&item.toLowerCase().indexOf(q.toLowerCase())===-1)continue;count++;html2+='<div style="padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px"><span style="flex:1;font-size:12px;cursor:pointer" onclick="navigator.clipboard.writeText(this.textContent);toast(\'已复制\')">'+escapeHtml(item)+'</span><span style="font-size:10px;color:'+g.color+';flex-shrink:0">'+g.name+'</span><button style="width:20px;height:20px;border-radius:50%;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:12px;flex-shrink:0" onclick="if(confirm(\'删除？\')){GROUPS['+i+'].items.splice('+j+',1);localStorage.setItem(\'zk-card-data\',JSON.stringify(GROUPS));toast(\'已删除\');render();}">✕</button></div>';}}
   if(count===0)html2='<p style="text-align:center;color:var(--text3);padding:20px">没有找到字卡</p>';
   list.innerHTML=html2;
