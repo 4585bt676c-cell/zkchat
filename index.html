@@ -914,7 +914,7 @@ function openCardBrowser(){
   if(count===0)html2='<p style="text-align:center;color:var(--text3);padding:20px">没有找到字卡</p>';
   list.innerHTML=html2;
   $("cb-close-btn").onclick=function(){overlay.classList.remove("open");};$("cb-group-filter").onchange=function(){selectedGroup=this.value;render();};
-  $("cb-search").oninput=function(){q=this.value;var l=$("cb-list");if(!l)return;clearTimeout(this._t);var self=this;this._t=setTimeout(function(){var h="",c=0;for(var i=0;i<GROUPS.length;i++){var g=GROUPS[i];if(selectedGroup&&g.name!==selectedGroup)continue;for(var j=0;j<g.items.length;j++){var it=g.items[j];if(q&&it.toLowerCase().indexOf(q.toLowerCase())===-1)continue;c++;h+="<div style=padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px><span style=flex:1;font-size:12px;cursor:pointer onclick=navigator.clipboard.writeText(this.textContent);toast('copied')>"+escapeHtml(it)+"</span><span style=font-size:10px;color:"+g.color+";flex-shrink:0>"+g.name+"</span></div>";}if(c===0)h="<p style=text-align:center;color:var(--text3);padding:20px>no results</p>";l.innerHTML=h;},100);};
+  $("cb-search").oninput=function(){q=this.value;render();};
   }
   render();
 }
