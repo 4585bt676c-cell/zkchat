@@ -850,7 +850,7 @@ function openSettings(){
   if(bgBtn&&bgInp){bgBtn.onclick=function(){bgInp.click();};bgInp.onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){compressImage(ev.target.result,800,600,0.5,function(c){$("set-bg").value=c;toast("背景已选");});};r.readAsDataURL(f);e.target.value="";};}
 
   $("set-close-btn").onclick=function(){
-    c.name=$("set-name").value.trim()||"梦角";
+    c.name=$("set-name").value.trim()||"梦角";$("header-name").textContent=c.name;$("header-avatar").textContent=c.name.charAt(0);
     
     settings.myName=$("set-myname").value.trim()||"我";settings.chatBg=$("set-bg").value.trim();applyChatBg();
     c.replyGroup=$("set-group").value;c.replyDelay=parseInt($("set-delay").value)||3;c.replyUnit=$("set-unit").value;
