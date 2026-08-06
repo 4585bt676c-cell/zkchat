@@ -862,14 +862,14 @@ function openSettings(){
   $("set-close-btn").onclick=function(){
     c.name=$("set-name").value.trim()||"梦角";
   var newName=c.name;
+  // Replace header HTML entirely
+  var hd=document.getElementById("header-name");
+  if(hd){hd.parentNode.replaceChild(Object.assign(document.createElement("div"),{id:"header-name",className:"header-name",textContent:newName}),hd);}
+  var av=document.getElementById("header-avatar");
+  if(av){av.parentNode.replaceChild(Object.assign(document.createElement("div"),{id:"header-avatar",className:"header-avatar",textContent:newName.charAt(0)}),av);}
+  headerNameEl=document.getElementById("header-name");
+  headerAvatarEl=document.getElementById("header-avatar");
   toast("名字已改为 "+newName);
-  // NUCLEAR: find ALL possible header elements
-  var allNames=document.querySelectorAll("#header-name, .header-name, [id=header-name]");
-  for(var i=0;i<allNames.length;i++){allNames[i].textContent=newName;allNames[i].innerText=newName;}
-  var allAvs=document.querySelectorAll("#header-avatar, .header-avatar, [id=header-avatar]");
-  for(var i=0;i<allAvs.length;i++){allAvs[i].textContent=newName.charAt(0);allAvs[i].innerText=newName.charAt(0);}
-  // Also update any element containing the old name
-  var oldName=headerNameEl?headerNameEl.textContent:"";
     
     settings.myName=$("set-myname").value.trim()||"我";settings.chatBg=$("set-bg").value.trim();applyChatBg();
     c.replyGroup=$("set-group").value;c.replyDelay=parseInt($("set-delay").value)||3;c.replyUnit=$("set-unit").value;updateMomentsNames(c);
