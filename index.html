@@ -874,7 +874,7 @@ function openSettings(){
     
     settings.myName=$("set-myname").value.trim()||"我";settings.chatBg=$("set-bg").value.trim();applyChatBg();
     c.replyGroup=$("set-group").value;c.replyDelay=parseInt($("set-delay").value)||3;c.replyUnit=$("set-unit").value;updateMomentsNames(c);
-    saveAll();overlay.classList.remove("open");
+    saveAll();updateHeader();overlay.classList.remove("open");
   };
   $("set-clear-btn").onclick=function(){if(!confirm("清空聊天？"))return;c.chatHistory=[];saveAll();renderChat();overlay.classList.remove("open");toast("已清空");};
   $("set-clear-emoji-btn").onclick=function(){if(!confirm("清空表情？"))return;customEmojis=[];dbSet("zk-emoji-library",[],function(){toast("已清空");});overlay.classList.remove("open");};
