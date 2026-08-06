@@ -900,23 +900,28 @@ function openAddCards(){
 
 function openCardBrowser(){
   var overlay=$("import-overlay"),panel=$("import-panel"),q="",selectedGroup="";
-  function render(){var prevGroup=selectedGroup;var h='<h3>字卡浏览</h3><select id="cb-group-filter" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;margin-bottom:6px"><option value=""'+(selectedGroup===""?" selected":"")+'>全部 ('+GROUPS.reduce(function(s,g){return s+g.items.length},0)+'条)</option>'+GROUPS.map(function(g){return '<option value="'+g.name.replace(/"/g,"&quot;")+'"'+(selectedGroup===g.name?" selected":"")+'>'+g.name+' ('+g.items.length+'条)</option>';}).join('')+'</select><input type="text" id="cb-search" placeholder="搜索字卡…" style="width:100%;padding:7px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:6px"><div id="cb-list" style="max-height:50vh;overflow-y:auto;font-size:13px"></div><button class="btn btn-sm" id="cb-close-btn" style="margin-top:8px">关闭</button>';
-  panel.innerHTML=h;overlay.classList.add("open");var srch=document.getElementById("cb-search");if(srch){srch.oninput=function(){q=this.value;render();};srch.value=q;}
-  var list=$("cb-list"),html2="";
-  html2+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">';
-  for(var gi=0;gi<GROUPS.length;gi++){
-    var gn=GROUPS[gi].name.replace(/'/g,"\\'"),gc=GROUPS[gi].items.length;
-    html2+='<button style="padding:2px 8px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text3);cursor:pointer;font-size:10px" onclick="if(confirm(\'删除分组：'+gn+'（'+gc+'条）？\')){GROUPS.splice('+gi+',1);localStorage.setItem(\'zk-card-data\',JSON.stringify(GROUPS));toast(\'已删除\');render();}">✕ '+GROUPS[gi].name+'</button>';
-  }
-  html2+='</div>';
-  var count=0;
-  for(var i=0;i<GROUPS.length;i++){var g=GROUPS[i];if(selectedGroup&&g.name!==selectedGroup)continue;for(var j=0;j<g.items.length;j++){var item=g.items[j];if(q&&item.toLowerCase().indexOf(q.toLowerCase())===-1)continue;count++;html2+='<div style="padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px"><span style="flex:1;font-size:12px;cursor:pointer" onclick="navigator.clipboard.writeText(this.textContent);toast(\'已复制\')">'+escapeHtml(item)+'</span><span style="font-size:10px;color:'+g.color+';flex-shrink:0">'+g.name+'</span><button style="width:20px;height:20px;border-radius:50%;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:12px;flex-shrink:0" onclick="if(confirm(\'删除？\')){GROUPS['+i+'].items.splice('+j+',1);localStorage.setItem(\'zk-card-data\',JSON.stringify(GROUPS));toast(\'已删除\');render();}">✕</button></div>';}}
-  if(count===0)html2='<p style="text-align:center;color:var(--text3);padding:20px">没有找到字卡</p>';
-  list.innerHTML=html2;
-  $("cb-close-btn").onclick=function(){overlay.classList.remove("open");};$("cb-search").oninput=function(){q=this.value;render();};$("cb-group-filter").onchange=function(){selectedGroup=this.value;render();};
+  // Build static header once
+  var h='<h3>字卡浏览</h3><select id="cb-group-filter" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;margin-bottom:6px"><option value="">全部 ('+GROUPS.reduce(function(s,g){return s+g.items.length},0)+'条)</option>'+GROUPS.map(function(g){return '<option value="'+g.name.replace(/"/g,"&quot;")+'"'+'>'+g.name+' ('+g.items.length+'条)</option>';}).join('')+'</select><input type="text" id="cb-search" placeholder="搜索字卡…" style="width:100%;padding:7px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:6px"><div id="cb-list" style="max-height:50vh;overflow-y:auto;font-size:13px"></div><button class="btn btn-sm" id="cb-close-btn" style="margin-top:8px">关闭</button>';
+  panel.innerHTML=h;
+  overlay.classList.add("open");
   
+  // Bind events - just update the list, never rebuild the header
+  function updateList(){
+    var list=$("cb-list");if(!list)return;
+    var html2="",count=0;
+    for(var i=0;i<GROUPS.length;i++){var g=GROUPS[i];if(selectedGroup&&g.name!==selectedGroup)continue;
+      for(var j=0;j<g.items.length;j++){var it=g.items[j];if(q&&it.toLowerCase().indexOf(q.toLowerCase())===-1)continue;count++;
+        html2+='<div style="padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px"><span style="flex:1;font-size:12px;cursor:pointer" onclick="navigator.clipboard.writeText(this.textContent);toast(\'copied\')">'+escapeHtml(it)+'</span><span style="font-size:10px;color:'+g.color+';flex-shrink:0">'+g.name+'</span><button style="width:20px;height:20px;border-radius:50%;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:12px;flex-shrink:0" onclick="if(confirm(\'delete?\')){GROUPS['+i+'].items.splice('+j+',1);localStorage.setItem(\'zk-card-data\',JSON.stringify(GROUPS));updateList();}">X</button></div>';
+      }
+    }
+    if(count===0)html2='<p style="text-align:center;color:var(--text3);padding:20px">no result</p>';
+    list.innerHTML=html2;
   }
-  render();
+  
+  $("cb-search").oninput=function(){q=this.value;updateList();};
+  $("cb-group-filter").onchange=function(){selectedGroup=this.value;updateList();};
+  $("cb-close-btn").onclick=function(){overlay.classList.remove("open");};
+  updateList();
 }
 function deliverSurveyReply(surveyId,opts){
   var ch=getActiveChar();if(!ch)return;
