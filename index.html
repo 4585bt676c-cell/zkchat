@@ -862,13 +862,14 @@ function openSettings(){
   $("set-close-btn").onclick=function(){
     c.name=$("set-name").value.trim()||"梦角";
   var newName=c.name;
-  // Replace header HTML entirely
-  var hd=document.getElementById("header-name");
-  if(hd){hd.parentNode.replaceChild(Object.assign(document.createElement("div"),{id:"header-name",className:"header-name",textContent:newName}),hd);}
-  var av=document.getElementById("header-avatar");
-  if(av){av.parentNode.replaceChild(Object.assign(document.createElement("div"),{id:"header-avatar",className:"header-avatar",textContent:newName.charAt(0)}),av);}
-  headerNameEl=document.getElementById("header-name");
-  headerAvatarEl=document.getElementById("header-avatar");
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){
+      var hd=document.getElementById("header-name");
+      if(hd)hd.innerHTML=newName;
+      var av=document.getElementById("header-avatar");
+      if(av)av.innerHTML=newName.charAt(0);
+    });
+  });
   toast("名字已改为 "+newName);
     
     settings.myName=$("set-myname").value.trim()||"我";settings.chatBg=$("set-bg").value.trim();applyChatBg();
