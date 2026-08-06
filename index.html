@@ -861,9 +861,12 @@ function openSettings(){
 
   $("set-close-btn").onclick=function(){
     c.name=$("set-name").value.trim()||"梦角";
-  if(headerNameEl)headerNameEl.textContent=c.name;
-  if(headerAvatarEl)headerAvatarEl.textContent=c.name.charAt(0);
-  toast("名字已改为 "+c.name);
+  var newName=c.name;
+  toast("名字已改为 "+newName);
+  setTimeout(function(){
+    if(headerNameEl)headerNameEl.textContent=newName;
+    if(headerAvatarEl)headerAvatarEl.textContent=newName.charAt(0);
+  },500);
     
     settings.myName=$("set-myname").value.trim()||"我";settings.chatBg=$("set-bg").value.trim();applyChatBg();
     c.replyGroup=$("set-group").value;c.replyDelay=parseInt($("set-delay").value)||3;c.replyUnit=$("set-unit").value;updateMomentsNames(c);
