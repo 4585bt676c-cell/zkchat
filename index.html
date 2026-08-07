@@ -871,6 +871,7 @@ function openSettings(){
   };
   $("set-clear-btn").onclick=function(){if(!confirm("清空聊天？"))return;c.chatHistory=[];saveAll();renderChat();overlay.classList.remove("open");toast("已清空");};
   $("set-clear-emoji-btn").onclick=function(){if(!confirm("清空表情？"))return;customEmojis=[];dbSet("zk-emoji-library",[],function(){toast("已清空");});overlay.classList.remove("open");};
+	  $("set-clear-all-btn").onclick=function(){if(!confirm("确定清除全部数据？这将删除所有聊天记录、梦角、字卡、表情、设置等，不可恢复！"))return;if(!confirm("再次确认：所有数据将被清空！"))return;GROUPS.length=0;GROUPS.push({name:"默认",color:"#888",items:[]});characters=[{id:Date.now(),name:"梦角",replyGroup:"",replyDelay:3,replyUnit:"s",chatHistory:[]}];activeCharId=characters[0].id;customEmojis=[];settings={theme:"auto",color:"gold",myName:"我",chatBg:""};document.body.style.background="";localStorage.clear();dbSet("zk-characters",characters);dbSet("zk-emoji-library",[]);dbSet("zk-chat-bg","");localStorage.setItem("zk-card-data",JSON.stringify(GROUPS));saveAll();applyTheme();applyColor();updateHeader();renderChat();overlay.classList.remove("open");toast("已清除全部数据，恢复初始状态");};
   $("set-add-cards-btn").onclick=function(){overlay.classList.remove("open");openAddCards();};
   $("set-browse-cards-btn").onclick=function(){overlay.classList.remove("open");openCardBrowser();};
   $("set-backup-btn").onclick=function(){var bk={version:2,date:new Date().toISOString(),cards:GROUPS,characters:characters,activeCharId:activeCharId,emojiLibrary:customEmojis,settings:settings};downloadJSON(bk,"备份_"+new Date().toISOString().slice(0,10)+".json");};
@@ -912,28 +913,71 @@ function openAddCards(){
 }
 
 function openCardBrowser(){
-  var overlay=$("import-overlay"),panel=$("import-panel"),q="",selectedGroup="";
-  // Build static header once
-  var h='<h3>字卡浏览</h3><select id="cb-group-filter" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;margin-bottom:6px"><option value="">全部 ('+GROUPS.reduce(function(s,g){return s+g.items.length},0)+'条)</option>'+GROUPS.map(function(g){return '<option value="'+g.name.replace(/"/g,"&quot;")+'"'+'>'+g.name+' ('+g.items.length+'条)</option>';}).join('')+'</select><input type="text" id="cb-search" placeholder="搜索字卡…" style="width:100%;padding:7px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:6px"><div id="cb-list" style="max-height:50vh;overflow-y:auto;font-size:13px"></div><button class="btn btn-sm" id="cb-close-btn" style="margin-top:8px">关闭</button>';
+  var overlay=$("import-overlay"),panel=$("import-panel"),q="",selectedGroup="",selectedCards={};
+  var totalCount=GROUPS.reduce(function(s,g){return s+g.items.length},0);
+  var h='<h3>字卡浏览</h3><select id="cb-group-filter" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;margin-bottom:6px"><option value="">全部 ('+totalCount+'条)</option>'+GROUPS.map(function(g){return '<option value="'+g.name.replace(/"/g,"&quot;")+'"'+'>'+g.name+' ('+g.items.length+'条)</option>';}).join('')+'</select><input type="text" id="cb-search" placeholder="搜索字卡…" style="width:100%;padding:7px 12px;border-radius:20px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:6px"><div style="display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap"><button class="btn btn-sm" id="cb-select-all-btn">全选</button><button class="btn btn-sm" id="cb-deselect-all-btn">取消全选</button><button class="btn btn-sm btn-danger" id="cb-batch-del-btn">批量删除选中</button></div><div id="cb-list" style="max-height:45vh;overflow-y:auto;font-size:13px"></div><button class="btn btn-sm" id="cb-close-btn" style="margin-top:8px">关闭</button>';
   panel.innerHTML=h;
   overlay.classList.add("open");
-  
-  // Bind events - just update the list, never rebuild the header
+
   function updateList(){
     var list=$("cb-list");if(!list)return;
     var html2="",count=0;
     for(var i=0;i<GROUPS.length;i++){var g=GROUPS[i];if(selectedGroup&&g.name!==selectedGroup)continue;
       for(var j=0;j<g.items.length;j++){var it=g.items[j];if(q&&it.toLowerCase().indexOf(q.toLowerCase())===-1)continue;count++;
-        html2+='<div style="padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px"><span style="flex:1;font-size:12px;cursor:pointer" onclick="navigator.clipboard.writeText(this.textContent);toast(\'copied\')">'+escapeHtml(it)+'</span><span style="font-size:10px;color:'+g.color+';flex-shrink:0">'+g.name+'</span><button style="width:20px;height:20px;border-radius:50%;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:12px;flex-shrink:0" onclick="if(confirm(\'delete?\')){GROUPS['+i+'].items.splice('+j+',1);localStorage.setItem(\'zk-card-data\',JSON.stringify(GROUPS));updateList();}">X</button></div>';
+        var key=i+"_"+j,checked=selectedCards[key]?" checked":"";
+        html2+='<div style="padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px"><input type="checkbox" class="cb-check" data-key="'+key+'"'+checked+' style="flex-shrink:0;accent-color:var(--accent)"><span style="flex:1;font-size:12px;cursor:pointer" onclick="navigator.clipboard.writeText(this.textContent);toast(\'已复制\')">'+escapeHtml(it)+'</span><span style="font-size:10px;color:'+g.color+';flex-shrink:0">'+g.name+'</span><button class="cb-del-btn" data-gi="'+i+'" data-ji="'+j+'" style="width:20px;height:20px;border-radius:50%;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:12px;flex-shrink:0" title="删除">✕</button></div>';
       }
     }
-    if(count===0)html2='<p style="text-align:center;color:var(--text3);padding:20px">no result</p>';
+    if(count===0)html2='<p style="text-align:center;color:var(--text3);padding:20px">无匹配结果</p>';
     list.innerHTML=html2;
+    var checks=list.querySelectorAll(".cb-check");
+    for(var ci=0;ci<checks.length;ci++){
+      checks[ci].onchange=function(){var k=this.dataset.key;if(this.checked)selectedCards[k]=true;else delete selectedCards[k];};
+    }
+    var dels=list.querySelectorAll(".cb-del-btn");
+    for(var di=0;di<dels.length;di++){
+      dels[di].onclick=function(){
+        var gi=parseInt(this.dataset.gi),ji=parseInt(this.dataset.ji);
+        if(gi>=GROUPS.length||ji>=GROUPS[gi].items.length)return;
+        if(!confirm("确定删除 \u201c"+GROUPS[gi].items[ji]+"\u201d ？"))return;
+        GROUPS[gi].items.splice(ji,1);
+        if(GROUPS[gi].items.length===0){GROUPS.splice(gi,1);}
+        localStorage.setItem("zk-card-data",JSON.stringify(GROUPS));
+        var newSel={};
+        for(var k in selectedCards){if(!selectedCards[k])continue;var p=k.split("_"),sgi=parseInt(p[0]),sji=parseInt(p[1]);if(sgi===gi&&sji===ji)continue;newSel[k]=true;}
+        selectedCards=newSel;
+        updateList();
+      };
+    }
   }
-  
+
   $("cb-search").oninput=function(){q=this.value;updateList();};
   $("cb-group-filter").onchange=function(){selectedGroup=this.value;updateList();};
   $("cb-close-btn").onclick=function(){overlay.classList.remove("open");};
+
+  $("cb-select-all-btn").onclick=function(){
+    var list=$("cb-list");if(!list)return;
+    var checks=list.querySelectorAll(".cb-check");
+    for(var ci=0;ci<checks.length;ci++){checks[ci].checked=true;selectedCards[checks[ci].dataset.key]=true;}
+  };
+  $("cb-deselect-all-btn").onclick=function(){
+    selectedCards={};
+    var list=$("cb-list");if(!list)return;
+    var checks=list.querySelectorAll(".cb-check");
+    for(var ci=0;ci<checks.length;ci++)checks[ci].checked=false;
+  };
+  $("cb-batch-del-btn").onclick=function(){
+    var keys=Object.keys(selectedCards).filter(function(k){return selectedCards[k];});
+    if(keys.length===0){toast("请先勾选要删除的字卡");return;}
+    if(!confirm("确定删除选中的 "+keys.length+" 条字卡？此操作不可恢复。"))return;
+    var dels=keys.map(function(k){var p=k.split("_");return {gi:parseInt(p[0]),ji:parseInt(p[1])};});
+    dels.sort(function(a,b){return a.gi!==b.gi?b.gi-a.gi:b.ji-a.ji;});
+    for(var d=0;d<dels.length;d++){var dg=dels[d].gi,dj=dels[d].ji;if(dg<GROUPS.length&&dj<GROUPS[dg].items.length)GROUPS[dg].items.splice(dj,1);}
+    for(var i=GROUPS.length-1;i>=0;i--){if(GROUPS[i].items.length===0)GROUPS.splice(i,1);}
+    localStorage.setItem("zk-card-data",JSON.stringify(GROUPS));
+    selectedCards={};updateList();toast("已删除 "+keys.length+" 条");
+  };
+
   updateList();
 }
 function deliverSurveyReply(surveyId,opts){
