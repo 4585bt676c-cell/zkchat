@@ -474,7 +474,7 @@ function getRandomCard(){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 function getRandomCards(min,max){
-  if(!min)min=2;if(!max)max=5;
+  if(!min)min=1;if(!max)max=5;
   var count=min+Math.floor(Math.random()*(max-min+1));
   var cards=[],used={};
   for(var i=0;i<count;i++){var card=getRandomCard();if(used[card]){i--;continue;}used[card]=true;cards.push(card);}
