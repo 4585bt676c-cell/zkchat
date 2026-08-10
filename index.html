@@ -211,10 +211,11 @@ html[data-color-theme="sunset"]{--accent:#FF9A8B;--accent-rgb:255,154,139}
 </div>
 
 <!-- Call minimized bar -->
-<div id="call-minibar" onclick="document.getElementById('call-overlay').classList.add('open');this.style.display='none'" style="position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:1001;background:var(--bg2);border:1px solid var(--border2);border-radius:24px;padding:8px 16px;display:none;align-items:center;gap:10px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,.4)">
+<div id="call-minibar" style="position:fixed;bottom:120px;right:16px;left:auto;transform:none;z-index:1001;background:var(--bg2);border:1px solid var(--border2);border-radius:24px;padding:8px 16px;display:none;align-items:center;gap:10px;cursor:grab;box-shadow:0 4px 20px rgba(0,0,0,.4);touch-action:none;user-select:none;-webkit-user-select:none">
+  <span id="cm-drag-handle" style="font-size:12px;color:var(--text3);cursor:grab;padding-right:2px" title="拖动移动">⋮⋮</span>
   <span id="cm-avatar" style="font-size:14px">✦</span>
   <span id="cm-info" style="font-size:12px;color:var(--text)">通话中</span>
-  <button onclick="event.stopPropagation();callActive=false;clearInterval(callTimer);clearInterval(callBubbleInterval);document.getElementById('call-overlay').classList.remove('open');this.parentElement.style.display='none'" style="width:28px;height:28px;border-radius:50%;background:#e74c3c;color:#fff;border:none;font-size:12px;cursor:pointer">📞</button>
+  <button id="cm-hangup-btn" style="width:28px;height:28px;border-radius:50%;background:#e74c3c;color:#fff;border:none;font-size:12px;cursor:pointer;flex-shrink:0" title="挂断">📞</button>
 </div>
 
 <div class="moments-overlay" id="moments-overlay" style="position:fixed;inset:0;z-index:999;background:var(--bg);display:none;flex-direction:column">
@@ -1099,6 +1100,45 @@ function bindEvents(){
 
   // System theme change
   window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(){if(settings.theme==="auto")applyTheme();});
+
+  // Call minibar drag
+  var cmDrag=false,cmStartX=0,cmStartY=0,cmOrigLeft=0,cmOrigTop=0,cmMoved=0;
+  var cm=$("call-minibar");
+  if(cm){
+    cm.addEventListener("pointerdown",function(e){
+      if(e.target.id==="cm-hangup-btn")return;
+      cmDrag=true;cmMoved=0;
+      cmStartX=e.clientX;cmStartY=e.clientY;
+      var rect=cm.getBoundingClientRect();
+      cmOrigLeft=rect.left;cmOrigTop=rect.top;
+      cm.setPointerCapture(e.pointerId);
+      cm.style.cursor="grabbing";
+      e.preventDefault();
+    });
+    cm.addEventListener("pointermove",function(e){
+      if(!cmDrag)return;
+      var dx=e.clientX-cmStartX,dy=e.clientY-cmStartY;
+      cmMoved=Math.max(cmMoved,Math.abs(dx)+Math.abs(dy));
+      cm.style.left=(cmOrigLeft+dx)+"px";
+      cm.style.top=(cmOrigTop+dy)+"px";
+      cm.style.right="auto";cm.style.bottom="auto";
+    });
+    cm.addEventListener("pointerup",function(e){
+      cmDrag=false;cm.style.cursor="grab";
+      if(cmMoved<5){
+        // Tap to restore call
+        $("call-overlay").classList.add("open");cm.style.display="none";
+      }
+    });
+    cm.addEventListener("pointercancel",function(){cmDrag=false;cm.style.cursor="grab";});
+    // Hangup button
+    var cmHb=$("cm-hangup-btn");
+    if(cmHb)cmHb.addEventListener("click",function(e){
+      e.stopPropagation();
+      callActive=false;clearInterval(callTimer);clearInterval(callBubbleInterval);
+      $("call-overlay").classList.remove("open");cm.style.display="none";
+    });
+  }
 
   // Keyboard
   document.addEventListener("keydown",function(e){
