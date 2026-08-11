@@ -497,14 +497,14 @@ function triggerReply(){
     }else if(roll<0.35){
       var yw=GROUPS.find(function(g){return g.name==="颜文字";});
       if(yw&&yw.items&&yw.items.length>0)addMessage("text",yw.items[Math.floor(Math.random()*yw.items.length)],senderName);
-      else addMessage("text",getRandomCard(),senderName);
+      else addMessage("text",getRandomCards(),senderName);
     }else{
       if(replyChar&&replyChar.chatHistory&&replyChar.chatHistory.length>0&&Math.random()<0.3){
         var lm=null;
         for(var i=replyChar.chatHistory.length-1;i>=0;i--){if(replyChar.chatHistory[i].sender==="me"){lm=replyChar.chatHistory[i];break;}}
-        if(lm&&lm.type==="text"){addMessage("text","> 我: "+lm.content+"\n"+getRandomCard(),senderName);return;}
+        if(lm&&lm.type==="text"){addMessage("text","> "+(settings.myName||"我")+": "+lm.content+"\n"+getRandomCards(),senderName);return;}
       }
-      addMessage("text",getRandomCard(),senderName);
+      addMessage("text",getRandomCards(),senderName);
     }
   },delay);
 }
